@@ -1,12 +1,17 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { DOCUMENT} from '@angular/common';
 
 @Component({
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',
 })
 export class App {
-  protected readonly title = signal('fanta-football');
+  protected readonly document = inject(DOCUMENT);
+
+  protected focusRouteHeading(): void {
+    this.document.querySelector<HTMLElement>('[data-route-heading]')?.focus();
+  }
 }
