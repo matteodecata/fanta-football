@@ -1,1 +1,34 @@
-<h1 data-route-heading tabindex="-1">Dashboard</h1>
+<div class="dashboard-page container page">
+  <header class="dashboard-header">
+    <div class="page-header">
+      <p class="eyebrow">Panoramica</p>
+      <h1 data-route-heading tabindex="-1">La tua dashboard</h1>
+      <p>Controlla le tue leghe e rispondi agli inviti ricevuti.</p>
+    </div>
+
+    <a class="btn btn--primary" routerLink="/leagues/new">Crea una lega</a>
+  </header>
+
+  <div class="dashboard-layout">
+    <section class="dashboard-section" aria-labelledby="leagues-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Competizioni</p>
+          <h2 id="leagues-title">Le tue leghe</h2>
+        </div>
+        <a routerLink="/leagues/new">Nuova lega</a>
+      </div>
+      <app-user-leagues />
+    </section>
+
+    <aside class="dashboard-section card" aria-labelledby="invites-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Da gestire</p>
+          <h2 id="invites-title">Inviti in sospeso</h2>
+        </div>
+      </div>
+      <app-pending-invites />
+    </aside>
+  </div>
+</div>
