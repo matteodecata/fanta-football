@@ -1,0 +1,37 @@
+:host { display: block; }
+
+.calendar {
+  max-width: 42rem;
+  padding: 1.5rem;
+  border: 1px solid #d9e1ea;
+  border-radius: 1rem;
+  background: #fff;
+  color: #17212b;
+  box-shadow: 0 .5rem 1.5rem rgb(23 33 43 / 8%);
+}
+
+.calendar__header, .calendar__actions { display: flex; align-items: center; }
+.calendar__header { justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.calendar__eyebrow { margin: 0 0 .25rem; color: #52677b; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+h2 { margin: 0; font-size: clamp(1.35rem, 4vw, 1.75rem); text-transform: capitalize; }
+.calendar__actions { gap: .4rem; }
+button { font: inherit; }
+.calendar__button, .calendar__today { min-height: 2.5rem; border: 1px solid #cbd5df; border-radius: .5rem; background: #fff; color: #1d4f73; cursor: pointer; }
+.calendar__button { width: 2.5rem; font-size: 1.5rem; line-height: 1; }
+.calendar__today { padding: 0 .75rem; font-size: .875rem; font-weight: 700; }
+.calendar__button:hover, .calendar__today:hover, .calendar__day:hover { background: #edf5fb; }
+.calendar__button:focus-visible, .calendar__today:focus-visible, .calendar__day:focus-visible { outline: 3px solid #f0a500; outline-offset: 2px; }
+.calendar__weekdays, .calendar__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.calendar__weekdays { margin-bottom: .5rem; color: #52677b; font-size: .75rem; font-weight: 700; text-align: center; }
+.calendar__day { aspect-ratio: 1; border: 2px solid transparent; border-radius: 50%; background: transparent; color: #17212b; cursor: pointer; }
+.calendar__day--outside { color: #8b9aa8; }
+.calendar__day--today { border-color: #1d4f73; font-weight: 700; }
+.calendar__day--selected { background: #1d4f73; color: #fff; }
+.calendar__day--selected:hover { background: #163b56; }
+.calendar__selection { margin: 1.25rem 0 0; color: #52677b; font-size: .9rem; }
+.calendar__selection strong { color: #17212b; text-transform: capitalize; }
+
+@media (max-width: 30rem) {
+  .calendar { padding: 1rem; }
+  .calendar__header { align-items: flex-start; flex-direction: column; }
+}

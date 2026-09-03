@@ -1,0 +1,36 @@
+<section class="calendar" aria-labelledby="calendar-title">
+  <div class="calendar__header">
+    <div>
+      <p class="calendar__eyebrow">Calendario</p>
+      <h2 id="calendar-title">{{ monthLabel() }}</h2>
+    </div>
+    <div class="calendar__actions" aria-label="Navigazione calendario">
+      <button type="button" class="calendar__button" aria-label="Mese precedente" (click)="previousMonth()"><span aria-hidden="true">‹</span></button>
+      <button type="button" class="calendar__today" (click)="goToToday()">Oggi</button>
+      <button type="button" class="calendar__button" aria-label="Mese successivo" (click)="nextMonth()"><span aria-hidden="true">›</span></button>
+    </div>
+  </div>
+
+  <div class="calendar__weekdays" aria-hidden="true">
+    @for (weekday of ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']; track weekday) {
+      <span>{{ weekday }}</span>
+    }
+  </div>
+
+  <div class="calendar__grid" role="grid" aria-label="Giorni del mese">
+    @for (day of calendarDays(); track trackDay($index, day)) {
+      <button type="button" role="gridcell" class="calendar__day"
+        [class.calendar__day--outside]="!day.isCurrentMonth"
+        [class.calendar__day--today]="day.isToday"
+        [class.calendar__day--selected]="isSelected(day)"
+        [attr.aria-current]="day.isToday ? 'date' : null"
+        [attr.aria-label]="day.date | date: 'd MMMM yyyy'"
+        [attr.aria-pressed]="isSelected(day)"
+        (click)="selectDate(day)">{{ day.dayNumber }}</button>
+    }
+  </div>
+
+  <p class="calendar__selection" aria-live="polite">
+    Data selezionata: <strong>{{ formatSelectedDate() }}</strong>
+  </p>
+</section>
