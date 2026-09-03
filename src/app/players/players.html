@@ -1,1 +1,78 @@
-<h1 data-route-heading tabindex="-1">Calciatori</h1>
+<main class="container page players-page">
+  <header class="page-header">
+    <div class="row-between">
+      <div>
+        <h1 data-route-heading tabindex="-1">Calciatori</h1>
+        <p>Consulta il catalogo dei calciatori disponibili.</p>
+      </div>
+
+      <button class="btn btn--primary" type="button" (click)="loadPlayers()" [disabled]="loading()">
+        @if (loading()) {
+          Caricamento...
+        } @else {
+          Carica calciatori
+        }
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="alert alert--info" role="status" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <p>Sto caricando i calciatori.</p>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert--danger" role="alert">
+      <p>{{ errorMessage() }}</p>
+    </div>
+  }
+
+  @if (!loading() && !errorMessage() && players().length === 0) {
+    <section class="empty-state" aria-live="polite">
+      <h2>Nessun calciatore caricato</h2>
+      <p>Usa il pulsante per richiedere il catalogo al backend.</p>
+    </section>
+  }
+
+  @if (players().length > 0) {
+    <section class="card players-table-card">
+      <table class="table">
+        <caption>Catalogo calciatori</caption>
+        <thead>
+          <tr>
+            <th scope="col">Calciatore</th>
+            <th scope="col">Ruolo</th>
+            <th scope="col">Squadra reale</th>
+            <th class="numeric" scope="col">Numero</th>
+            <th class="numeric" scope="col">Prezzo</th>
+            <th scope="col">Stato</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (player of players(); track player.id) {
+            <tr>
+              <td>
+                <strong>{{ player.name }} {{ player.surname }}</strong>
+              </td>
+              <td>
+                <span class="badge badge--accent">{{ player.role }}</span>
+              </td>
+              <td>{{ player.realTeamName }}</td>
+              <td class="numeric">{{ player.realTeamShirtNum }}</td>
+              <td class="numeric">{{ player.price }}</td>
+              <td>
+                @if (player.injured) {
+                  <span class="badge badge--warning">Infortunato</span>
+                } @else {
+                  <span class="badge badge--success">Disponibile</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+</main>
