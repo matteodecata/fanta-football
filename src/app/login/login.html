@@ -1,1 +1,59 @@
-<h1 data-route-heading tabindex="-1">Login</h1>
+<div class="page container">
+  <div class="page-header">
+    <h1 data-route-heading tabindex="-1">Accedi</h1>
+    <p>Inserisci le tue credenziali per accedere a FantaFootball.</p>
+  </div>
+
+  <form class="form" novalidate (submit)="onSubmit($event)">
+    <div class="field">
+      <label class="field__label" for="username">Nome utente</label>
+      <input
+        id="username"
+        #usernameInput
+        class="input"
+        type="text"
+        autocomplete="username"
+        [formField]="loginForm.username"
+        [attr.aria-invalid]="loginForm.username().touched() && loginForm.username().invalid() ? true : null"
+        [attr.aria-describedby]="loginForm.username().touched() && loginForm.username().invalid() ? 'username-error' : null"
+      />
+      @if (loginForm.username().touched() && loginForm.username().invalid()) {
+        <div id="username-error">
+          @for (error of loginForm.username().errors(); track error.kind) {
+            <p class="field__error">{{ error.message }}</p>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="password">Password</label>
+      <input
+        id="password"
+        #passwordInput
+        class="input"
+        type="password"
+        autocomplete="current-password"
+        [formField]="loginForm.password"
+        [attr.aria-invalid]="loginForm.password().touched() && loginForm.password().invalid() ? true : null"
+        [attr.aria-describedby]="loginForm.password().touched() && loginForm.password().invalid() ? 'password-error' : null"
+      />
+      @if (loginForm.password().touched() && loginForm.password().invalid()) {
+        <div id="password-error">
+          @for (error of loginForm.password().errors(); track error.kind) {
+            <p class="field__error">{{ error.message }}</p>
+          }
+        </div>
+      }
+    </div>
+
+    <button class="btn btn--primary btn--block" type="submit">Accedi</button>
+
+    <p class="text-sm text-muted">
+      Non hai un account? <a routerLink="/register">Registrati</a>
+    </p>
+    <p class="text-sm text-muted">
+      <a routerLink="/forgot-password">Password dimenticata?</a>
+    </p>
+  </form>
+</div>
