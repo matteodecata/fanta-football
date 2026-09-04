@@ -1,1 +1,23 @@
-<h1 data-route-heading tabindex="-1">Login</h1>
+<section class="auth-page">
+  <h1 data-route-heading tabindex="-1">Accedi</h1>
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate aria-describedby="login-error">
+    <label for="username">Nome utente</label>
+    <input id="username" type="text" formControlName="username" autocomplete="username" />
+    @if (form.controls.username.touched && form.controls.username.invalid) {
+      <small>Inserisci il nome utente.</small>
+    }
+
+    <label for="password">Password</label>
+    <input id="password" type="password" formControlName="password" autocomplete="current-password" />
+    @if (form.controls.password.touched && form.controls.password.invalid) {
+      <small>Inserisci la password.</small>
+    }
+
+    @if (state() === 'error') {
+      <p id="login-error" role="alert">{{ errorMessage() }}</p>
+    }
+    <button type="submit" [disabled]="state() === 'loading'">
+      {{ state() === 'loading' ? 'Accesso in corso…' : 'Accedi' }}
+    </button>
+  </form>
+</section>

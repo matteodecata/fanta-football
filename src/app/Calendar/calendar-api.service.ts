@@ -11,6 +11,11 @@ export interface CalendarMatch {
   readonly awayTeamId: number;
   readonly awayTeamName: string;
   readonly lineupId?: number;
+  readonly homeLineupId?: number;
+  readonly awayLineupId?: number;
+  readonly homeScore?: number | null;
+  readonly awayScore?: number | null;
+  readonly status?: 'scheduled' | 'played' | 'closed';
 }
 
 export interface CalendarScore {
@@ -26,6 +31,12 @@ export class CalendarApiService {
     return this.http.post<CalendarMatch[] | { matches?: CalendarMatch[]; calendar?: CalendarMatch[] }>(
       `/api/leagues/${leagueId}/matches`,
       null,
+    ).pipe(map((response) => Array.isArray(response) ? response : response.matches ?? response.calendar ?? []));
+  }
+
+  getCalendar(leagueId: number): Observable<CalendarMatch[]> {
+    return this.http.get<CalendarMatch[] | { matches?: CalendarMatch[]; calendar?: CalendarMatch[] }>(
+      `/api/leagues/${leagueId}/matches`,
     ).pipe(map((response) => Array.isArray(response) ? response : response.matches ?? response.calendar ?? []));
   }
 

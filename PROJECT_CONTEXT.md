@@ -342,9 +342,11 @@ diversi dalle combinazioni documentate producono `invalid_trade_filters`.
 | POST | `/api/leagues/{leagueId}/matches` | — | calendario, 201; solo admin lega |
 | GET | `/api/lineups/{lineupId}/score` | — | `{score, goals}` |
 
-Il calendario può essere generato una sola volta. Attualmente non esiste un GET
-per recuperarlo successivamente. Il punteggio è disponibile solo per lineup già
-esistenti e dopo la chiusura della giornata.
+Il calendario può essere generato una sola volta. Il frontend usa anche
+`GET /api/leagues/{leagueId}/matches` per recuperare un calendario già generato;
+il backend deve restituire 404 (o `calendar_not_found`) se non è ancora presente.
+Il punteggio è disponibile solo per lineup già esistenti e dopo la chiusura della
+giornata.
 
 ## 11. Architettura frontend proposta
 

@@ -1,8 +1,8 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { afterNextRender, Component, computed, inject, input, signal } from '@angular/core';
 import { CalendarApiService, CalendarMatch, CalendarScore } from './calendar-api.service';
 
-type CalendarStatus = 'idle' | 'loading' | 'ready' | 'already-generated' | 'no-open-matchday' | 'error';
+type CalendarStatus = 'idle' | 'loading' | 'ready' | 'not-generated' | 'already-generated' | 'no-open-matchday' | 'error';
 
 @Component({
   selector: 'app-calendar',
@@ -22,6 +22,10 @@ export class CalendarComponent {
   readonly scoreStatus = signal<Record<number, 'loading' | 'ready' | 'not-closed' | 'error'>>({});
   readonly errorMessage = signal('');
 
+  constructor() {
+    afterNextRender(() => this.loadCalendar(this.leagueId()));
+  }
+
   readonly groupedMatches = computed(() => {
     const groups = new Map<number, CalendarMatch[]>();
     for (const match of this.matches()) {
@@ -31,7 +35,33 @@ export class CalendarComponent {
     return [...groups.entries()].map(([roundNumber, matches]) => ({ roundNumber, matches }));
   });
 
-  readonly canGenerate = computed(() => this.isAdmin() && this.status() === 'idle');
+  readonly canGenerate = computed(() => this.isAdmin() && this.status() === 'not-generated');
+
+  private loadCalendar(leagueId: number): void {
+    if (!Number.isInteger(leagueId) || leagueId <= 0) {
+      this.status.set('error');
+      this.errorMessage.set('Identificativo della lega non valido.');
+      return;
+    }
+
+    this.status.set('loading');
+    this.errorMessage.set('');
+    this.calendarApi.getCalendar(leagueId).subscribe({
+      next: (matches) => {
+        this.matches.set(matches);
+        this.status.set(matches.length > 0 ? 'ready' : 'not-generated');
+      },
+      error: (error: unknown) => {
+        const code = this.getErrorCode(error);
+        if (code === 'calendar_not_found' || code === 'not_found' || this.getHttpStatus(error) === 404) {
+          this.status.set('not-generated');
+          return;
+        }
+        this.status.set('error');
+        this.errorMessage.set('Non è stato possibile caricare il calendario. Riprova più tardi.');
+      },
+    });
+  }
 
   generateCalendar(): void {
     if (!this.canGenerate()) return;
@@ -45,6 +75,10 @@ export class CalendarComponent {
       },
       error: (error: unknown) => this.handleGenerationError(error),
     });
+  }
+
+  retry(): void {
+    this.loadCalendar(this.leagueId());
   }
 
   loadScore(match: CalendarMatch): void {
@@ -101,5 +135,11 @@ export class CalendarComponent {
       if (typeof body.code === 'string') return body.code;
     }
     return undefined;
+  }
+
+  private getHttpStatus(error: unknown): number | undefined {
+    return typeof error === 'object' && error !== null && 'status' in error && typeof error.status === 'number'
+      ? error.status
+      : undefined;
   }
 }

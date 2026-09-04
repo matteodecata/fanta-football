@@ -5,7 +5,7 @@
       <h2 id="calendar-title">Partite tra fantallenatori</h2>
       <p class="calendar__intro">Genera una sola volta il calendario della lega e consulta qui le giornate.</p>
     </div>
-    @if (isAdmin() && status() === 'idle') {
+    @if (canGenerate()) {
       <button class="btn btn--primary" type="button" (click)="generateCalendar()">Genera calendario</button>
     }
   </div>
@@ -13,10 +13,13 @@
   @if (status() === 'loading') {
     <div class="calendar__state" role="status"><span class="spinner" aria-hidden="true"></span> Generazione del calendario in corso…</div>
   } @else if (status() === 'already-generated' || status() === 'no-open-matchday' || status() === 'error') {
-    <div class="alert" [class.alert--warning]="status() !== 'error'" [class.alert--danger]="status() === 'error'" role="status">
-      {{ errorMessage() }}
+    <div class="alert" [class.alert--warning]="status() !== 'error'" [class.alert--danger]="status() === 'error'" role="alert">
+      <span>{{ errorMessage() }}</span>
+      @if (status() === 'error' || status() === 'already-generated') {
+        <button class="btn btn--sm" type="button" (click)="retry()">Riprova</button>
+      }
     </div>
-  } @else if (status() === 'idle' && !isAdmin()) {
+  } @else if (status() === 'not-generated') {
     <div class="empty-state"><strong>Calendario non ancora generato</strong><span>L’amministratore della lega deve generarlo una sola volta.</span></div>
   } @else if (status() === 'ready') {
     <div class="calendar__results" aria-live="polite">

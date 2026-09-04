@@ -44,6 +44,7 @@
 .match__status { color: var(--c-text-muted); font-size: var(--fs-sm); }
 .match__status--error { color: var(--c-danger); }
 .empty-state { gap: var(--sp-2); }
+.alert { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); }
 
 @media (max-width: 48rem) {
   .calendar__header { flex-direction: column; }
