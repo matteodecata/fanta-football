@@ -1,37 +1,58 @@
 :host { display: block; }
 
-.calendar {
-  max-width: 42rem;
-  padding: 1.5rem;
-  border: 1px solid #d9e1ea;
-  border-radius: 1rem;
-  background: #fff;
-  color: #17212b;
-  box-shadow: 0 .5rem 1.5rem rgb(23 33 43 / 8%);
+.calendar { display: grid; gap: var(--sp-6); }
+.calendar__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-6);
+}
+.calendar__intro { margin-top: var(--sp-2); color: var(--c-text-muted); }
+.calendar__state {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 5rem;
+  color: var(--c-text-muted);
+}
+.calendar__results { display: grid; gap: var(--sp-6); }
+.calendar__result-count { color: var(--c-text-muted); font-size: var(--fs-sm); }
+.matchday { display: grid; gap: var(--sp-3); }
+.matchday h3 {
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--c-border);
+  color: var(--c-text-subtle);
+  font-size: var(--fs-sm);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.matchday__matches { display: grid; gap: var(--sp-3); }
+.match {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  background: var(--c-surface-2);
+}
+.match__teams { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--sp-3); font-weight: 600; }
+.match__teams span:last-child { text-align: right; }
+.match__teams strong { color: var(--c-accent); }
+.match__date { color: var(--c-text-subtle); font-size: var(--fs-sm); white-space: nowrap; }
+.match__status { color: var(--c-text-muted); font-size: var(--fs-sm); }
+.match__status--error { color: var(--c-danger); }
+.empty-state { gap: var(--sp-2); }
+
+@media (max-width: 48rem) {
+  .calendar__header { flex-direction: column; }
+  .calendar__header .btn { width: 100%; }
+  .match { grid-template-columns: 1fr; gap: var(--sp-3); }
+  .match__date { order: 2; }
 }
 
-.calendar__header, .calendar__actions { display: flex; align-items: center; }
-.calendar__header { justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
-.calendar__eyebrow { margin: 0 0 .25rem; color: #52677b; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-h2 { margin: 0; font-size: clamp(1.35rem, 4vw, 1.75rem); text-transform: capitalize; }
-.calendar__actions { gap: .4rem; }
-button { font: inherit; }
-.calendar__button, .calendar__today { min-height: 2.5rem; border: 1px solid #cbd5df; border-radius: .5rem; background: #fff; color: #1d4f73; cursor: pointer; }
-.calendar__button { width: 2.5rem; font-size: 1.5rem; line-height: 1; }
-.calendar__today { padding: 0 .75rem; font-size: .875rem; font-weight: 700; }
-.calendar__button:hover, .calendar__today:hover, .calendar__day:hover { background: #edf5fb; }
-.calendar__button:focus-visible, .calendar__today:focus-visible, .calendar__day:focus-visible { outline: 3px solid #f0a500; outline-offset: 2px; }
-.calendar__weekdays, .calendar__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.calendar__weekdays { margin-bottom: .5rem; color: #52677b; font-size: .75rem; font-weight: 700; text-align: center; }
-.calendar__day { aspect-ratio: 1; border: 2px solid transparent; border-radius: 50%; background: transparent; color: #17212b; cursor: pointer; }
-.calendar__day--outside { color: #8b9aa8; }
-.calendar__day--today { border-color: #1d4f73; font-weight: 700; }
-.calendar__day--selected { background: #1d4f73; color: #fff; }
-.calendar__day--selected:hover { background: #163b56; }
-.calendar__selection { margin: 1.25rem 0 0; color: #52677b; font-size: .9rem; }
-.calendar__selection strong { color: #17212b; text-transform: capitalize; }
-
 @media (max-width: 30rem) {
-  .calendar { padding: 1rem; }
-  .calendar__header { align-items: flex-start; flex-direction: column; }
+  .match { padding-inline: var(--sp-4); }
+  .match__teams { gap: var(--sp-2); font-size: var(--fs-sm); }
 }

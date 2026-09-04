@@ -1,12 +1,8 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { CalendarApiService, CalendarMatch, CalendarScore } from './calendar-api.service';
 
-interface CalendarDay {
-  readonly date: Date;
-  readonly dayNumber: number;
-  readonly isCurrentMonth: boolean;
-  readonly isToday: boolean;
-}
+type CalendarStatus = 'idle' | 'loading' | 'ready' | 'already-generated' | 'no-open-matchday' | 'error';
 
 @Component({
   selector: 'app-calendar',
@@ -15,100 +11,95 @@ interface CalendarDay {
   styleUrl: './calendar.component.css',
 })
 export class CalendarComponent {
-  private readonly today = new Date();
-  readonly selectedDate = signal(new Date(this.today));
-  readonly displayedMonth = signal(
-    new Date(this.today.getFullYear(), this.today.getMonth(), 1),
-  );
+  readonly leagueId = input.required<number>();
+  readonly isAdmin = input(false);
 
-  readonly monthLabel = computed(() =>
-    new Intl.DateTimeFormat('it-IT', {
-      month: 'long',
-      year: 'numeric',
-    }).format(this.displayedMonth()),
-  );
+  private readonly calendarApi = inject(CalendarApiService);
+  readonly status = signal<CalendarStatus>('idle');
+  readonly matches = signal<CalendarMatch[]>([]);
+  readonly scoreByLineupId = signal<Record<number, CalendarScore>>({});
+  readonly loadingScoreFor = signal<number | null>(null);
+  readonly scoreStatus = signal<Record<number, 'loading' | 'ready' | 'not-closed' | 'error'>>({});
+  readonly errorMessage = signal('');
 
-  readonly calendarDays = computed<CalendarDay[]>(() => {
-    const month = this.displayedMonth();
-    const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
-    const firstWeekday = (firstDay.getDay() + 6) % 7;
-    const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-    const daysInPreviousMonth = new Date(month.getFullYear(), month.getMonth(), 0).getDate();
-    const days: CalendarDay[] = [];
-
-    for (let index = firstWeekday - 1; index >= 0; index -= 1) {
-      const dayNumber = daysInPreviousMonth - index;
-      days.push({
-        date: new Date(month.getFullYear(), month.getMonth() - 1, dayNumber),
-        dayNumber,
-        isCurrentMonth: false,
-        isToday: false,
-      });
+  readonly groupedMatches = computed(() => {
+    const groups = new Map<number, CalendarMatch[]>();
+    for (const match of this.matches()) {
+      const current = groups.get(match.roundNumber) ?? [];
+      groups.set(match.roundNumber, [...current, match]);
     }
-
-    for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber += 1) {
-      const date = new Date(month.getFullYear(), month.getMonth(), dayNumber);
-      days.push({
-        date,
-        dayNumber,
-        isCurrentMonth: true,
-        isToday: this.isSameDay(date, this.today),
-      });
-    }
-
-    const trailingDays = (7 - (days.length % 7)) % 7;
-    for (let dayNumber = 1; dayNumber <= trailingDays; dayNumber += 1) {
-      days.push({
-        date: new Date(month.getFullYear(), month.getMonth() + 1, dayNumber),
-        dayNumber,
-        isCurrentMonth: false,
-        isToday: false,
-      });
-    }
-    return days;
+    return [...groups.entries()].map(([roundNumber, matches]) => ({ roundNumber, matches }));
   });
 
-  previousMonth(): void {
-    const month = this.displayedMonth();
-    this.displayedMonth.set(new Date(month.getFullYear(), month.getMonth() - 1, 1));
+  readonly canGenerate = computed(() => this.isAdmin() && this.status() === 'idle');
+
+  generateCalendar(): void {
+    if (!this.canGenerate()) return;
+
+    this.status.set('loading');
+    this.errorMessage.set('');
+    this.calendarApi.generateCalendar(this.leagueId()).subscribe({
+      next: (response) => {
+        this.matches.set(response);
+        this.status.set('ready');
+      },
+      error: (error: unknown) => this.handleGenerationError(error),
+    });
   }
 
-  nextMonth(): void {
-    const month = this.displayedMonth();
-    this.displayedMonth.set(new Date(month.getFullYear(), month.getMonth() + 1, 1));
+  loadScore(match: CalendarMatch): void {
+    if (match.lineupId === undefined || this.loadingScoreFor() !== null) return;
+
+    this.loadingScoreFor.set(match.lineupId);
+    this.scoreStatus.update((statuses) => ({ ...statuses, [match.lineupId!]: 'loading' }));
+    this.calendarApi.getScore(match.lineupId).subscribe({
+      next: (score) => {
+        this.scoreByLineupId.update((scores) => ({ ...scores, [match.lineupId!]: score }));
+        this.scoreStatus.update((statuses) => ({ ...statuses, [match.lineupId!]: 'ready' }));
+        this.loadingScoreFor.set(null);
+      },
+      error: (error: unknown) => {
+        const code = this.getErrorCode(error);
+        this.scoreStatus.update((statuses) => ({
+          ...statuses,
+          [match.lineupId!]: code === 'matchday_not_closed' ? 'not-closed' : 'error',
+        }));
+        this.loadingScoreFor.set(null);
+      },
+    });
   }
 
-  goToToday(): void {
-    this.displayedMonth.set(new Date(this.today.getFullYear(), this.today.getMonth(), 1));
-    this.selectedDate.set(new Date(this.today));
+  scoreFor(match: CalendarMatch): CalendarScore | undefined {
+    return match.lineupId === undefined ? undefined : this.scoreByLineupId()[match.lineupId];
   }
 
-  selectDate(day: CalendarDay): void {
-    this.selectedDate.set(new Date(day.date));
-    if (!day.isCurrentMonth) {
-      this.displayedMonth.set(new Date(day.date.getFullYear(), day.date.getMonth(), 1));
+  scoreStateFor(match: CalendarMatch): string | undefined {
+    return match.lineupId === undefined ? undefined : this.scoreStatus()[match.lineupId];
+  }
+
+  private handleGenerationError(error: unknown): void {
+    const code = this.getErrorCode(error);
+    if (code === 'calendar_already_generated') {
+      this.status.set('already-generated');
+      this.errorMessage.set('Il calendario è già stato generato e non può essere ricreato.');
+    } else if (code === 'no_open_matchday' || code === 'no_open_matchdays') {
+      this.status.set('no-open-matchday');
+      this.errorMessage.set('Non ci sono giornate aperte per generare il calendario.');
+    } else {
+      this.status.set('error');
+      this.errorMessage.set('Non è stato possibile generare il calendario. Riprova più tardi.');
     }
   }
 
-  isSelected(day: CalendarDay): boolean {
-    return this.isSameDay(day.date, this.selectedDate());
-  }
-
-  formatSelectedDate(): string {
-    return new Intl.DateTimeFormat('it-IT', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(this.selectedDate());
-  }
-
-  trackDay(_: number, day: CalendarDay): string {
-    return day.date.toISOString();
-  }
-
-  private isSameDay(first: Date, second: Date): boolean {
-    return first.getFullYear() === second.getFullYear()
-      && first.getMonth() === second.getMonth()
-      && first.getDate() === second.getDate();
+  private getErrorCode(error: unknown): string | undefined {
+    if (typeof error !== 'object' || error === null) return undefined;
+    const payload = error as { error?: { errorCode?: unknown; code?: unknown } | unknown; errorCode?: unknown };
+    if (typeof payload.errorCode === 'string') return payload.errorCode;
+    if (typeof payload.error === 'object' && payload.error !== null) {
+      const body = payload.error as { errorCode?: unknown; code?: unknown };
+      if (typeof body.errorCode === 'string') return body.errorCode;
+      if (typeof body.code === 'string') return body.code;
+    }
+    return undefined;
   }
 }
