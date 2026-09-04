@@ -1,1 +1,55 @@
-<h1 data-route-heading tabindex="-1">Crea squadra</h1>
+<form novalidate (submit)="onSubmit($event)">
+  <h1>Crea una nuova lega</h1>
+
+  @if (submitError()) {
+    <p role="alert" aria-live="assertive">{{ submitError() }}</p>
+  }
+
+  @if (submitSuccess()) {
+    <p role="status" aria-live="polite">{{ submitSuccess() }}</p>
+  }
+
+  <div>
+    <label for="league-name">Nome della lega</label>
+    <input
+      id="league-name"
+      type="text"
+      [formField]="leagueForm.name"
+      [attr.aria-describedby]="leagueForm.name().touched() && leagueForm.name().invalid() ? 'league-name-error' : null"
+      [attr.aria-invalid]="leagueForm.name().touched() && leagueForm.name().invalid() ? 'true' : null"
+    />
+
+    @if (leagueForm.name().touched() && leagueForm.name().invalid()) {
+      <ul id="league-name-error" class="error-list" role="alert">
+        @for (error of leagueForm.name().errors(); track error) {
+          <li>{{ error.message }}</li>
+        }
+      </ul>
+    }
+  </div>
+
+  <div>
+    <label for="league-budget">Budget iniziale</label>
+    <input
+      id="league-budget"
+      type="number"
+      [formField]="leagueForm.budget"
+      [attr.aria-describedby]="leagueForm.budget().touched() && leagueForm.budget().invalid() ? 'league-budget-error' : null"
+      [attr.aria-invalid]="leagueForm.budget().touched() && leagueForm.budget().invalid() ? 'true' : null"
+    />
+
+    @if (leagueForm.budget().touched() && leagueForm.budget().invalid()) {
+      <ul id="league-budget-error" class="error-list" role="alert">
+        @for (error of leagueForm.budget().errors(); track error) {
+          <li>{{ error.message }}</li>
+        }
+      </ul>
+    }
+  </div>
+
+  <app-create-admin-team [teamNameField]="leagueForm.teamName" />
+
+  <button type="submit" [disabled]="isSubmitting()">
+    {{ isSubmitting() ? 'Creazione in corso...' : 'Crea lega' }}
+  </button>
+</form>

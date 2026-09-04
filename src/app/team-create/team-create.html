@@ -1,1 +1,24 @@
-<h1 data-route-heading tabindex="-1">Nuova lega</h1>
+<form novalidate (submit)="onSubmit($event)">
+  <h1>Crea la tua squadra</h1>
+
+  <div>
+    <label for="team-name">Nome della squadra</label>
+    <input
+      id="team-name"
+      type="text"
+      [formField]="teamForm.teamName"
+      [attr.aria-describedby]="teamForm.teamName().touched() && teamForm.teamName().invalid() ? 'team-name-error' : null"
+      [attr.aria-invalid]="teamForm.teamName().touched() && teamForm.teamName().invalid() ? 'true' : null"
+    />
+
+    @if (teamForm.teamName().touched() && teamForm.teamName().invalid()) {
+      <ul id="team-name-error" class="error-list" role="alert">
+        @for (error of teamForm.teamName().errors(); track error) {
+          <li>{{ error.message }}</li>
+        }
+      </ul>
+    }
+  </div>
+
+  <button type="submit">Crea squadra</button>
+</form>

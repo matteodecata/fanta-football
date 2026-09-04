@@ -57,14 +57,14 @@ export const routes: Routes = [
     {
         path: 'leagues/new',
         title: 'Nuova lega',
-        loadComponent: () => import('./leagues-new/leagues-new')
-            .then((component) => component.LeaguesNew),
+        loadComponent: () => import('./league-create/league-create')
+            .then((component) => component.LeagueCreate),
     },
     {
         path: 'leagues/:leagueId/team/new',
         title: 'Crea squadra',
-        loadComponent: () => import('./league-team-new/league-team-new')
-            .then((component) => component.LeagueTeamNew),
+        loadComponent: () => import('./team-create/team-create')
+            .then((component) => component.TeamCreate),
     },
     {
         path: 'leagues/:leagueId',
