@@ -5,6 +5,13 @@
   </div>
 
   <form class="form" novalidate (submit)="onSubmit($event)">
+    <!--
+      Pattern ripetuto per ogni campo in tutte le form dell'app:
+      - [formField] collega l'input al FieldTree di Signal Forms (binding a due vie + stato di validazione).
+      - aria-invalid/aria-describedby si attivano solo dopo touched() (l'utente ha già interagito col campo),
+        così non mostriamo errori mentre l'utente sta ancora scrivendo per la prima volta.
+      - aria-describedby punta all'id del div con gli errori, così uno screen reader li legge insieme al campo.
+    -->
     <div class="field">
       <label class="field__label" for="username">Nome utente</label>
       <input

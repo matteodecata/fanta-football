@@ -1,1 +1,78 @@
-<h1 data-route-heading tabindex="-1">Registrati</h1>
+<div class="page container">
+  <div class="page-header">
+    <h1 data-route-heading tabindex="-1">Registrati</h1>
+    <p>Inserisci le tue credenziali per Registrarti a FantaFootball.</p>
+  </div>
+
+  <form class="form" novalidate (submit)="onSubmit($event)">
+    <div class="field">
+      <label class="field__label" for="username">Nome utente</label>
+      <input
+        id="username"
+        #usernameInput
+        class="input"
+        type="text"
+        autocomplete="username"
+        [formField]="registerForm.username"
+        [attr.aria-invalid]="registerForm.username().touched() && registerForm.username().invalid() ? true : null"
+        [attr.aria-describedby]="registerForm.username().touched() && registerForm.username().invalid() ? 'username-error' : null"
+      />
+      @if (registerForm.username().touched() && registerForm.username().invalid()) {
+        <div id="username-error">
+          @for (error of registerForm.username().errors(); track error.kind) {
+            <p class="field__error">{{ error.message }}</p>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="email">Email</label>
+      <input
+        id="email"
+        #emailInput
+        class="input"
+        type="email"
+        autocomplete="email"
+        [formField]="registerForm.email"
+        [attr.aria-invalid]="registerForm.email().touched() && registerForm.email().invalid() ? true : null"
+        [attr.aria-describedby]="registerForm.email().touched() && registerForm.email().invalid() ? 'email-error' : null"
+      />
+      @if (registerForm.email().touched() && registerForm.email().invalid()) {
+        <div id="email-error">
+          @for (error of registerForm.email().errors(); track error.kind) {
+            <p class="field__error">{{ error.message }}</p>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="password">Password</label>
+      <input
+        id="password"
+        #passwordInput
+        class="input"
+        type="password"
+        autocomplete="current-password"
+        [formField]="registerForm.password"
+        [attr.aria-invalid]="registerForm.password().touched() && registerForm.password().invalid() ? true : null"
+        [attr.aria-describedby]="registerForm.password().touched() && registerForm.password().invalid() ? 'password-error' : null"
+      />
+      @if (registerForm.password().touched() && registerForm.password().invalid()) {
+        <div id="password-error">
+          @for (error of registerForm.password().errors(); track error.kind) {
+            <p class="field__error">{{ error.message }}</p>
+          }
+        </div>
+      }
+    </div>
+
+    <button class="btn btn--primary btn--block" type="submit">Registrati</button>
+
+    <p class="text-sm text-muted">
+      Hai gia un account? <a routerLink="/login">Login</a>
+    </p>
+  </form>
+</div>
+
