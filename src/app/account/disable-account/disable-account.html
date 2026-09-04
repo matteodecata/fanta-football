@@ -1,1 +1,102 @@
-<p>disable-account works!</p>
+<div class="danger-warning" role="note">
+  <h3>Prima di continuare</h3>
+  <p>
+    La disattivazione impedirà l’accesso al tuo profilo e limiterà la partecipazione
+    alle leghe. I dati dell’account non verranno eliminati definitivamente.
+  </p>
+</div>
+
+<form class="disable-account-form" [formRoot]="disableAccountForm">
+  <div class="form-field">
+    <label for="disable-current-password">Password attuale</label>
+    <input
+      id="disable-current-password"
+      class="input"
+      type="password"
+      autocomplete="current-password"
+      [formField]="disableAccountForm.currentPassword"
+      [class.input-error]="
+        disableAccountForm.currentPassword().touched() &&
+        disableAccountForm.currentPassword().invalid()
+      "
+      [attr.aria-invalid]="
+        disableAccountForm.currentPassword().touched() &&
+        disableAccountForm.currentPassword().invalid()
+          ? 'true'
+          : null
+      "
+      aria-describedby="disable-password-help disable-password-errors"
+    />
+    <p id="disable-password-help" class="field-help">
+      Inserisci la password per verificare la tua identità.
+    </p>
+    <ul id="disable-password-errors" class="field-errors" aria-live="polite">
+      @if (
+        disableAccountForm.currentPassword().touched() &&
+        disableAccountForm.currentPassword().invalid()
+      ) {
+        @for (error of disableAccountForm.currentPassword().errors(); track error.kind) {
+          <li>{{ error.message }}</li>
+        }
+      }
+    </ul>
+  </div>
+
+  <div class="form-field">
+    <label for="disable-confirmation">
+      Scrivi <strong>{{ confirmationWord }}</strong> per confermare
+    </label>
+    <input
+      id="disable-confirmation"
+      class="input"
+      type="text"
+      autocomplete="off"
+      spellcheck="false"
+      [formField]="disableAccountForm.confirmation"
+      [class.input-error]="
+        disableAccountForm.confirmation().touched() &&
+        disableAccountForm.confirmation().invalid()
+      "
+      [attr.aria-invalid]="
+        disableAccountForm.confirmation().touched() &&
+        disableAccountForm.confirmation().invalid()
+          ? 'true'
+          : null
+      "
+      aria-describedby="disable-confirmation-help disable-confirmation-errors"
+    />
+    <p id="disable-confirmation-help" class="field-help">
+      La parola deve essere scritta esattamente in maiuscolo.
+    </p>
+    <ul id="disable-confirmation-errors" class="field-errors" aria-live="polite">
+      @if (
+        disableAccountForm.confirmation().touched() &&
+        disableAccountForm.confirmation().invalid()
+      ) {
+        @for (error of disableAccountForm.confirmation().errors(); track error.kind) {
+          <li>{{ error.message }}</li>
+        }
+      }
+    </ul>
+  </div>
+
+  @if (disableAccountForm().errors().length > 0) {
+    <ul class="form-errors" aria-live="polite">
+      @for (error of disableAccountForm().errors(); track error.kind) {
+        <li>{{ error.message }}</li>
+      }
+    </ul>
+  }
+
+  <button
+    class="btn btn--danger"
+    type="submit"
+    [disabled]="disableAccountForm().submitting()"
+  >
+    @if (disableAccountForm().submitting()) {
+      Disattivazione in corso…
+    } @else {
+      Disattiva account
+    }
+  </button>
+</form>

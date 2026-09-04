@@ -1,1 +1,97 @@
-<p>change-username works!</p>
+<form class="change-username-form" [formRoot]="usernameForm">
+  <div class="current-username">
+    <span>Nome utente attuale</span>
+    <strong>{{ currentUsername() }}</strong>
+  </div>
+
+  <div class="form-field">
+    <label for="new-username">Nuovo nome utente</label>
+    <input
+      id="new-username"
+      class="input"
+      type="text"
+      autocomplete="username"
+      [formField]="usernameForm.newUsername"
+      [class.input-error]="
+        usernameForm.newUsername().touched() && usernameForm.newUsername().invalid()
+      "
+      [attr.aria-invalid]="
+        usernameForm.newUsername().touched() && usernameForm.newUsername().invalid()
+          ? 'true'
+          : null
+      "
+      aria-describedby="username-help username-errors"
+    />
+    <p id="username-help" class="field-help">
+      Da 3 a 20 caratteri. Puoi utilizzare lettere, numeri, trattini e trattini bassi.
+    </p>
+    <ul id="username-errors" class="field-errors" aria-live="polite">
+      @if (
+        usernameForm.newUsername().touched() && usernameForm.newUsername().invalid()
+      ) {
+        @for (error of usernameForm.newUsername().errors(); track error.kind) {
+          <li>{{ error.message }}</li>
+        }
+      }
+    </ul>
+  </div>
+
+  <div class="form-field">
+    <label for="current-password">Password attuale</label>
+    <input
+      id="current-password"
+      class="input"
+      type="password"
+      autocomplete="current-password"
+      [formField]="usernameForm.currentPassword"
+      [class.input-error]="
+        usernameForm.currentPassword().touched() &&
+        usernameForm.currentPassword().invalid()
+      "
+      [attr.aria-invalid]="
+        usernameForm.currentPassword().touched() &&
+        usernameForm.currentPassword().invalid()
+          ? 'true'
+          : null
+      "
+      aria-describedby="password-help password-errors"
+    />
+    <p id="password-help" class="field-help">
+      Inserisci la password per confermare la modifica.
+    </p>
+    <ul id="password-errors" class="field-errors" aria-live="polite">
+      @if (
+        usernameForm.currentPassword().touched() &&
+        usernameForm.currentPassword().invalid()
+      ) {
+        @for (error of usernameForm.currentPassword().errors(); track error.kind) {
+          <li>{{ error.message }}</li>
+        }
+      }
+    </ul>
+  </div>
+
+  <div class="login-warning" role="note">
+    Dopo la modifica verrai disconnesso e dovrai accedere usando il nuovo nome utente.
+  </div>
+
+  @if (usernameForm().errors().length > 0) {
+    <ul class="form-errors" aria-live="polite">
+      @for (error of usernameForm().errors(); track error.kind) {
+        <li>{{ error.message }}</li>
+      }
+    </ul>
+  }
+
+  <button
+    class="btn btn--primary"
+    type="submit"
+    [disabled]="usernameForm().submitting()"
+  >
+    @if (usernameForm().submitting()) {
+      Modifica in corso…
+    } @else {
+      Modifica nome utente
+    }
+  </button>
+</form>

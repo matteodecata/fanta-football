@@ -1,1 +1,140 @@
 
+:host {
+  display: block;
+}
+
+.user-leagues {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.leagues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.league-card {
+  height: 100%;
+  display: grid;
+  gap: var(--sp-4);
+  align-content: start;
+}
+
+.league-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.league-role {
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.league-card-content {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.league-card-content h3 {
+  margin: 0;
+}
+
+.league-card-content h3 a {
+  color: var(--c-text);
+}
+
+.league-card-content h3 a:hover {
+  color: var(--c-accent);
+}
+
+.participants {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.participants-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.participants progress {
+  width: 100%;
+  height: 0.5rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--c-surface-2);
+}
+
+.participants progress::-webkit-progress-bar {
+  border-radius: var(--r-full);
+  background: var(--c-surface-2);
+}
+
+.participants progress::-webkit-progress-value {
+  border-radius: var(--r-full);
+  background: var(--c-accent);
+}
+
+.participants progress::-moz-progress-bar {
+  border-radius: var(--r-full);
+  background: var(--c-accent);
+}
+
+.league-card > .btn {
+  justify-self: start;
+  margin-top: auto;
+}
+
+.leagues-status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--c-text-muted);
+}
+
+.leagues-error {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.leagues-error p {
+  margin: 0;
+}
+
+.leagues-error .btn {
+  justify-self: start;
+}
+
+.empty-leagues {
+  display: grid;
+  justify-items: start;
+  gap: var(--sp-5);
+  padding: var(--sp-8);
+  border: 1px dashed var(--c-border-strong);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+}
+
+.empty-leagues-content {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.empty-leagues h3,
+.empty-leagues p {
+  margin: 0;
+}
+
+.empty-leagues p {
+  color: var(--c-text-muted);
+}

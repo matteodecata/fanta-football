@@ -1,1 +1,90 @@
-<p>user-leagues works!</p>
+<div
+  class="user-leagues"
+  [attr.aria-busy]="leagues.isLoading() ? 'true' : null"
+>
+  @if (leagues.isLoading() && leagues.value().length === 0) {
+    <div class="leagues-status" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Caricamento delle leghe…</span>
+    </div>
+  } @else if (leagues.error()) {
+    <div class="leagues-error alert alert--danger" role="alert">
+      <p>Non è stato possibile caricare le tue leghe.</p>
+      <button class="btn btn--sm" type="button" (click)="reloadLeagues()">
+        Riprova
+      </button>
+    </div>
+  } @else if (leagues.value().length === 0) {
+    <div class="empty-leagues">
+      <div class="empty-leagues-content">
+        <h3>Non partecipi ancora a nessuna lega</h3>
+        <p>
+          Crea una nuova lega oppure attendi l’invito di un altro partecipante.
+        </p>
+      </div>
+      <a class="btn btn--primary" routerLink="/leagues/new">
+        Crea la tua prima lega
+      </a>
+    </div>
+  } @else {
+    <ul class="leagues-grid" aria-label="Le tue leghe">
+      @for (league of leagues.value(); track league.id) {
+        <li>
+          <article
+            class="league-card card"
+            [attr.aria-labelledby]="'league-title-' + league.id"
+          >
+            <div class="league-card-header">
+              <span
+                class="badge"
+                [class.badge--warning]="league.status === 'draft'"
+                [class.badge--success]="league.status === 'active'"
+                [class.badge--info]="league.status === 'completed'"
+              >
+                {{ getStatusLabel(league.status) }}
+              </span>
+              <span class="league-role">{{ getRoleLabel(league.role) }}</span>
+            </div>
+
+            <div class="league-card-content">
+              <h3 [id]="'league-title-' + league.id">
+                <a [routerLink]="['/leagues', league.id]">{{ league.name }}</a>
+              </h3>
+              <div class="participants">
+                <div class="participants-heading">
+                  <span>Partecipanti</span>
+                  <span>{{ league.participantsCount }}/{{ league.maxParticipants }}</span>
+                </div>
+                <progress
+                  [value]="league.participantsCount"
+                  [max]="league.maxParticipants"
+                  [attr.aria-label]="
+                    getParticipantsLabel(
+                      league.participantsCount,
+                      league.maxParticipants
+                    )
+                  "
+                >
+                  {{
+                    getParticipantsLabel(
+                      league.participantsCount,
+                      league.maxParticipants
+                    )
+                  }}
+                </progress>
+              </div>
+            </div>
+
+            <a
+              class="btn btn--sm"
+              [routerLink]="['/leagues', league.id]"
+              [attr.aria-label]="'Apri la lega ' + league.name"
+            >
+              Apri lega
+            </a>
+          </article>
+        </li>
+      }
+    </ul>
+  }
+</div>

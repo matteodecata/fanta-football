@@ -1,1 +1,73 @@
 
+:host {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+.danger-warning {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border: 1px solid var(--c-danger);
+  border-radius: var(--r-md);
+  background: var(--c-danger-soft);
+}
+
+.danger-warning h3,
+.danger-warning p {
+  margin: 0;
+}
+
+.danger-warning h3 {
+  color: var(--c-danger);
+}
+
+.danger-warning p {
+  color: var(--c-text-muted);
+}
+
+.disable-account-form {
+  display: grid;
+  gap: var(--sp-5);
+  max-width: 36rem;
+}
+
+.form-field {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.form-field label {
+  font-weight: 700;
+}
+
+.field-help {
+  margin: 0;
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.input-error {
+  border-color: var(--c-danger);
+}
+
+.field-errors,
+.form-errors {
+  margin: 0;
+  padding-left: var(--sp-5);
+  color: var(--c-danger);
+  font-size: var(--fs-sm);
+}
+
+.field-errors:empty {
+  display: none;
+}
+
+button {
+  justify-self: start;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
