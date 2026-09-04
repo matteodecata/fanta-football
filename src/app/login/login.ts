@@ -1,6 +1,10 @@
-import { Component, ElementRef, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { FormField, form, required } from '@angular/forms/signals';
+import { HttpErrorResponse } from '@angular/common/http';
+import { AuthApiService } from '../core/auth/auth-api.service';
+import { Session } from '../core/auth/session';
+import { extractApiError } from '../core/http/api-error';
 
 // Definizione dell'interfaccia per l'utilizzo per della form
 interface LoginFormValue {
@@ -15,6 +19,10 @@ interface LoginFormValue {
   styleUrl: './login.css',
 })
 export class Login {
+  private readonly authApi = inject(AuthApiService);
+  private readonly session = inject(Session);
+  private readonly router = inject(Router);
+
   // Riferimenti ai due <input> del template (via #usernameInput/#passwordInput),
   // servono solo per spostare il focus sul campo con errore dopo un submit non valido.
   private readonly usernameInput = viewChild<ElementRef<HTMLInputElement>>('usernameInput');
@@ -29,6 +37,12 @@ export class Login {
     required(path.password, { message: 'Inserisci la password' });
   });
 
+  // Stati espliciti di caricamento/errore (PROJECT_CONTEXT.md sezione 3):
+  // il template li userà per disabilitare il bottone durante la richiesta e
+  // per mostrare un messaggio d'errore accessibile (aria-live).
+  protected readonly submitting = signal(false);
+  protected readonly errorMessage = signal<string | null>(null);
+
   protected onSubmit(event: Event): void {
     event.preventDefault();
 
@@ -41,8 +55,26 @@ export class Login {
       return;
     }
 
-    // TODO: sostituire con la chiamata ad AuthApiService (POST /api/auth/login)
-    console.log('Login da inviare al backend:', this.credentials());
+    this.errorMessage.set(null);
+    this.submitting.set(true);
+
+    // Il componente è il "chiamante" di cui parlavamo per AuthApiService: qui
+    // decidiamo noi quando iscriverci (subscribe) e cosa fare nei due casi,
+    // successo ed errore.
+    this.authApi.login(this.credentials()).subscribe({
+      next: (response) => {
+        this.session.login(response);
+        this.submitting.set(false);
+        this.router.navigateByUrl('/dashboard');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.submitting.set(false);
+        // Se il body ha la forma di un ApiError usiamo il messaggio del
+        // backend, altrimenti (errore di rete, backend giù, ecc.) mostriamo
+        // un messaggio generico invece di uno stack trace all'utente.
+        this.errorMessage.set(extractApiError(err)?.message ?? 'Accesso non riuscito. Riprova.');
+      },
+    });
   }
 
   // Sposta il focus sul primo campo non valido, nell'ordine in cui appaiono nel form:

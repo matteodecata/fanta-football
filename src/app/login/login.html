@@ -54,7 +54,13 @@
       }
     </div>
 
-    <button class="btn btn--primary btn--block" type="submit">Accedi</button>
+    @if (errorMessage()) {
+      <p class="field__error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <button class="btn btn--primary btn--block" type="submit" [disabled]="submitting()">
+      {{ submitting() ? 'Accesso in corso…' : 'Accedi' }}
+    </button>
 
     <p class="text-sm text-muted">
       Non hai un account? <a routerLink="/register">Registrati</a>
