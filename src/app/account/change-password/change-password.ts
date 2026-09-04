@@ -23,6 +23,8 @@ interface ChangePasswordModel {
   confirmPassword: string;
 }
 
+const TOKEN_STORAGE_KEY = 'fanta-football-token';
+
 @Component({
   selector: 'app-change-password',
   imports: [FormField, FormRoot],
@@ -120,7 +122,8 @@ export class ChangePassword {
           try {
             await firstValueFrom(this.changePasswordService.changePassword(request));
 
-            // Clear the local session here once the authentication service exists.
+            sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+
             await this.router.navigate(['/login'], {
               state: {
                 message: 'Password modificata. Accedi utilizzando la nuova password.',
@@ -137,6 +140,8 @@ export class ChangePassword {
             }
 
             if (error.status === 401) {
+              sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+
               await this.router.navigate(['/login'], {
                 state: {
                   message: 'La sessione è scaduta. Accedi nuovamente.',

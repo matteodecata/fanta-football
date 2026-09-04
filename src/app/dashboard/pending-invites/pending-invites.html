@@ -33,14 +33,17 @@
         <li class="invite-item">
           <article [attr.aria-labelledby]="'invite-title-' + invite.id">
             <div class="invite-content">
-              <h3 [id]="'invite-title-' + invite.id">{{ invite.leagueName }}</h3>
+              <h3 [id]="'invite-title-' + invite.id">
+                Invito alla lega n. {{ invite.leagueId }}
+              </h3>
               <p>
-                Invito ricevuto da <strong>{{ invite.invitedBy }}</strong>
+                Inviato dall'utente n.
+                <strong>{{ invite.invitedByUserId }}</strong>
               </p>
               <p class="invite-date">
                 Ricevuto il
-                <time [attr.datetime]="invite.receivedAt">
-                  {{ invite.receivedAt | date: 'dd/MM/yyyy' }}
+                <time [attr.datetime]="invite.sentDate">
+                  {{ invite.sentDate | date: 'dd/MM/yyyy' }}
                 </time>
               </p>
             </div>

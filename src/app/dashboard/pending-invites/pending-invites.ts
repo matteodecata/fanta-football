@@ -1,10 +1,11 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import {
-  PendingInvite,
+  InviteResponse,
   PendingInvitesService,
 } from './pending-invites.service';
 
@@ -16,13 +17,14 @@ import {
 })
 export class PendingInvites {
   private readonly pendingInvitesService = inject(PendingInvitesService);
+  private readonly router = inject(Router);
 
   protected readonly invites = this.pendingInvitesService.pendingInvites;
-  protected readonly processingInviteIds = signal<ReadonlySet<string>>(new Set());
+  protected readonly processingInviteIds = signal<ReadonlySet<number>>(new Set());
   protected readonly statusMessage = signal<string | null>(null);
   protected readonly actionError = signal<string | null>(null);
 
-  protected isProcessing(inviteId: string): boolean {
+  protected isProcessing(inviteId: number): boolean {
     return this.processingInviteIds().has(inviteId);
   }
 
@@ -31,7 +33,7 @@ export class PendingInvites {
     this.invites.reload();
   }
 
-  protected async acceptInvite(invite: PendingInvite): Promise<void> {
+  protected async acceptInvite(invite: InviteResponse): Promise<void> {
     if (this.isProcessing(invite.id)) {
       return;
     }
@@ -39,11 +41,11 @@ export class PendingInvites {
     this.beginProcessing(invite.id);
 
     try {
-      await firstValueFrom(this.pendingInvitesService.acceptInvite(invite.id));
-      this.statusMessage.set(
-        `Hai accettato l’invito alla lega ${invite.leagueName}.`,
+      await firstValueFrom(
+        this.pendingInvitesService.respondToInvite(invite.id, 'ACCEPTED'),
       );
-      this.invites.reload();
+      this.statusMessage.set('Invito accettato. Ora puoi creare la tua squadra.');
+      await this.router.navigate(['/leagues', invite.leagueId, 'team', 'new']);
     } catch (error: unknown) {
       this.actionError.set(this.getActionErrorMessage(error, 'accettare'));
     } finally {
@@ -51,7 +53,7 @@ export class PendingInvites {
     }
   }
 
-  protected async rejectInvite(invite: PendingInvite): Promise<void> {
+  protected async rejectInvite(invite: InviteResponse): Promise<void> {
     if (this.isProcessing(invite.id)) {
       return;
     }
@@ -59,10 +61,10 @@ export class PendingInvites {
     this.beginProcessing(invite.id);
 
     try {
-      await firstValueFrom(this.pendingInvitesService.rejectInvite(invite.id));
-      this.statusMessage.set(
-        `Hai rifiutato l’invito alla lega ${invite.leagueName}.`,
+      await firstValueFrom(
+        this.pendingInvitesService.respondToInvite(invite.id, 'DECLINED'),
       );
+      this.statusMessage.set('Invito rifiutato.');
       this.invites.reload();
     } catch (error: unknown) {
       this.actionError.set(this.getActionErrorMessage(error, 'rifiutare'));
@@ -71,7 +73,7 @@ export class PendingInvites {
     }
   }
 
-  private beginProcessing(inviteId: string): void {
+  private beginProcessing(inviteId: number): void {
     this.statusMessage.set(null);
     this.actionError.set(null);
     this.processingInviteIds.update((currentIds) => {
@@ -81,7 +83,7 @@ export class PendingInvites {
     });
   }
 
-  private endProcessing(inviteId: string): void {
+  private endProcessing(inviteId: number): void {
     this.processingInviteIds.update((currentIds) => {
       const updatedIds = new Set(currentIds);
       updatedIds.delete(inviteId);
@@ -99,6 +101,10 @@ export class PendingInvites {
 
     if (error.status === 401) {
       return 'La sessione è scaduta. Accedi nuovamente.';
+    }
+
+    if (error.status === 403) {
+      return 'Non hai i permessi per gestire questo invito.';
     }
 
     if (error.status === 404) {

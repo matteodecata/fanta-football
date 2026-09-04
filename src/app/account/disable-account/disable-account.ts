@@ -20,6 +20,8 @@ interface DisableAccountModel {
   confirmation: string;
 }
 
+const TOKEN_STORAGE_KEY = 'fanta-football-token';
+
 @Component({
   selector: 'app-disable-account',
   imports: [FormField, FormRoot],
@@ -70,7 +72,8 @@ export class DisableAccount {
           try {
             await firstValueFrom(this.disableAccountService.disableAccount(request));
 
-            // Clear the local session here once the authentication service exists.
+            sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+
             await this.router.navigate(['/login'], {
               state: {
                 message: 'Il tuo account è stato disattivato.',
@@ -87,6 +90,8 @@ export class DisableAccount {
             }
 
             if (error.status === 401) {
+              sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+
               await this.router.navigate(['/login'], {
                 state: {
                   message: 'La sessione è scaduta. Accedi nuovamente.',
@@ -101,13 +106,6 @@ export class DisableAccount {
                 kind: 'incorrectPassword',
                 message: 'La password attuale non è corretta.',
                 fieldTree: formField.currentPassword,
-              };
-            }
-
-            if (error.status === 409) {
-              return {
-                kind: 'alreadyDisabled',
-                message: 'L’account risulta già disattivato.',
               };
             }
 

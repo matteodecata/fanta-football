@@ -8,7 +8,6 @@ import {
   minLength,
   pattern,
   required,
-  validate,
 } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -30,9 +29,6 @@ export class ChangeUsername {
   private readonly changeUsernameService = inject(ChangeUsernameService);
   private readonly router = inject(Router);
 
-  // This will come from the authenticated-user state once authentication is wired up.
-  protected readonly currentUsername = signal('MarioRossi');
-
   protected readonly usernameModel = signal<ChangeUsernameModel>({
     newUsername: '',
     currentPassword: '',
@@ -53,19 +49,6 @@ export class ChangeUsername {
       pattern(fieldPath.newUsername, /^[a-zA-Z0-9_-]+$/, {
         message: 'Usa solamente lettere, numeri, trattini e trattini bassi.',
       });
-      validate(fieldPath.newUsername, ({ value }) => {
-        const newUsername = value().trim().toLowerCase();
-        const currentUsername = this.currentUsername().trim().toLowerCase();
-
-        if (newUsername === currentUsername) {
-          return {
-            kind: 'unchangedUsername',
-            message: 'Il nuovo nome utente deve essere diverso da quello attuale.',
-          };
-        }
-
-        return null;
-      });
 
       required(fieldPath.currentPassword, {
         message: 'Inserisci la password attuale.',
@@ -74,15 +57,21 @@ export class ChangeUsername {
     {
       submission: {
         action: async (formField) => {
+          const value = formField().value();
+          const newUsername = value.newUsername.trim();
+
           try {
             await firstValueFrom(
-              this.changeUsernameService.changeUsername(formField().value()),
+              this.changeUsernameService.changeUsername({
+                newUsername,
+                currentPassword: value.currentPassword,
+              }),
             );
 
-            // Clear the local session here once the authentication service exists.
             await this.router.navigate(['/login'], {
               state: {
                 message: 'Nome utente modificato. Accedi con il nuovo nome utente.',
+                username: newUsername,
               },
             });
 

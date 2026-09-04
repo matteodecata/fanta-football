@@ -7,17 +7,11 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
-export interface ChangePasswordResponse {
-  message: string;
-}
-
 @Service()
 export class ChangePasswordService {
   private readonly http = inject(HttpClient);
 
-  changePassword(
-    request: ChangePasswordRequest,
-  ): Observable<ChangePasswordResponse> {
-    return this.http.patch<ChangePasswordResponse>('/api/account/password', request);
+  changePassword(request: ChangePasswordRequest): Observable<void> {
+    return this.http.put<void>('/api/account/me/password', request);
   }
 }

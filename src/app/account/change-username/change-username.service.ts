@@ -7,18 +7,11 @@ export interface ChangeUsernameRequest {
   currentPassword: string;
 }
 
-export interface ChangeUsernameResponse {
-  username: string;
-  message: string;
-}
-
 @Service()
 export class ChangeUsernameService {
   private readonly http = inject(HttpClient);
 
-  changeUsername(
-    request: ChangeUsernameRequest,
-  ): Observable<ChangeUsernameResponse> {
-    return this.http.patch<ChangeUsernameResponse>('/api/account/username', request);
+  changeUsername(request: ChangeUsernameRequest): Observable<void> {
+    return this.http.patch<void>('/api/account/me/username', request);
   }
 }

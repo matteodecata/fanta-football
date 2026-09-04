@@ -2,28 +2,37 @@ import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
 
-export interface PendingInvite {
-  id: string;
-  leagueId: string;
-  leagueName: string;
-  invitedBy: string;
-  receivedAt: string;
+export type InviteStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
+export type InviteDecision = Extract<InviteStatus, 'ACCEPTED' | 'DECLINED'>;
+
+export interface InviteResponse {
+  id: number;
+  leagueId: number;
+  invitedByUserId: number;
+  invitedUserId: number;
+  status: InviteStatus;
+  sentDate: string;
+  responseDate: string | null;
+}
+
+interface UpdateInviteStatusRequest {
+  status: InviteDecision;
 }
 
 @Service()
 export class PendingInvitesService {
   private readonly http = inject(HttpClient);
 
-  readonly pendingInvites = httpResource<PendingInvite[]>(
+  readonly pendingInvites = httpResource<InviteResponse[]>(
     () => '/api/invites/pending',
     { defaultValue: [] },
   );
 
-  acceptInvite(inviteId: string): Observable<void> {
-    return this.http.post<void>(`/api/invites/${inviteId}/accept`, {});
-  }
-
-  rejectInvite(inviteId: string): Observable<void> {
-    return this.http.post<void>(`/api/invites/${inviteId}/reject`, {});
+  respondToInvite(
+    inviteId: number,
+    status: InviteDecision,
+  ): Observable<InviteResponse> {
+    const request: UpdateInviteStatusRequest = { status };
+    return this.http.patch<InviteResponse>(`/api/invites/${inviteId}`, request);
   }
 }
