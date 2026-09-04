@@ -1,11 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import {
-  UserLeagueRole,
-  UserLeaguesService,
-  UserLeagueStatus,
-} from './user-leagues.service';
+import { UserLeaguesService } from './user-leagues.service';
 
 @Component({
   selector: 'app-user-leagues',
@@ -22,30 +18,18 @@ export class UserLeagues {
     this.leagues.reload();
   }
 
-  protected getRoleLabel(role: UserLeagueRole): string {
-    switch (role) {
-      case 'admin':
-        return 'Amministratore';
-      case 'participant':
-        return 'Partecipante';
-    }
+  protected getRoleLabel(admin: boolean): string {
+    return admin ? 'Amministratore' : 'Partecipante';
   }
 
-  protected getStatusLabel(status: UserLeagueStatus): string {
-    switch (status) {
-      case 'draft':
-        return 'In preparazione';
-      case 'active':
-        return 'Attiva';
-      case 'completed':
-        return 'Conclusa';
-    }
+  protected formatBudget(budget: number): string {
+    return new Intl.NumberFormat('it-IT').format(budget);
   }
 
-  protected getParticipantsLabel(
-    participantsCount: number,
-    maxParticipants: number,
-  ): string {
-    return `${participantsCount} partecipanti su ${maxParticipants}`;
+  protected formatPoints(points: number): string {
+    return new Intl.NumberFormat('it-IT', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(points);
   }
 }

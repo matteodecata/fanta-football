@@ -1,22 +1,30 @@
 import { httpResource } from '@angular/common/http';
 import { Service } from '@angular/core';
 
-export type UserLeagueRole = 'admin' | 'participant';
-export type UserLeagueStatus = 'draft' | 'active' | 'completed';
-
-export interface UserLeague {
-  id: string;
+export interface LeagueResponse {
+  id: number;
   name: string;
-  role: UserLeagueRole;
-  participantsCount: number;
-  maxParticipants: number;
-  status: UserLeagueStatus;
+}
+
+export interface TeamResponse {
+  id: number;
+  name: string;
+  userId: number;
+  leagueId: number;
+  leagueName: string;
+  budget: number;
+  totalPoints: number;
+}
+
+export interface UserLeagueTeamResponse {
+  league: LeagueResponse;
+  team: TeamResponse | null;
+  admin: boolean;
 }
 
 @Service()
 export class UserLeaguesService {
-  readonly userLeagues = httpResource<UserLeague[]>(
-    () => '/api/leagues/mine',
-    { defaultValue: [] },
-  );
+  readonly userLeagues = httpResource<UserLeagueTeamResponse[]>(() => '/api/account/me/leagues', {
+    defaultValue: [],
+  });
 }
