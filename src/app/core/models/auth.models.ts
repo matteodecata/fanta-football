@@ -21,28 +21,41 @@
 // domini (team, player, invite, trade, calendario) li affronteremo più avanti,
 // quando arriveremo alle fasi corrispondenti della roadmap in PROJECT_CONTEXT.md.
 
-// TODO: export interface LoginRequest { ... }
 export interface LoginRequest {
     username: string,
     password: string
 }
 
-// TODO: export interface LoginResponse { ... }
 export interface LoginResponse {
     token: string,
     roles: string[]
 }
 
-// TODO: export interface CreateUserRequest { ... }
 export interface CreateUserRequest {
     username: string,
     email: string,
     password: string
 }
-// TODO: export interface UserDto { ... }
+
 export interface UserDto {
     id: number,
     username: string,
     enabled: boolean,
     roles: string[]
+}
+
+// TODO (step AuthApiService, Fase 2): mancano i tipi per gli altri due
+// endpoint pubblici della tabella in PROJECT_CONTEXT.md sezione 6:
+// - POST /api/auth/forgot-password  request: { email }
+// - POST /api/auth/reset-password   request: { token, newPassword }
+// Chiamale ForgotPasswordRequest e ResetPasswordRequest. Entrambe le risposte
+// sono 204 (nessun corpo), quindi non serve un'interfaccia di risposta.
+
+export interface ForgotPasswordRequest {
+    email: string
+}
+
+export interface ResetPasswordRequest {
+    token: string,
+    newPassword: string,
 }
