@@ -1,6 +1,10 @@
-import { Component, ElementRef, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { email, form, FormField, required } from '@angular/forms/signals';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { AuthApiService } from '../core/auth/auth-api.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { extractApiError } from '../core/http/api-error';
+
 
 interface RegisterFormValue {
   username: string,
@@ -15,6 +19,9 @@ interface RegisterFormValue {
   styleUrl: './register.css',
 })
 export class Register {
+  private readonly authApi = inject(AuthApiService);
+  private readonly router = inject(Router);
+
   private readonly usernameInput = viewChild<ElementRef<HTMLInputElement>>('usernameInput');
   private readonly emailInput = viewChild<ElementRef<HTMLInputElement>>('emailInput');
   private readonly passwordInput = viewChild<ElementRef<HTMLInputElement>>('passwordInput');
@@ -30,6 +37,10 @@ export class Register {
     required(path.password, {message: 'Inserisci password'});
   })
 
+
+  protected readonly submitting = signal(false);
+  protected readonly errorMessage = signal<string | null>(null);
+
     protected onSubmit(event: Event): void {
     event.preventDefault();
 
@@ -39,8 +50,21 @@ export class Register {
       return;
     }
 
-    // TODO: sostituire con la chiamata ad AuthApiService (POST /api/auth/register)
-    console.log('Registration da inviare al backend:', this.credentials());
+    this.submitting.set(true);
+    this.errorMessage.set(null);
+
+    this.authApi.register(this.credentials()).subscribe({
+      next:() =>{
+          this.submitting.set(false);
+          this.router.navigateByUrl('/login');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.submitting.set(false);
+        this.errorMessage.set(extractApiError(err)?.message ?? 'Registrazione non avvenuta')
+      },
+    });
+
+    
   }
 
   private focusFirstInvalidField(): void {
