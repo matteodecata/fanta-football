@@ -1,16 +1,24 @@
 <header class="app-header">
-  <nav  aria-label="Principale">
-    <ul>
-      <li><a routerLink="/landing" routerLinkActive="active" ariaCurrentWhenActive="page">Home</a></li>
-      <li><a routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">Dashboard</a></li>
-      <li><a routerLink="/players" routerLinkActive="active" ariaCurrentWhenActive="page">Calciatori</a></li>
-      <li><a routerLink="/leagues/new" routerLinkActive="active" ariaCurrentWhenActive="page">Nuova lega</a></li>
-      <li><a routerLink="/account" routerLinkActive="active" ariaCurrentWhenActive="page">Account</a></li>
-      <li><a routerLink="/login" routerLinkActive="active" ariaCurrentWhenActive="page">Login</a></li>
-      <li><a routerLink="/register" routerLinkActive="active" ariaCurrentWhenActive="page">Registrati</a></li>
-      <li><a routerLink="/forgot-password" routerLinkActive="active" ariaCurrentWhenActive="page">Password dimenticata</a></li>
-    </ul>
-  </nav>
+  <div class="app-header__inner">
+    <a class="brand" routerLink="/dashboard">
+      <span class="brand__mark" aria-hidden="true">FF</span>
+      FantaFootball
+    </a>
+
+    <nav class="nav" aria-label="Principale">
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="is-active" ariaCurrentWhenActive="page">Dashboard</a>
+      <!-- TODO: sostituire con la rotta dedicata alla lista squadre dell'account, quando esisterà -->
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="is-active" ariaCurrentWhenActive="page">Squadre</a>
+      <a class="nav-link" routerLink="/players" routerLinkActive="is-active" ariaCurrentWhenActive="page">Calciatori</a>
+      <!-- TODO: sostituire con la rotta dedicata alla lista scambi, quando esisterà -->
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="is-active" ariaCurrentWhenActive="page">Scambi</a>
+    </nav>
+
+    <nav class="nav ml-auto" aria-label="Account">
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="is-active" ariaCurrentWhenActive="page">Inviti</a>
+      <a class="nav-link" routerLink="/account" routerLinkActive="is-active" ariaCurrentWhenActive="page">Account</a>
+    </nav>
+  </div>
 </header>
 <main>
   <router-outlet (activate)="focusRouteHeading()"/>

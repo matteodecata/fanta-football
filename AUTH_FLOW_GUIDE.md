@@ -117,6 +117,64 @@ Stesso pattern riusato in `session.ts` (`isLoginResponse`, per leggere
   implicito, quindi gli screen reader lo annunciano appena compare, senza
   bisogno di aggiungerlo a mano.
 
+## 7. Guard di rotta — [`core/auth/auth.guard.ts`](src/app/core/auth/auth.guard.ts)
+
+Flusso quando si naviga su una rotta protetta (es. `/players`) senza sessione:
+
+```
+Router (navigazione a /players)
+   -> authGuard(route, state)         CanActivateFn eseguita PRIMA di caricare il componente
+        -> session.isAuthenticated()  legge lo stesso Session di core/auth/session.ts
+   -> true                            se autenticato: la navigazione prosegue
+   -> UrlTree('/login?returnUrl=...') se no: redirect, il componente non viene mai istanziato
+```
+
+- **Cos'è una guard**: una funzione che il Router interpella prima di
+  attivare (o lasciare) una rotta, per decidere se la navigazione può
+  procedere. Ne esistono più tipi (`CanActivateFn`, `CanDeactivateFn`,
+  `CanMatchFn`, ...); qui usiamo `CanActivateFn`, quella che intercetta "posso
+  ENTRARE in questa rotta?".
+- **Dove si registra**: nell'array `canActivate: [authGuard]` di ogni rotta
+  da proteggere, dentro [`app.routes.ts`](src/app/app.routes.ts). Non è una
+  configurazione globale: va ripetuta su ogni rotta protetta (qui: dashboard,
+  account, players, leagues/\*, teams/\*).
+- **Firma**: `CanActivateFn = (route, state) => boolean | UrlTree | Observable<...> | Promise<...>`.
+  Il Router aspetta il risultato prima di procedere:
+  - `true` → naviga normalmente;
+  - `false` → naviga bloccata senza redirect (non usato qui: bloccare "a
+    vuoto" un utente non loggato, senza spiegazione, sarebbe peggio di un
+    redirect al login);
+  - una `UrlTree` → il Router **reindirizza** a quell'url al posto della
+    rotta richiesta, senza dover chiamare `router.navigate()` a parte.
+- **`inject(Session)` / `inject(Router)`**: stessa regola vista per
+  l'interceptor (sezione 5) — l'injection va fatta in modo sincrono
+  all'inizio della funzione guard, perché il contesto di injection è valido
+  solo per la durata di quella chiamata.
+- **Perché deve leggere lo stesso `Session` usato da login e interceptor**:
+  `Session` è un singleton (`@Service()`, root injector), quindi guard,
+  interceptor e componente `Login` condividono la stessa istanza e lo stesso
+  `signal` di stato. Se la guard leggesse lo stato da un altro service (o da
+  un'altra chiave di `sessionStorage`), potrebbe non vedere mai il login
+  appena effettuato e bloccare per sempre un utente autenticato — è
+  esattamente il bug capitato dopo il merge delle branch, quando esisteva un
+  secondo `SessionService` parallelo (in un vecchio `src/app/auth/`,
+  rimosso) con stato indipendente da quello scritto da `login.ts`.
+- **`state.url` e `returnUrl`**: `state.url` è l'URL completo che si stava
+  tentando di raggiungere (es. `/players`). Viene passato come query param
+  (`createUrlTree(['/login'], { queryParams: { returnUrl: state.url } })`)
+  così, dopo il login, si potrebbe riportare l'utente lì invece che sempre
+  alla dashboard. **Nota**: `login.ts` non legge ancora questo query param
+  (naviga sempre a `/dashboard`) — pezzo lasciato apposta da implementare:
+  andrebbe letto con `inject(ActivatedRoute).snapshot.queryParamMap.get('returnUrl')`
+  nel componente `Login` e usato al posto di `/dashboard` nel `next` della
+  `subscribe`.
+- **`createUrlTree` invece di `router.navigate()`**: dentro una guard si
+  preferisce **restituire** una `UrlTree` (prodotta da
+  `router.createUrlTree(...)`) piuttosto che chiamare `router.navigate()` e
+  poi restituire `false`: `createUrlTree` non avvia subito una navigazione,
+  produce solo il valore che il Router userà per il redirect nello stesso
+  ciclo di navigazione, evitando una doppia navigazione.
+
 ## Da riusare per Register / Forgot-password / Reset-password
 
 Stesso schema del componente `Login`: signal di stato (`submitting`,
