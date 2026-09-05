@@ -1,0 +1,11 @@
+.players-page {
+  min-height: 100%;
+}
+
+.players-table-card {
+  overflow-x: auto;
+}
+
+.players-table-card strong {
+  font-weight: 700;
+}
