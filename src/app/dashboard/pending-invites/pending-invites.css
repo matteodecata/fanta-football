@@ -1,0 +1,113 @@
+
+:host {
+  display: block;
+}
+
+.pending-invites {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.invites-list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.invite-item {
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.invite-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.invite-item article,
+.invite-content {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.invite-content h3,
+.invite-content p {
+  margin: 0;
+}
+
+.invite-content p {
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.invite-content strong {
+  color: var(--c-text);
+}
+
+.invite-date {
+  color: var(--c-text-subtle);
+}
+
+.invite-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.invites-status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--c-text-muted);
+}
+
+.invites-error {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.invites-error p {
+  margin: 0;
+}
+
+.invites-error .btn {
+  justify-self: start;
+}
+
+.empty-invites {
+  display: grid;
+  gap: var(--sp-1);
+  padding-block: var(--sp-4);
+  text-align: center;
+}
+
+.empty-invites p {
+  margin: 0;
+  color: var(--c-text);
+  font-weight: 700;
+}
+
+.empty-invites span {
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

@@ -1,1 +1,41 @@
-<h1 data-route-heading tabindex="-1">Account</h1>
+<div class="account-page container page">
+  <header class="page-header">
+    <p class="eyebrow">Profilo personale</p>
+    <h1 data-route-heading tabindex="-1">Impostazioni account</h1>
+    <p>Gestisci le credenziali di accesso e le preferenze del tuo account.</p>
+  </header>
+
+  <div class="account-layout">
+    <nav class="account-nav card" aria-label="Sezioni dell'account">
+      <a href="#username">Nome utente</a>
+      <a href="#password">Password</a>
+      <a href="#disable-account">Disattiva account</a>
+    </nav>
+
+    <div class="account-content">
+      <section id="username" class="account-section card" aria-labelledby="username-title">
+        <div class="section-heading">
+          <h2 id="username-title">Nome utente</h2>
+          <p>Aggiorna il nome con cui ti riconoscono gli altri partecipanti.</p>
+        </div>
+        <app-change-username />
+      </section>
+
+      <section id="password" class="account-section card" aria-labelledby="password-title">
+        <div class="section-heading">
+          <h2 id="password-title">Password</h2>
+          <p>Scegli una password sicura per proteggere il tuo profilo.</p>
+        </div>
+        <app-change-password />
+      </section>
+
+      <section id="disable-account" class="account-section account-section--danger card" aria-labelledby="disable-title">
+        <div class="section-heading">
+          <h2 id="disable-title">Disattiva account</h2>
+          <p>Questa operazione limita l'accesso al profilo e richiede una conferma.</p>
+        </div>
+        <app-disable-account />
+      </section>
+    </div>
+  </div>
+</div>
