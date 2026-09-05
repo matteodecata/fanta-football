@@ -5,14 +5,14 @@
   <input
     id="invite-user"
     type="text"
-    [formField]="form.username"
-    [attr.aria-invalid]="form.username().touched() && form.username().invalid() ? 'true' : null"
-    [attr.aria-describedby]="form.username().touched() && form.username().invalid() ? 'invite-user-error' : null"
+    [formField]="inviteForm.username"
+    [attr.aria-invalid]="inviteForm.username().touched() && inviteForm.username().invalid() ? 'true' : null"
+    [attr.aria-describedby]="inviteForm.username().touched() && inviteForm.username().invalid() ? 'invite-user-error' : null"
   />
 
-  @if (form.username().touched() && form.username().invalid()) {
+  @if (inviteForm.username().touched() && inviteForm.username().invalid()) {
     <ul id="invite-user-error" class="error-list" role="alert">
-      @for (error of form.username().errors(); track error) {
+      @for (error of inviteForm.username().errors(); track error.kind) {
         <li>{{ error.message }}</li>
       }
     </ul>
