@@ -1,0 +1,31 @@
+@if (standingsResource.status() === 'loading') {
+  <p aria-live="polite">Caricamento classifica...</p>
+} @else if (standingsResource.error()) {
+  <p role="alert">Impossibile caricare la classifica.</p>
+} @else if ((standings() ?? []).length === 0) {
+  <p>Non ci sono squadre in classifica.</p>
+} @else {
+  <table>
+    <caption>Classifica della lega</caption>
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Squadra</th>
+        <th scope="col">Proprietario</th>
+        <th scope="col">Budget</th>
+        <th scope="col">Punti</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (team of standings() ?? []; track team.teamId) {
+        <tr>
+          <th scope="row">{{ $index + 1 }}</th>
+          <td>{{ team.teamName }}</td>
+          <td>{{ team.username }}</td>
+          <td>{{ team.budget }}</td>
+          <td>{{ team.totalPoints }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

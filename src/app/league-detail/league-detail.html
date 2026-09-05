@@ -1,7 +1,89 @@
-<div class="page container">
-  <header class="page-header">
-    <h1 data-route-heading tabindex="-1">Dettaglio lega</h1>
-    <p>Calendario delle partite tra le squadre della lega.</p>
-  </header>
-  <app-calendar [leagueId]="leagueId" [isAdmin]="isAdmin()" />
-</div>
+<main>
+  <main>
+  <h1 data-route-heading tabindex="-1">Dettaglio lega</h1>
+
+  @if (isLoading()) {
+    <p aria-live="polite">Caricamento della lega...</p>
+  } @else if (hasError()) {
+    <p role="alert">Non è stato possibile caricare i dettagli della lega.</p>
+  } @else if (league(); as league) {
+    <section aria-labelledby="league-title">
+      <h2 id="league-title">{{ league.name }}</h2>
+
+      <dl>
+        <div>
+          <dt>Budget iniziale</dt>
+          <dd>{{ league.budget }}</dd>
+        </div>
+        <div>
+          <dt>Admin</dt>
+          <dd>{{ league.adminUserId }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="standings-title">
+      <h2 id="standings-title">Classifica</h2>
+      <app-standings [leagueId]="leagueId" />
+    </section>
+
+    <section aria-labelledby="invite-title">
+      <h2 id="invite-title">Inviti</h2>
+      <app-invite-league [leagueId]="leagueId" />
+    </section>
+  }
+</main>
+
+  @if (isLoading()) {
+    <p aria-live="polite">Caricamento della lega...</p>
+  } @else if (hasError()) {
+    <p role="alert">Non è stato possibile caricare i dettagli della lega.</p>
+  } @else if (league(); as league) {
+    <section aria-labelledby="league-title">
+      <h2 id="league-title">{{ league.name }}</h2>
+
+      <dl>
+        <div>
+          <dt>Budget iniziale</dt>
+          <dd>{{ league.budget }}</dd>
+        </div>
+        <div>
+          <dt>Admin</dt>
+          <dd>{{ league.adminUserId }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="standings-title">
+      <h2 id="standings-title">Classifica</h2>
+
+      @if (standings().length === 0) {
+        <p>Non ci sono squadre nella classifica.</p>
+      } @else {
+        <table>
+          <caption>Classifica della lega</caption>
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Squadra</th>
+              <th scope="col">Proprietario</th>
+              <th scope="col">Budget</th>
+              <th scope="col">Punti</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (team of standings(); track team.teamId) {
+              <tr>
+                <th scope="row">{{ $index + 1 }}</th>
+                <td>{{ team.teamName }}</td>
+                <td>{{ team.username }}</td>
+                <td>{{ team.budget }}</td>
+                <td>{{ team.totalPoints }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+</main>

@@ -1,0 +1,22 @@
+<form novalidate (submit)="onSubmit($event)">
+  <h2>Invita un utente</h2>
+
+  <label for="invite-user">Username</label>
+  <input
+    id="invite-user"
+    type="text"
+    [formField]="form.username"
+    [attr.aria-invalid]="form.username().touched() && form.username().invalid() ? 'true' : null"
+    [attr.aria-describedby]="form.username().touched() && form.username().invalid() ? 'invite-user-error' : null"
+  />
+
+  @if (form.username().touched() && form.username().invalid()) {
+    <ul id="invite-user-error" class="error-list" role="alert">
+      @for (error of form.username().errors(); track error) {
+        <li>{{ error.message }}</li>
+      }
+    </ul>
+  }
+
+  <button type="submit">Invita</button>
+</form>
