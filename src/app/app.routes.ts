@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
     {
@@ -38,48 +39,56 @@ export const routes: Routes = [
     },
     {
         path: 'dashboard',
+        canActivate: [authGuard],
         title: 'Dashboard',
         loadComponent: () => import('./dashboard/dashboard')
             .then((component) => component.Dashboard),
     },
     {
         path: 'account',
+        canActivate: [authGuard],
         title: 'Account',
         loadComponent: () => import('./account/account')
             .then((component) => component.Account),
     },
     {
         path: 'players',
+        canActivate: [authGuard],
         title: 'Calciatori',
         loadComponent: () => import('./players/players')
             .then((component) => component.Players),
     },
     {
         path: 'leagues/new',
+        canActivate: [authGuard],
         title: 'Nuova lega',
         loadComponent: () => import('./leagues-new/leagues-new')
             .then((component) => component.LeaguesNew),
     },
     {
         path: 'leagues/:leagueId/team/new',
+        canActivate: [authGuard],
         title: 'Crea squadra',
         loadComponent: () => import('./league-team-new/league-team-new')
             .then((component) => component.LeagueTeamNew),
     },
     {
         path: 'leagues/:leagueId',
+        canActivate: [authGuard],
         title: 'Dettaglio lega',
         loadComponent: () => import('./league-detail/league-detail')
             .then((component) => component.LeagueDetail),
     },
     {
         path: 'teams/:teamId/trades',
+        canActivate: [authGuard],
         title: 'Scambi squadra',
         loadComponent: () => import('./team-trades/team-trades')
             .then((component) => component.TeamTrades),
     },
     {
         path: 'teams/:teamId',
+        canActivate: [authGuard],
         title: 'Squadra',
         loadComponent: () => import('./team-detail/team-detail')
             .then((component) => component.TeamDetail),

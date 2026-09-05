@@ -1,1 +1,7 @@
-<h1 data-route-heading tabindex="-1">Dettaglio lega</h1>
+<div class="page container">
+  <header class="page-header">
+    <h1 data-route-heading tabindex="-1">Dettaglio lega</h1>
+    <p>Calendario delle partite tra le squadre della lega.</p>
+  </header>
+  <app-calendar [leagueId]="leagueId" [isAdmin]="isAdmin()" />
+</div>
