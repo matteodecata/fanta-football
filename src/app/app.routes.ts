@@ -83,6 +83,12 @@ export const routes: Routes = [
             .then((component) => component.TeamCreate),
     },
     {
+        path: 'leagues/:leagueId/auction',
+        title: 'Asta lega',
+        loadComponent: () => import('./auction/auction')
+            .then((component) => component.Auction),
+    },
+    {
         path: 'leagues/:leagueId',
         title: 'Dettaglio lega',
         loadComponent: () => import('./league-detail/league-detail')
