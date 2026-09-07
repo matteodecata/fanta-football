@@ -4,7 +4,7 @@
   min-height: calc(100dvh - 4.25rem);
   overflow: hidden;
   background-color: var(--c-bg);
-  background-image: url('https://images.unsplash.com/photo-1579952363873-27f3b3a7f7c8?auto=format&fit=crop&w=2200&q=85');
+  background-image: url('/sfondoFantaFootball.jpg');
   background-position: center;
   background-size: cover;
 }
