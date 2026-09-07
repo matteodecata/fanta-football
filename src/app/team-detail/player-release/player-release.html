@@ -1,0 +1,17 @@
+<button
+  type="button"
+  class="btn btn--ghost btn--sm"
+  [disabled]="isReleasing()"
+  aria-label="Rilascia giocatore"
+  (click)="onRelease($event)"
+>
+  {{ isReleasing() ? 'Rilascio...' : 'Rilascia' }}
+</button>
+
+@if (releaseError()) {
+  <p class="alert alert--danger" role="alert" aria-live="assertive">{{ releaseError() }}</p>
+}
+
+@if (releaseSuccess()) {
+  <p class="alert alert--success" role="status" aria-live="polite">{{ releaseSuccess() }}</p>
+}

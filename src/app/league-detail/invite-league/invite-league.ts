@@ -23,14 +23,34 @@ export class InviteLeague {
     required(path.username, { message: 'Il nome utente è obbligatorio' });
   });
 
+  protected readonly isSubmitting = signal(false);
+  protected readonly submitError = signal<string | null>(null);
+  protected readonly submitSuccess = signal<string | null>(null);
+
   protected async onSubmit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
+    this.submitError.set(null);
+    this.submitSuccess.set(null);
 
     await submit(this.inviteForm, async () => {
-      const id = this.leagueId();
-      await firstValueFrom(
-        this.http.post(`/api/leagues/${id}/invites`, { username: this.model().username })
-      );
+      this.isSubmitting.set(true);
+
+      try {
+        const id = this.leagueId();
+        await firstValueFrom(
+          this.http.post(`/api/leagues/${id}/invites`, {
+            username: this.model().username,
+          })
+        );
+
+        this.submitSuccess.set('Invito inviato con successo.');
+        this.model.set({ username: '' });
+      } catch (error) {
+        this.submitError.set('Non è stato possibile invitare questo utente.');
+        console.error('Errore durante l’invito:', error);
+      } finally {
+        this.isSubmitting.set(false);
+      }
     });
   }
 }

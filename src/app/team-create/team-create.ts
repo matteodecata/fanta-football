@@ -11,12 +11,15 @@ import { CreateTeamRequest } from './team-create.models';
   templateUrl: './team-create.html',
   styleUrl: './team-create.css',
 })
-
 export class TeamCreate {
   private readonly route = inject(ActivatedRoute);
   private readonly teamsApi = inject(TeamsApiService);
 
   protected readonly leagueId = Number(this.route.snapshot.paramMap.get('leagueId'));
+
+  protected readonly isSubmitting = signal(false);
+  protected readonly submitError = signal<string | null>(null);
+  protected readonly submitSuccess = signal<string | null>(null);
 
   protected readonly model = signal<CreateTeamRequest>({
     teamName: '',
@@ -29,10 +32,23 @@ export class TeamCreate {
 
   protected async onSubmit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
+    this.submitError.set(null);
+    this.submitSuccess.set(null);
 
     await submit(this.teamForm, async () => {
-      const team = await firstValueFrom(this.teamsApi.createTeam(this.model()));
-      console.log('Squadra creata:', team);
+      this.isSubmitting.set(true);
+
+      try {
+        const team = await firstValueFrom(this.teamsApi.createTeam(this.model()));
+        this.submitSuccess.set(`Squadra creata con successo: ${team.name}`);
+        console.log('Squadra creata:', team);
+      } catch (error) {
+        this.submitError.set('Non è stato possibile creare la squadra.');
+        console.error('Errore durante la creazione della squadra:', error);
+      } finally {
+        this.isSubmitting.set(false);
+      }
     });
   }
 }
+

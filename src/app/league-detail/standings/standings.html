@@ -3,29 +3,34 @@
 } @else if (standingsResource.error()) {
   <p role="alert">Impossibile caricare la classifica.</p>
 } @else if ((standings() ?? []).length === 0) {
-  <p>Non ci sono squadre in classifica.</p>
+  <div class="empty-state">
+    <h3>Classifica vuota</h3>
+    <p>Non ci sono squadre in classifica.</p>
+  </div>
 } @else {
-  <table>
-    <caption>Classifica della lega</caption>
-    <thead>
-      <tr>
-        <th scope="col">#</th>
-        <th scope="col">Squadra</th>
-        <th scope="col">Proprietario</th>
-        <th scope="col">Budget</th>
-        <th scope="col">Punti</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (team of standings() ?? []; track team.teamId) {
+  <div class="table-wrap">
+    <table class="table">
+      <caption>Classifica della lega</caption>
+      <thead>
         <tr>
-          <th scope="row">{{ $index + 1 }}</th>
-          <td>{{ team.teamName }}</td>
-          <td>{{ team.username }}</td>
-          <td>{{ team.budget }}</td>
-          <td>{{ team.totalPoints }}</td>
+          <th scope="col">#</th>
+          <th scope="col">Squadra</th>
+          <th scope="col">Proprietario</th>
+          <th scope="col" class="numeric">Budget</th>
+          <th scope="col" class="numeric">Punti</th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (team of standings() ?? []; track team.teamId) {
+          <tr>
+            <th scope="row">{{ $index + 1 }}</th>
+            <td>{{ team.teamName }}</td>
+            <td>{{ team.username }}</td>
+            <td class="numeric">{{ team.budget }}</td>
+            <td class="numeric">{{ team.totalPoints }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 }

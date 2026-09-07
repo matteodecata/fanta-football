@@ -1,0 +1,32 @@
+.page-shell {
+  display: grid;
+  gap: var(--sp-6);
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+
+.eyebrow {
+  margin: 0 0 var(--sp-2);
+  color: var(--c-text-subtle);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--sp-4);
+}
+
+.stack {
+  display: grid;
+  gap: var(--sp-6);
+}

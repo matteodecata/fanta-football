@@ -1,1 +1,44 @@
-<h1 data-route-heading tabindex="-1">Squadra</h1>
+<main class="page-shell">
+  @if (isLoading()) {
+    <p aria-live="polite">Caricamento squadra...</p>
+  } @else if (hasError()) {
+    <p role="alert">Non è stato possibile caricare i dettagli della squadra.</p>
+  } @else if (team(); as team) {
+    <section class="card" aria-labelledby="team-title">
+      <div class="page-header">
+        <div>
+          <p class="eyebrow">Squadra</p>
+          <h1 id="team-title" data-route-heading tabindex="-1">{{ team.name }}</h1>
+        </div>
+        <span class="badge badge--accent">{{ team.leagueName }}</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="metric">
+          <span class="metric__label">Budget</span>
+          <span class="metric__value">{{ team.budget }}</span>
+        </div>
+        <div class="metric">
+          <span class="metric__label">Punti</span>
+          <span class="metric__value">{{ team.totalPoints }}</span>
+        </div>
+        <div class="metric">
+          <span class="metric__label">Lega</span>
+          <span class="metric__value">{{ team.leagueId }}</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="stack">
+      <section class="card" aria-labelledby="rename-team-title">
+        <h2 id="rename-team-title" class="card__title">Rinomina squadra</h2>
+        <app-rename-team [teamId]="teamId" (updated)="teamResource.reload()" />
+      </section>
+
+      <section class="card" aria-labelledby="team-roster-title">
+        <h2 id="team-roster-title" class="card__title">Rosa</h2>
+        <app-team-roster [teamId]="teamId" />
+      </section>
+    </div>
+  }
+</main>

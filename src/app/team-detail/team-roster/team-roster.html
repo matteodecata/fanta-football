@@ -1,0 +1,36 @@
+@if (rosterResource.status() === 'loading') {
+  <p aria-live="polite">Caricamento rosa...</p>
+} @else if (rosterResource.error()) {
+  <p role="alert">Non è stato possibile caricare la rosa.</p>
+} @else if ((roster() ?? []).length === 0) {
+  <div class="empty-state">
+    <h3>La rosa è vuota</h3>
+    <p>Non ci sono calciatori nella tua squadra.</p>
+  </div>
+} @else {
+  <div class="table-wrap">
+    <table class="table">
+      <caption>Rosa della squadra</caption>
+      <thead>
+        <tr>
+          <th scope="col">Giocatore</th>
+          <th scope="col">Squadra reale</th>
+          <th scope="col">Valore</th>
+          <th scope="col">Azioni</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (player of roster() ?? []; track player.id) {
+          <tr>
+            <td>{{ player.name }} {{ player.surname }}</td>
+            <td>{{ player.realTeamName }}</td>
+            <td>{{ player.purchasePrice }}</td>
+            <td>
+              <app-player-release [teamId]="teamId()" [playerId]="player.id" (released)="refreshRoster()" />
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

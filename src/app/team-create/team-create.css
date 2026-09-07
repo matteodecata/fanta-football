@@ -1,0 +1,4 @@
+.page-shell {
+  display: grid;
+  gap: var(--sp-6);
+}
