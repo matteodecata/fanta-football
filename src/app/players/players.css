@@ -58,3 +58,38 @@
   gap: var(--sp-2);
   flex-wrap: wrap;
 }
+
+.players-price-filter {
+  display: grid;
+  gap: var(--sp-3);
+  max-width: 34rem;
+}
+
+.players-price-filter__summary {
+  color: var(--c-text-muted);
+  font-weight: 600;
+}
+
+.players-role-badge {
+  color: var(--c-text);
+}
+
+.players-role-badge--p {
+  background: var(--c-info-soft);
+  border-color: var(--c-info);
+}
+
+.players-role-badge--d {
+  background: var(--c-success-soft);
+  border-color: var(--c-success);
+}
+
+.players-role-badge--c {
+  background: var(--c-warning-soft);
+  border-color: var(--c-warning);
+}
+
+.players-role-badge--a {
+  background: var(--c-danger-soft);
+  border-color: var(--c-danger);
+}
