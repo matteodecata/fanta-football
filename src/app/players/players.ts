@@ -47,6 +47,8 @@ export class Players {
     const term = this.searchTerm().trim().toLowerCase();
     const selectedRoles = this.selectedRoles();
     const selectedRealTeamNames = this.selectedRealTeamNames();
+    const minPrice = this.minPriceFilter();
+    const maxPrice = this.maxPriceFilter();
     const players = this.playersResource.value();
     return players.filter((player) => {
       const fullName = `${player.name} ${player.surname}`.toLowerCase();
@@ -55,14 +57,18 @@ export class Players {
       const matchesRealTeam =
         selectedRealTeamNames.length === 0 ||
         selectedRealTeamNames.includes(player.realTeamName);
-        return matchesTerm && matchesRole && matchesRealTeam;
+      const matchesMinPrice = minPrice === null || player.price >= minPrice;
+      const matchesMaxPrice = maxPrice === null || player.price <= maxPrice;
+
+      return matchesTerm && matchesRole && matchesRealTeam && matchesMinPrice && matchesMaxPrice;
     });
   });
 
-  // TODO: valuta se anche il prezzo deve filtrare localmente in visiblePlayers.
-  // Domanda guida: se minPrice/maxPrice vanno al backend, cosa succede alla lista delle squadre
-  // reali quando il catalogo torna gia ristretto dal backend?
-  // Hint: confronta il comportamento desiderato con quello dei filtri multi-ruolo e multi-squadra.
+  // TODO: rivaluta se il prezzo deve restare locale o andare al backend.
+  // Domanda guida: vuoi uno slider stabile sul catalogo gia caricato o una richiesta HTTP
+  // ogni volta che cambia minPrice/maxPrice?
+  // Hint: per ora il prezzo filtra in visiblePlayers, cosi minCatalogPrice/maxCatalogPrice
+  // non cambiano mentre trascini i cursori.
 
   realTeamNames = computed(() => {
     const names = this.playersResource.value().map((player) => player.realTeamName);
@@ -77,11 +83,9 @@ export class Players {
 
   suggestedPlayers = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
-
     if (term.length < 2) {
       return [];
     }
-
     return this.visiblePlayers().slice(0, 5);
   });
 
@@ -90,23 +94,22 @@ export class Players {
    // Hint: quando playersResource.value() e vuoto deve tornare un number, non null, perche lo slider
    // usa [min], [max] e [value].
    minCatalogPrice =computed(() => {
-    const prices = this.playersResource.value();
-    if(this.playersResource.value() === null){
+    const prices = this.playersResource.value().map((player) => player.price);
+    if(prices.length === 0){
       return 0;
     }
-    return Math.min(...prices.map((player) => player.price));
+    return Math.min(...prices);
    });
 
    // TODO: tienilo simmetrico a minCatalogPrice.
    // Domanda guida: i due computed si leggono come una coppia?
    // Hint: se cambi logica nel minimo, probabilmente devi fare lo stesso anche qui.
    maxCatalogPrice = computed(() => {
-    const prices = this.playersResource.value().map((player) => player.price)
-    .reduce((max,price)=> max === null || price > max ? price : max, null as number | null);
-    if(prices=== null){
+    const prices = this.playersResource.value().map((player) => player.price);
+    if(prices.length === 0){
       return 0;
     }
-     return prices;
+     return Math.max(...prices);
    });
    
 
@@ -116,8 +119,8 @@ export class Players {
       role: this.selectedRoles().length === 1 ? this.selectedRoles()[0] : null,
       realTeamName:
         this.selectedRealTeamNames().length === 1 ? this.selectedRealTeamNames()[0] : '',
-      minPrice: this.minPriceFilter(),
-      maxPrice: this.maxPriceFilter(),
+      minPrice: null,
+      maxPrice: null,
       injured: this.injuredFilter(),
     };
   }
