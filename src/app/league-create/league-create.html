@@ -1,6 +1,9 @@
 <main class="page-shell">
-  <section class="card" aria-labelledby="league-create-title">
-    <h1 id="league-create-title" data-route-heading tabindex="-1">Crea una nuova lega</h1>
+  <section class="card form-card" aria-labelledby="league-create-title">
+    <div class="page-header">
+      <h1 id="league-create-title" data-route-heading tabindex="-1">Crea una nuova lega</h1>
+      <p>Imposta nome, budget e squadra.</p>
+    </div>
 
     <form class="form" novalidate (submit)="onSubmit($event)">
       @if (submitError()) {

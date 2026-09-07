@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { form, min, required, submit, FormField } from '@angular/forms/signals';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CreateAdminTeam } from './create-admin-team/create-admin-team';
 import { LeaguesApiService } from './leagues-api.service';
@@ -13,6 +14,7 @@ import { CreateLeagueRequest } from './league-create.models';
 })
 export class LeagueCreate {
   private readonly leaguesApi = inject(LeaguesApiService);
+  private readonly router = inject(Router);
 
   protected readonly isSubmitting = signal(false);
   protected readonly submitError = signal<string | null>(null);
@@ -42,6 +44,7 @@ export class LeagueCreate {
         const league = await firstValueFrom(this.leaguesApi.createLeague(this.model()));
         this.submitSuccess.set(`Lega creata con successo: ${league.name}`);
         console.log('Lega creata:', league);
+        await this.router.navigateByUrl('/dashboard');
       } catch (error) {
         this.submitError.set('Non è stato possibile creare la lega. Riprova più tardi.');
         console.error('Errore durante la creazione della lega:', error);
