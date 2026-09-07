@@ -1,5 +1,5 @@
-import { inject, Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
+import { Injectable } from "@angular/core";
+import { httpResource, HttpResourceRef } from "@angular/common/http";
 import { PlayerFilters, PlayerResponse } from "./players-response";
 
 
@@ -8,33 +8,43 @@ import { PlayerFilters, PlayerResponse } from "./players-response";
 })
 
 export class PlayersService {
-    private http = inject(HttpClient);
-    private playerUrls = "/api/players" ;
+  
+    getPlayersResource(filters: () => PlayerFilters): HttpResourceRef<PlayerResponse[]> {
+
+        return httpResource<PlayerResponse[]>(() =>
+        ({
+            url: '/api/players',
+            method: 'GET',
+            params: this.toParams(filters()),
+         }), {
+            defaultValue: [],
+        });
+     }
 
 
-     getPlayers(filters?: PlayerFilters) {
+    private toParams(filters: PlayerFilters): Record<string, string> {
         const params: Record<string, string> = {};
 
-        if (filters?.role) {
+        if (filters.role) {
             params['role'] = filters.role;
         }
 
-        if (filters?.realTeamName.trim()) {
+        if (filters.realTeamName.trim()) {
             params['realTeamName'] = filters.realTeamName.trim();
         }
 
-        if (filters?.minPrice !== null && filters?.minPrice !== undefined) {
+        if (filters.minPrice !== null) {
             params['minPrice'] = String(filters.minPrice);
         }
 
-        if (filters?.maxPrice !== null && filters?.maxPrice !== undefined) {
+        if (filters.maxPrice !== null) {
             params['maxPrice'] = String(filters.maxPrice);
         }
 
-        if (filters?.injured !== null && filters?.injured !== undefined) {
+        if (filters.injured !== null) {
             params['injured'] = String(filters.injured);
         }
 
-        return this.http.get<PlayerResponse[]>(this.playerUrls, { params });
+        return params;
     }
 }

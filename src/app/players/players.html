@@ -6,39 +6,164 @@
         <p>Consulta il catalogo dei calciatori disponibili.</p>
       </div>
 
-      <button class="btn btn--primary" type="button" (click)="loadPlayers()" [disabled]="loading()">
-        @if (loading()) {
+      <button class="btn btn--primary" type="button" (click)="playersResource.reload()" [disabled]="playersResource.isLoading()">
+        @if (playersResource.isLoading()) {
           Caricamento...
         } @else {
-          Carica calciatori
+          Aggiorna catalogo
         }
       </button>
+      <button class="btn" type="button" (click)="resetFilters()" [disabled]="!hasFilterActive()">Reset filtri</button>
+      <!-- TODO: aggiungi qui vicino un bottone reset quando esiste almeno un filtro attivo.
+        Domanda guida: deve essere sempre visibile o solo quando serve davvero?
+        Hint: usa un computed nel TS per evitare condizioni lunghe direttamente nel template. -->
     </div>
   </header>
 
-  @if (loading()) {
+  <section class="card form form--wide" aria-labelledby="players-filters-title">
+    <h2 id="players-filters-title" class="card__title">Filtri catalogo</h2>
+
+    <!-- TODO: migliora il comportamento dei suggerimenti.
+      Domanda guida: dopo che clicchi un suggerimento, la lista deve restare aperta?
+      Hint: potresti nascondere i suggerimenti quando searchTerm coincide esattamente
+      con "nome cognome" di un calciatore. -->
+    <div class="field players-search">
+      <label class="field__label" for="players-search">Cerca calciatore</label>
+      <input
+        id="players-search"
+        class="input"
+        type="search"
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        placeholder="Nome o cognome"
+        autocomplete="off"
+      />
+
+      @if (suggestedPlayers().length > 0) {
+        <ul class="players-suggestions" aria-label="Suggerimenti calciatori">
+          @for (player of suggestedPlayers(); track player.id) {
+            <li>
+              <button
+                class="players-suggestion"
+                type="button"
+                (click)="selectSuggestedPlayer(player)"
+              >
+                <span>{{ player.name }} {{ player.surname }}</span>
+                <small>{{ player.realTeamName }} · {{ player.role }}</small>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </section>
+
+  <section class="players-filter-groups" aria-label="Filtri rapidi">
+    <div class="players-filter-group" aria-label="Filtro ruolo">
+      <!-- TODO: rendi piu comprensibili P, D, C, A.
+        Domanda guida: un utente nuovo capisce che P = portiere e A = attaccante?
+        Hint: puoi usare aria-label piu descrittive sui bottoni, mantenendo il testo corto. -->
+      <button class="chip" type="button" (click)="updateRoleFilter('P')" [attr.aria-pressed]="isRoleSelected('P')">P</button>
+      <button class="chip" type="button" (click)="updateRoleFilter('D')" [attr.aria-pressed]="isRoleSelected('D')">D</button>
+      <button class="chip" type="button" (click)="updateRoleFilter('C')" [attr.aria-pressed]="isRoleSelected('C')">C</button>
+      <button class="chip" type="button" (click)="updateRoleFilter('A')" [attr.aria-pressed]="isRoleSelected('A')">A</button>
+    </div>
+
+    <div class="players-filter-group" aria-label="Filtro stato">
+      <!-- TODO: valuta se lo stato infortunio deve essere combinabile con gli altri filtri o se
+        deve azzerare qualcosa.
+        Domanda guida: "Infortunati" + ruolo "P" deve mostrare solo portieri infortunati?
+        Hint: se vuoi combinazione, la logica attuale e corretta; se vuoi filtri esclusivi, cambia
+        il metodo updateInjuredFilter. -->
+      <button class="chip" type="button" (click)="updateInjuredFilter(false)" [attr.aria-pressed]="injuredFilter() === false">Disponibili</button>
+      <button class="chip" type="button" (click)="updateInjuredFilter(true)" [attr.aria-pressed]="injuredFilter() === true">Infortunati</button>
+    </div>
+
+    <!-- TODO: rendi il filtro prezzo piu leggibile.
+      Domanda guida: i due slider sembrano un unico filtro "da X a Y" o due controlli separati?
+      Hint: potresti mostrare sopra gli slider una riga tipo "Prezzo: da 5 a 80 crediti"
+      e sotto mettere i due range in colonna. -->
+    <section class="players-filter-group" aria-label = "Filtro prezzo">
+      <label class="field__label" for="players-min-price-filter">Prezzo minimo: {{minPriceFilter() ?? minCatalogPrice()}}</label>
+      <input 
+        id = "players-min-price-filter"
+        class = "input"
+        type = "range"
+        [value]="minPriceFilter() ?? minCatalogPrice()"
+        [min] = "minCatalogPrice()"
+        [max] = "maxPriceFilter() ?? maxCatalogPrice()"
+        (input) = "updateMinPriceFilter($any($event.target).value)"
+
+      />
+      <label class="field__label" for="players-max-price-filter" >Prezzo massimo: {{maxPriceFilter() ?? maxCatalogPrice()}}</label>
+      <input 
+        id = "players-max-price-filter"
+        class = "input"
+        type = "range"
+        [value]="maxPriceFilter() ?? maxCatalogPrice()"
+        [min]="minPriceFilter() ?? minCatalogPrice()"
+        [max] = "maxCatalogPrice()"
+        (input) = "updateMaxPriceFilter($any($event.target).value)"
+
+      />
+
+    </section>
+
+    @if (realTeamNames().length > 0) {
+      <div class="players-filter-group" aria-label="Filtro squadre reali">
+        <!-- TODO: pensa alla UI quando le squadre diventano tante.
+          Domanda guida: venti bottoni in fila sono ancora comodi su mobile?
+          Hint: prima controlla come va con dati reali; poi valuta wrap, scroll orizzontale o
+          una sezione espandibile. -->
+        @for (realTeamName of realTeamNames(); track realTeamName) {
+          <button
+            class="chip"
+            type="button"
+            (click)="updateRealTeamNameFilter(realTeamName)"
+            [attr.aria-pressed]="isRealTeamNameSelected(realTeamName)"
+          >
+            {{ realTeamName }}
+          </button>
+        }
+      </div>
+    }
+  </section>
+  
+  @if (playersResource.isLoading()) {
     <div class="alert alert--info" role="status" aria-live="polite">
       <span class="spinner" aria-hidden="true"></span>
       <p>Sto caricando i calciatori.</p>
     </div>
   }
 
-  @if (errorMessage()) {
+  @if (playersResource.error()) {
     <div class="alert alert--danger" role="alert">
-      <p>{{ errorMessage() }}</p>
+      <!-- TODO: rendi questo errore meno generico.
+        Domanda guida: l'utente deve capire se il backend e spento, se non e autenticato,
+        o se il filtro inviato non e valido?
+        Hint: sposta la decisione del messaggio nel TS, non mettere troppa logica qui. -->
+      <p>La richiesta non e andata a buon fine.</p>
     </div>
   }
 
-  @if (!loading() && !errorMessage() && players().length === 0) {
+  @if (!playersResource.isLoading() && !playersResource.error() && visiblePlayers().length === 0) {
     <section class="empty-state" aria-live="polite">
-      <h2>Nessun calciatore caricato</h2>
-      <p>Usa il pulsante per richiedere il catalogo al backend.</p>
+      <h2>Nessun calciatore trovato</h2>
+      <!-- TODO: distingui catalogo vuoto e filtri troppo stretti.
+        Domanda guida: playersResource.value().length e 0 oppure sono i filtri a nascondere tutto?
+        Hint: non fare un for stile TypeScript qui nel template; crea un computed nel TS,
+        per esempio hasLoadedPlayers = computed(() => playersResource.value().length > 0),
+        e poi usa @if per mostrare il messaggio giusto. -->
+      <p>Modifica o rimuovi qualche filtro per ampliare i risultati.</p>
     </section>
   }
 
-  @if (players().length > 0) {
+  @if (visiblePlayers().length > 0) {
     <section class="card players-table-card">
       <table class="table">
+        <!-- TODO: aggiungi il conteggio risultati.
+          Domanda guida: vuoi mostrare solo visiblePlayers().length o anche il totale caricato?
+          Hint: una caption utile potrebbe dire "23 calciatori trovati su 120 caricati". -->
         <caption>Catalogo calciatori</caption>
         <thead>
           <tr>
@@ -51,12 +176,15 @@
           </tr>
         </thead>
         <tbody>
-          @for (player of players(); track player.id) {
+          @for (player of visiblePlayers(); track player.id) {
             <tr>
               <td>
                 <strong>{{ player.name }} {{ player.surname }}</strong>
               </td>
               <td>
+                <!-- TODO: valuta se il ruolo deve mostrare anche il nome esteso.
+                  Domanda guida: nella tabella basta "D" o e meglio "D - Difensore"?
+                  Hint: potresti creare una piccola funzione o mappa nel TS per tradurre i ruoli. -->
                 <span class="badge badge--accent">{{ player.role }}</span>
               </td>
               <td>{{ player.realTeamName }}</td>
