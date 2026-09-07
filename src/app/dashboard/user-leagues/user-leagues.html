@@ -53,11 +53,19 @@
             <div class="league-card-actions">
               @if (item.team; as team) {
                 <a class="btn btn--primary btn--sm" [routerLink]="['/teams', team.id, 'trades']">Gestisci Asta</a>
-                <a class="btn btn--sm" [routerLink]="['/leagues', item.league.id]">Invita per username</a>
+                <button class="btn btn--sm" type="button" (click)="toggleInvite(item.league.id)">
+                  {{ inviteOpen() === item.league.id ? 'Chiudi invito' : 'Invita per username' }}
+                </button>
               } @else {
                 <a class="btn btn--primary btn--sm" [routerLink]="['/leagues', item.league.id, 'team', 'new']">Crea squadra</a>
               }
             </div>
+
+            @if (item.team && inviteOpen() === item.league.id) {
+              <div class="invite-panel">
+                <app-invite-league [leagueId]="item.league.id" />
+              </div>
+            }
           </article>
         </li>
       }
