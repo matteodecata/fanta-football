@@ -1,6 +1,20 @@
+:host {
+  display: block;
+}
+
 .page-shell {
   display: grid;
+  place-items: center;
+  min-height: calc(100dvh - 10rem);
   gap: var(--sp-6);
+}
+
+.form-card {
+  width: min(100%, var(--w-form));
+}
+
+.form {
+  max-width: none;
 }
 
 input[type='number'] {

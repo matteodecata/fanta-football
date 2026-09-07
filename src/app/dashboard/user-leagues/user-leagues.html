@@ -27,7 +27,6 @@
                 <span class="league-card-name" [id]="'league-title-' + item.league.id">{{ item.league.name }}</span>
                 <span class="badge">{{ getRoleLabel(item.admin) }}</span>
               </div>
-              <a class="btn btn--sm btn--ghost" [routerLink]="['/leagues', item.league.id]">Dettagli lega</a>
             </div>
 
             <div class="league-card-content">
@@ -40,32 +39,11 @@
               } @else {
                 <p class="team-missing">Non hai ancora creato una squadra per questa lega.</p>
               }
-
-              @if (item.team; as team) {
-                <div class="league-card-links" aria-label="Azioni lega">
-                  <a class="chip" [routerLink]="['/teams', team.id]">Membri</a>
-                  <a class="chip" [routerLink]="['/teams', team.id, 'trades']">Calendario</a>
-                  <a class="chip" [routerLink]="['/leagues', item.league.id]">Classifica</a>
-                </div>
-              }
             </div>
 
             <div class="league-card-actions">
-              @if (item.team; as team) {
-                <a class="btn btn--primary btn--sm" [routerLink]="['/teams', team.id, 'trades']">Gestisci Asta</a>
-                <button class="btn btn--sm" type="button" (click)="toggleInvite(item.league.id)">
-                  {{ inviteOpen() === item.league.id ? 'Chiudi invito' : 'Invita per username' }}
-                </button>
-              } @else {
-                <a class="btn btn--primary btn--sm" [routerLink]="['/leagues', item.league.id, 'team', 'new']">Crea squadra</a>
-              }
+              <a class="btn btn--primary btn--sm" [routerLink]="['/leagues', item.league.id]">Dettagli lega</a>
             </div>
-
-            @if (item.team && inviteOpen() === item.league.id) {
-              <div class="invite-panel">
-                <app-invite-league [leagueId]="item.league.id" />
-              </div>
-            }
           </article>
         </li>
       }

@@ -26,6 +26,53 @@
   gap: var(--sp-4);
 }
 
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--sp-4);
+}
+
+.action-card {
+  display: grid;
+  gap: var(--sp-2);
+  min-height: 7rem;
+  padding: var(--sp-4);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg, var(--c-surface-2), var(--c-surface));
+  color: var(--c-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--t-fast), transform var(--t-fast), background var(--t-fast);
+}
+
+.action-card:hover {
+  border-color: var(--c-accent);
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, var(--c-surface-hover), var(--c-surface));
+}
+
+.action-card--primary {
+  border-color: rgba(182, 232, 71, 0.5);
+  background: rgba(182, 232, 71, 0.08);
+}
+
+.action-card--active {
+  border-color: var(--c-accent);
+  background: rgba(182, 232, 71, 0.12);
+}
+
+.action-card__label {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+
+.action-card__meta {
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
 .stack {
   display: grid;
   gap: var(--sp-6);
