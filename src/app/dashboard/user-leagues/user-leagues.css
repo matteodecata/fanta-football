@@ -90,6 +90,15 @@
   margin-top: auto;
 }
 
+.invite-panel {
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-border);
+}
+
+.invite-panel app-invite-league {
+  display: block;
+}
+
 .leagues-status {
   display: flex;
   align-items: center;
