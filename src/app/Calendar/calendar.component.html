@@ -1,0 +1,61 @@
+<section class="calendar card" aria-labelledby="calendar-title">
+  <div class="calendar__header">
+    <div>
+      <p class="card__title">Calendario lega</p>
+      <h2 id="calendar-title">Partite tra fantallenatori</h2>
+      <p class="calendar__intro">Genera una sola volta il calendario della lega e consulta qui le giornate.</p>
+    </div>
+    @if (canGenerate()) {
+      <button class="btn btn--primary" type="button" (click)="generateCalendar()">Genera calendario</button>
+    }
+  </div>
+
+  @if (status() === 'loading') {
+    <div class="calendar__state" role="status"><span class="spinner" aria-hidden="true"></span> Generazione del calendario in corso…</div>
+  } @else if (status() === 'already-generated' || status() === 'no-open-matchday' || status() === 'error') {
+    <div class="alert" [class.alert--warning]="status() !== 'error'" [class.alert--danger]="status() === 'error'" role="alert">
+      <span>{{ errorMessage() }}</span>
+      @if (status() === 'error' || status() === 'already-generated') {
+        <button class="btn btn--sm" type="button" (click)="retry()">Riprova</button>
+      }
+    </div>
+  } @else if (status() === 'not-generated') {
+    <div class="empty-state"><strong>Calendario non ancora generato</strong><span>L’amministratore della lega deve generarlo una sola volta.</span></div>
+  } @else if (status() === 'ready') {
+    <div class="calendar__results" aria-live="polite">
+      <p class="calendar__result-count">Calendario generato · {{ matches().length }} partite</p>
+      @for (group of groupedMatches(); track group.roundNumber) {
+        <section class="matchday" [attr.aria-labelledby]="'matchday-' + group.roundNumber">
+          <h3 [id]="'matchday-' + group.roundNumber">Giornata {{ group.roundNumber }}</h3>
+          <div class="matchday__matches">
+            @for (match of group.matches; track match.id) {
+              <article class="match">
+                <div class="match__teams">
+                  <span>{{ match.homeTeamName }}</span>
+                  <strong aria-hidden="true">–</strong>
+                  <span>{{ match.awayTeamName }}</span>
+                </div>
+                @if (match.matchDay) { <time class="match__date">{{ match.matchDay | date: 'd MMM yyyy' }}</time> }
+                @if (match.lineupId !== undefined) {
+                  @if (scoreFor(match); as score) {
+                    <span class="badge badge--accent">{{ score.score }} punti · {{ score.goals }} gol</span>
+                  } @else if (scoreStateFor(match) === 'not-closed') {
+                    <span class="match__status">Punteggio disponibile alla chiusura della giornata</span>
+                  } @else if (scoreStateFor(match) === 'error') {
+                    <span class="match__status match__status--error">Punteggio non disponibile</span>
+                  } @else {
+                    <button class="btn btn--sm" type="button" [disabled]="loadingScoreFor() !== null" (click)="loadScore(match)">
+                      {{ scoreStateFor(match) === 'loading' ? 'Caricamento…' : 'Leggi punteggio' }}
+                    </button>
+                  }
+                }
+              </article>
+            }
+          </div>
+        </section>
+      } @empty {
+        <div class="empty-state">La response non contiene giornate o partite.</div>
+      }
+    </div>
+  }
+</section>

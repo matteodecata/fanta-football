@@ -132,13 +132,15 @@ Endpoint pubblici realmente implementati:
 Non costruire feature su `/api/public/**` o `POST /api/registration-requests`:
 sono consentiti dalla security configuration ma non hanno un controller.
 
-### Decisione da prendere sulla persistenza del token
+### Decisione presa sulla persistenza del token
 
-Prima di implementare l'autenticazione scegliere e documentare dove conservare
-il JWT. Il backend non usa cookie HttpOnly, quindi le opzioni frontend più
-semplici sono memoria, `sessionStorage` o `localStorage`, con compromessi tra
-persistenza e impatto di un eventuale XSS. Non spargere accessi allo storage nei
-componenti: incapsularli in un servizio di sessione.
+Il JWT viene conservato in `sessionStorage`. Il backend non usa cookie
+HttpOnly, quindi non esiste un'opzione priva di rischio XSS residuo; rispetto
+a `localStorage` si è preferito `sessionStorage` per limitare la superficie
+temporale di esposizione del token (sparisce alla chiusura della tab, non è
+condiviso tra tab diverse), accettando come contropartita un login più
+frequente per l'utente. L'accesso allo storage non va sparso nei componenti:
+va incapsulato in un servizio di sessione (`core/auth/`).
 
 ## 7. Errori API
 
@@ -342,9 +344,11 @@ diversi dalle combinazioni documentate producono `invalid_trade_filters`.
 | POST | `/api/leagues/{leagueId}/matches` | — | calendario, 201; solo admin lega |
 | GET | `/api/lineups/{lineupId}/score` | — | `{score, goals}` |
 
-Il calendario può essere generato una sola volta. Attualmente non esiste un GET
-per recuperarlo successivamente. Il punteggio è disponibile solo per lineup già
-esistenti e dopo la chiusura della giornata.
+Il calendario può essere generato una sola volta. Il frontend usa anche
+`GET /api/leagues/{leagueId}/matches` per recuperare un calendario già generato;
+il backend deve restituire 404 (o `calendar_not_found`) se non è ancora presente.
+Il punteggio è disponibile solo per lineup già esistenti e dopo la chiusura della
+giornata.
 
 ## 11. Architettura frontend proposta
 
@@ -410,7 +414,7 @@ feature che dipendono da essa.
 - [ ] Confermare tipi degli ID, date, `LeagueResponse`, `UserLeagueTeamResponse`
   e campo `matchDay` di `LeagueMatchDto`.
 - [ ] Salvare esempi reali delle response principali senza dati sensibili.
-- [ ] Concordare dove persistere il JWT.
+- [x] Concordare dove persistere il JWT: `sessionStorage` (sezione 6).
 - [ ] Concordare la strategia proxy/CORS per sviluppo e produzione.
 
 ### Fase 1 — fondamenta Angular

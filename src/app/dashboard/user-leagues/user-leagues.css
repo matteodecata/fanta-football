@@ -1,0 +1,129 @@
+:host {
+  display: block;
+}
+
+.user-leagues {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.leagues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.league-card {
+  display: grid;
+  height: 100%;
+  gap: var(--sp-4);
+  align-content: start;
+}
+
+.league-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+}
+
+.league-card-content {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.league-card-content h3 {
+  margin: 0;
+}
+
+.league-card-content h3 a {
+  color: var(--c-text);
+}
+
+.league-card-content h3 a:hover {
+  color: var(--c-accent);
+}
+
+.team-details {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.team-details > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.team-details dt {
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.team-details dd {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+}
+
+.team-missing {
+  margin: 0;
+  color: var(--c-text-muted);
+}
+
+.league-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: auto;
+}
+
+.leagues-status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--c-text-muted);
+}
+
+.leagues-error {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.leagues-error p {
+  margin: 0;
+}
+
+.leagues-error .btn {
+  justify-self: start;
+}
+
+.empty-leagues {
+  display: grid;
+  justify-items: start;
+  gap: var(--sp-5);
+  padding: var(--sp-8);
+  border: 1px dashed var(--c-border-strong);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+}
+
+.empty-leagues-content {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.empty-leagues h3,
+.empty-leagues p {
+  margin: 0;
+}
+
+.empty-leagues p {
+  color: var(--c-text-muted);
+}

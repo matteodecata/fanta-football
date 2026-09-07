@@ -1,0 +1,16 @@
+<header class="app-header">
+  <div class="app-header__inner">
+    <a class="brand" routerLink="/dashboard">
+      <span class="brand__mark" aria-hidden="true">FF</span>
+      FantaFootball
+    </a>
+
+    <nav class="nav" aria-label="Principale">
+      <a class="nav-link" routerLink="/login" routerLinkActive="is-active" ariaCurrentWhenActive="page">Login</a>
+      <a class="nav-link" routerLink="/register" routerLinkActive="is-active" ariaCurrentWhenActive="page">Registrati</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <router-outlet (activate)="focusRouteHeading()"/>
+</main>

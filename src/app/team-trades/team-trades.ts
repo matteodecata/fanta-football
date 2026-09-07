@@ -1,9 +1,115 @@
-import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
+
+
+
+type TradeStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
+
+interface TradeDto {
+  id: number;
+  proposingTeamId: number;
+  proposingTeamName: string;
+  receivingTeamId: number;
+  receivingTeamName: string;
+  requestedPlayerName: string;
+  offeredPlayerName: string;
+  amount: number;
+  status: TradeStatus;
+  proposalDate: string;
+}
+
+interface CreateTradeDto {
+  receivingTeamId: string;
+  requestedPlayerId: string;
+  offeredPlayerId: string;
+  amount: number;
+}
+
+type TradeTab = 'received' | 'sent' | 'history';
+
+interface TeamOption {
+  id: number;
+  name: string;
+}
+
+interface Player {
+  id: number;
+  name: string;
+}
 
 @Component({
   selector: 'app-team-trades',
-  imports: [],
+  imports: [FormField],
   templateUrl: './team-trades.html',
   styleUrl: './team-trades.css',
 })
-export class TeamTrades {}
+export class TeamTrades {
+  private readonly _proposals = signal<TradeDto[]>([]);
+  readonly proposals = this._proposals.asReadonly();
+
+  readonly newProposal = signal<CreateTradeDto>({
+    receivingTeamId: '0',
+    requestedPlayerId: '0',
+    offeredPlayerId: '0',
+    amount: 0,
+  });
+  readonly proposalForm = form(this.newProposal);
+
+  readonly leagueTeams = signal<TeamOption[]>([]);
+  readonly availablePlayers = signal<Player[]>([]);
+
+  private http = inject(HttpClient);
+
+  readonly activeTab = signal<TradeTab>('received');
+  readonly loadError = signal<string | null>(null);
+
+
+  readonly visibleTrades = computed(() => {
+    const trades = this.proposals();
+    const tab = this.activeTab();
+    const currentTeamId = 1; // Replace with the logged-in team's ID
+
+    if (tab === 'received') {
+      return trades.filter(
+        trade =>
+          trade.receivingTeamId === currentTeamId &&
+          trade.status === 'PENDING',
+      );
+    }
+
+    if (tab === 'sent') {
+      return trades.filter(
+        trade =>
+          trade.proposingTeamId === currentTeamId &&
+          trade.status === 'PENDING',
+      );
+    }
+
+    return trades.filter(trade => trade.status !== 'PENDING');
+  });
+
+  ngOnInit(): void {
+    this.http.get<TradeDto[]>('/api/trades').subscribe({
+      next: (data) => {
+        this._proposals.set(data);
+        this.loadError.set(null);
+      },
+      error: (error) => {
+        console.error(error);
+        this.loadError.set('Impossibile caricare gli scambi.');
+      },
+    });
+  }
+
+  selectTab(tab: TradeTab): void {
+    this.activeTab.set(tab);
+  }
+
+
+  submitProposal(event: SubmitEvent): void {
+    event.preventDefault();
+
+    const proposal = this.newProposal();
+  }
+}

@@ -1,17 +1,2 @@
-<header class="app-header">
-  <nav  aria-label="Principale">
-    <ul>
-      <li><a routerLink="/landing" routerLinkActive="active" ariaCurrentWhenActive="page">Home</a></li>
-      <li><a routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">Dashboard</a></li>
-      <li><a routerLink="/players" routerLinkActive="active" ariaCurrentWhenActive="page">Calciatori</a></li>
-      <li><a routerLink="/leagues/new" routerLinkActive="active" ariaCurrentWhenActive="page">Nuova lega</a></li>
-      <li><a routerLink="/account" routerLinkActive="active" ariaCurrentWhenActive="page">Account</a></li>
-      <li><a routerLink="/login" routerLinkActive="active" ariaCurrentWhenActive="page">Login</a></li>
-      <li><a routerLink="/register" routerLinkActive="active" ariaCurrentWhenActive="page">Registrati</a></li>
-      <li><a routerLink="/forgot-password" routerLinkActive="active" ariaCurrentWhenActive="page">Password dimenticata</a></li>
-    </ul>
-  </nav>
-</header>
-<main>
-  <router-outlet (activate)="focusRouteHeading()"/>
-</main>
+
+<router-outlet/>

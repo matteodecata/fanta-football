@@ -1,0 +1,81 @@
+<div
+  class="pending-invites"
+  [attr.aria-busy]="invites.isLoading() ? 'true' : null"
+>
+  <p class="sr-only" aria-live="polite">{{ statusMessage() }}</p>
+
+  @if (actionError()) {
+    <div class="alert alert--danger" role="alert">
+      {{ actionError() }}
+    </div>
+  }
+
+  @if (invites.isLoading() && invites.value().length === 0) {
+    <div class="invites-status" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Caricamento degli inviti…</span>
+    </div>
+  } @else if (invites.error()) {
+    <div class="invites-error alert alert--danger" role="alert">
+      <p>Non è stato possibile caricare gli inviti.</p>
+      <button class="btn btn--sm" type="button" (click)="reloadInvites()">
+        Riprova
+      </button>
+    </div>
+  } @else if (invites.value().length === 0) {
+    <div class="empty-invites">
+      <p>Nessun invito in sospeso.</p>
+      <span>Quando riceverai un invito, comparirà qui.</span>
+    </div>
+  } @else {
+    <ul class="invites-list" aria-label="Inviti in sospeso">
+      @for (invite of invites.value(); track invite.id) {
+        <li class="invite-item">
+          <article [attr.aria-labelledby]="'invite-title-' + invite.id">
+            <div class="invite-content">
+              <h3 [id]="'invite-title-' + invite.id">
+                Invito alla lega n. {{ invite.leagueId }}
+              </h3>
+              <p>
+                Inviato dall'utente n.
+                <strong>{{ invite.invitedByUserId }}</strong>
+              </p>
+              <p class="invite-date">
+                Ricevuto il
+                <time [attr.datetime]="invite.sentDate">
+                  {{ invite.sentDate | date: 'dd/MM/yyyy' }}
+                </time>
+              </p>
+            </div>
+
+            <div
+              class="invite-actions"
+              [attr.aria-busy]="isProcessing(invite.id) ? 'true' : null"
+            >
+              <button
+                class="btn btn--primary btn--sm"
+                type="button"
+                [disabled]="isProcessing(invite.id)"
+                (click)="acceptInvite(invite)"
+              >
+                @if (isProcessing(invite.id)) {
+                  Attendi…
+                } @else {
+                  Accetta
+                }
+              </button>
+              <button
+                class="btn btn--danger btn--sm"
+                type="button"
+                [disabled]="isProcessing(invite.id)"
+                (click)="rejectInvite(invite)"
+              >
+                Rifiuta
+              </button>
+            </div>
+          </article>
+        </li>
+      }
+    </ul>
+  }
+</div>

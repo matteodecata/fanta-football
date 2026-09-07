@@ -1,17 +1,10 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { DOCUMENT} from '@angular/common';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',
 })
-export class App {
-  protected readonly document = inject(DOCUMENT);
-
-  protected focusRouteHeading(): void {
-    this.document.querySelector<HTMLElement>('[data-route-heading]')?.focus();
-  }
-}
+export class App {}

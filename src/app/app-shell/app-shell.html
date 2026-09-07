@@ -1,0 +1,25 @@
+<header class="app-header">
+  <div class="app-header__inner">
+    <a class="brand" routerLink="/dashboard">
+      <span class="brand__mark" aria-hidden="true">FF</span>
+      FantaFootball
+    </a>
+
+    <nav class="nav" aria-label="Principale">
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="is-active" ariaCurrentWhenActive="page">Dashboard</a>
+      <!-- TODO: sostituire con la rotta dedicata alla lista squadre dell'account, quando esisterà -->
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="is-active" ariaCurrentWhenActive="page">Squadre</a>
+      <a class="nav-link" routerLink="/players" routerLinkActive="is-active" ariaCurrentWhenActive="page">Calciatori</a>
+      <!-- TODO: sostituire con la rotta dedicata alla lista scambi, quando esisterà -->
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="is-active" ariaCurrentWhenActive="page">Scambi</a>
+    </nav>
+
+    <nav class="nav ml-auto" aria-label="Account">
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="is-active" ariaCurrentWhenActive="page">Inviti</a>
+      <a class="nav-link" routerLink="/account" routerLinkActive="is-active" ariaCurrentWhenActive="page">Account</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <router-outlet (activate)="focusRouteHeading()"/>
+</main>
