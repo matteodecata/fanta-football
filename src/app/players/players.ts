@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { PlayerFilters, PlayerResponse, PlayerRole } from './players-response';
+import { PlayerResponse, PlayerRole } from './players-response';
 import { PlayersService } from './players.service';
 
 @Component({
@@ -19,29 +19,19 @@ export class Players {
   injuredFilter = signal<boolean | null>(null);
   searchTerm = signal('');
 
-  // TODO: aggiungi uno stato per capire se almeno un filtro e attivo.
-  // Domanda guida: quando mostreresti un bottone "Reset filtri"?
-  // Hint: controlla searchTerm, selectedRoles, selectedRealTeamNames, minPriceFilter,
-  // maxPriceFilter e injuredFilter. Non serve salvare un nuovo signal se puoi derivarlo.
-  
-   hasFilterActive = computed(() => {
-      return (
-        this.searchTerm().trim() !== '' ||
-        this.selectedRealTeamNames().length > 0 ||
-        this.selectedRoles().length > 0 ||
-        this.minPriceFilter() !== null ||
-        this.maxPriceFilter() !== null ||
-        this.injuredFilter() !== null
-      );
+  hasFilterActive = computed(() => {
+    return (
+      this.searchTerm().trim() !== '' ||
+      this.selectedRealTeamNames().length > 0 ||
+      this.selectedRoles().length > 0 ||
+      this.minPriceFilter() !== null ||
+      this.maxPriceFilter() !== null ||
+      this.injuredFilter() !== null
+    );
   });
-  
 
-  // TODO: decidi quali filtri devono davvero chiamare il backend.
-  // Domanda guida: se selezioni P e D insieme, il backend supporta role=P&role=D oppure no?
-  // Hint: per ora role/realTeamName singoli vanno in currentFilters(), le selezioni multiple
-  // vengono rifiltrate qui in visiblePlayers senza inventare un contratto API nuovo.
   playersResource = 
-      this.playersService.getPlayersResource(() => this.currentFilters());
+      this.playersService.getPlayersResource();
 
   visiblePlayers = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
@@ -50,6 +40,7 @@ export class Players {
     const minPrice = this.minPriceFilter();
     const maxPrice = this.maxPriceFilter();
     const players = this.playersResource.value();
+    const injured = this.injuredFilter();
     return players.filter((player) => {
       const fullName = `${player.name} ${player.surname}`.toLowerCase();
       const matchesTerm = !term || fullName.includes(term);
@@ -59,27 +50,31 @@ export class Players {
         selectedRealTeamNames.includes(player.realTeamName);
       const matchesMinPrice = minPrice === null || player.price >= minPrice;
       const matchesMaxPrice = maxPrice === null || player.price <= maxPrice;
-
-      return matchesTerm && matchesRole && matchesRealTeam && matchesMinPrice && matchesMaxPrice;
+      const matchesInjured = injured === null || player.injured === injured;
+      return matchesTerm && matchesRole && matchesRealTeam && matchesMinPrice && matchesMaxPrice && matchesInjured;
     });
   });
 
-  // TODO: rivaluta se il prezzo deve restare locale o andare al backend.
-  // Domanda guida: vuoi uno slider stabile sul catalogo gia caricato o una richiesta HTTP
-  // ogni volta che cambia minPrice/maxPrice?
-  // Hint: per ora il prezzo filtra in visiblePlayers, cosi minCatalogPrice/maxCatalogPrice
-  // non cambiano mentre trascini i cursori.
+  playersGroupedByRole = computed(() => {
+    const roleOrder: Record<PlayerRole, number> = {
+      P: 0,
+      D: 1,
+      C: 2,
+      A: 3,
+    };
 
-  realTeamNames = computed(() => {
-    const names = this.playersResource.value().map((player) => player.realTeamName);
-    return [...new Set(names)].sort((first, second) => first.localeCompare(second));
+    return [...this.visiblePlayers()].sort((firstPlayer, secondPlayer) => {
+      return roleOrder[firstPlayer.role] - roleOrder[secondPlayer.role];
+    });
   });
 
-  // TODO: valuta se ricavare le squadre da tutti i player caricati o solo dai player visibili.
-  // Domanda guida: dopo aver selezionato un ruolo, vuoi vedere tutte le squadre o solo quelle
-  // che hanno almeno un calciatore visibile?
-  // Hint: playersResource.value() produce opzioni piu stabili; visiblePlayers() produce opzioni
-  // piu contestuali ma puo far sparire bottoni mentre filtri.
+  realTeamNames = computed(() => {
+    return [...new Set(
+      this.playersResource.value().map((player) =>
+               player.realTeamName))]
+                  .sort((first, second) => first.localeCompare(second));
+  });
+
 
   suggestedPlayers = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
@@ -89,41 +84,25 @@ export class Players {
     return this.visiblePlayers().slice(0, 5);
   });
 
-   // TODO: semplifica questo computed.
-   // Domanda guida: ti serve davvero map + reduce o puoi leggere i prezzi e tornare subito il minimo?
-   // Hint: quando playersResource.value() e vuoto deve tornare un number, non null, perche lo slider
-   // usa [min], [max] e [value].
-   minCatalogPrice =computed(() => {
+   minCatalogPrice = computed(() => {
     const prices = this.playersResource.value().map((player) => player.price);
-    if(prices.length === 0){
+    if (prices.length === 0) {
       return 0;
     }
     return Math.min(...prices);
    });
 
-   // TODO: tienilo simmetrico a minCatalogPrice.
-   // Domanda guida: i due computed si leggono come una coppia?
-   // Hint: se cambi logica nel minimo, probabilmente devi fare lo stesso anche qui.
    maxCatalogPrice = computed(() => {
     const prices = this.playersResource.value().map((player) => player.price);
-    if(prices.length === 0){
+    if (prices.length === 0) {
       return 0;
     }
      return Math.max(...prices);
    });
+
+   
    
 
-     
-  currentFilters() : PlayerFilters {
-    return {
-      role: this.selectedRoles().length === 1 ? this.selectedRoles()[0] : null,
-      realTeamName:
-        this.selectedRealTeamNames().length === 1 ? this.selectedRealTeamNames()[0] : '',
-      minPrice: null,
-      maxPrice: null,
-      injured: this.injuredFilter(),
-    };
-  }
 
   // TODO: aggiungi gestione messaggi errore piu specifica.
   // Domanda guida: playersResource.error() contiene informazioni utili oltre al semplice "errore"?
@@ -173,10 +152,6 @@ export class Players {
     this.searchTerm.set(value);
   }
 
-  // TODO: collega resetFilters() a un bottone nel template.
-  // Domanda guida: dopo il reset serve chiamare playersResource.reload() oppure la resource
-  // si aggiorna gia perche currentFilters() legge signal che sono appena cambiati?
-  // Hint: prova prima senza reload e guarda se parte una nuova richiesta quando cambi i signal.
   resetFilters() { 
     this.searchTerm.set('');
     this.selectedRoles.set([]);
@@ -207,6 +182,10 @@ export class Players {
 
   isRealTeamNameSelected(realTeamName: string) {
     return this.selectedRealTeamNames().includes(realTeamName);
+  }
+
+  roleBadgeClass(role: PlayerRole) {
+    return `badge players-role-badge players-role-badge--${role.toLowerCase()}`;
   }
 
 
