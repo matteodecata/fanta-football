@@ -15,13 +15,18 @@
         autocomplete="username"
         placeholder="Inserisci il tuo username"
         [formField]="registerForm.username"
-        [attr.aria-invalid]="registerForm.username().touched() && registerForm.username().invalid() ? true : null"
-        [attr.aria-describedby]="registerForm.username().touched() && registerForm.username().invalid() ? 'username-error' : null"
+        [attr.aria-invalid]="registerForm.username().touched() && registerForm.username().invalid() || usernameError() ? true : null"
+        [attr.aria-describedby]="registerForm.username().touched() && registerForm.username().invalid() || usernameError() ? 'username-error' : null"
+        (input)="clearUsernameError()"
       />
-      @if (registerForm.username().touched() && registerForm.username().invalid()) {
+      @if ((registerForm.username().touched() && registerForm.username().invalid()) || usernameError()) {
         <div id="username-error">
-          @for (error of registerForm.username().errors(); track error.kind) {
-            <p class="field__error">{{ error.message }}</p>
+          @if (usernameError()) {
+            <p class="field__error">{{ usernameError() }}</p>
+          } @else {
+            @for (error of registerForm.username().errors(); track error.kind) {
+              <p class="field__error">{{ error.message }}</p>
+            }
           }
         </div>
       }

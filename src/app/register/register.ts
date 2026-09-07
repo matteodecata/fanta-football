@@ -70,9 +70,14 @@ export class Register {
 
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly usernameError = signal<string | null>(null);
 
   protected togglePasswordVisibility(): void {
     this.passwordVisible.update((visible) => !visible);
+  }
+
+  protected clearUsernameError(): void {
+    this.usernameError.set(null);
   }
 
     protected onSubmit(event: Event): void {
@@ -86,6 +91,7 @@ export class Register {
 
     this.submitting.set(true);
     this.errorMessage.set(null);
+    this.usernameError.set(null);
 
     this.authApi.register(this.credentials()).subscribe({
       next:() =>{
@@ -94,11 +100,23 @@ export class Register {
       },
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);
-        this.errorMessage.set(extractApiError(err)?.message ?? 'Registrazione non avvenuta')
+        const apiError = extractApiError(err);
+
+        if (this.isUsernameTakenError(err, apiError?.errorCode)) {
+          this.usernameError.set('Username già utilizzato da un altro utente');
+          this.usernameInput()?.nativeElement.focus();
+          return;
+        }
+
+        this.errorMessage.set(apiError?.message ?? 'Registrazione non avvenuta');
       },
     });
 
     
+  }
+
+  private isUsernameTakenError(error: HttpErrorResponse, errorCode: string | undefined): boolean {
+    return error.status === 409 && (errorCode === 'USERNAME_TAKEN' || errorCode === 'username_taken');
   }
 
   private focusFirstInvalidField(): void {
