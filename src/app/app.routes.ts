@@ -88,10 +88,26 @@ export const routes: Routes = [
         loadComponent: () => import('./league-detail/league-detail')
             .then((component) => component.LeagueDetail),
     },
+    /*
     {
         path: 'teams/:teamId/trades',
         title: 'Scambi squadra',
         loadComponent: () => import('./team-trades/team-trades')
+            .then((component) => component.TeamTrades),
+    },
+    */
+    {
+        path: 'trades',
+        title: 'I miei scambi',
+        loadComponent: () =>
+            import('./team-trades/team-trades')
+            .then((component) => component.TeamTrades),
+    },
+    {
+        path: 'leagues/:leagueId/trades',
+        title: 'Scambi della lega',
+        loadComponent: () =>
+            import('./team-trades/team-trades')
             .then((component) => component.TeamTrades),
     },
     {

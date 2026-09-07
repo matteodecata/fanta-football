@@ -1,7 +1,7 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
-
+import { TeamTradesService } from './team-trades.service';
+import { ActivatedRoute } from '@angular/router';
 
 
 type TradeTab = 'received' | 'sent' | 'history';
@@ -11,16 +11,23 @@ interface TeamOption {
   name: string;
 }
 
-
 @Component({
-  selector: 'app-team-trades',
   imports: [FormField],
   templateUrl: './team-trades.html',
   styleUrl: './team-trades.css',
 })
 export class TeamTrades {
+
+  private readonly tradeService = inject(TeamTradesService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly leagueIdParam = this.route.snapshot.paramMap.get('leagueId');
+  readonly leagueId = this.leagueIdParam === null
+    ? null
+    : Number(this.leagueIdParam);
+
   private readonly _proposals = signal<TradeDto[]>([]);
   readonly proposals = this._proposals.asReadonly();
+  
 
   readonly newProposal = signal<CreateTradeDto>({
     receivingTeamId: '0',
@@ -32,8 +39,6 @@ export class TeamTrades {
 
   readonly leagueTeams = signal<TeamOption[]>([]);
   readonly availablePlayers = signal<Player[]>([]);
-  
-  private http = inject(HttpClient);
 
   readonly activeTab = signal<TradeTab>('received');
   readonly loadError = signal<string | null>(null);
@@ -63,13 +68,14 @@ export class TeamTrades {
   });
 
   ngOnInit(): void {
-    this.http.get<TradeDto[]>('/api/trades').subscribe({
-      next: (data) => {
-        this._proposals.set(data);
-        this.loadError.set(null);
-      },
+    const trades$ = this.leagueId === null
+    ? this.tradeService.getUserTrades()
+    : this.tradeService.getLeagueTrades(this.leagueId);
+
+    trades$.subscribe({
+      next: (trades) => this._proposals.set(trades),
       error: (error) => {
-        console.error(error);
+        console.error('Errore nel caricamento degli scambi:', error);
         this.loadError.set('Impossibile caricare gli scambi.');
       },
     });
