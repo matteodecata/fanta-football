@@ -89,6 +89,11 @@ export const routes: Routes = [
             .then((component) => component.LeagueDetail),
     },
     {
+        path: 'teams',
+        title: 'Squadre',
+        loadComponent: () => import('./teams/teams').then(component => component.Teams),
+    },
+    {
         path: 'teams/:teamId/trades',
         title: 'Scambi squadra',
         loadComponent: () => import('./team-trades/team-trades')

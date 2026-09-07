@@ -1,0 +1,5 @@
+:host { display: block; }
+.filters { display: grid; gap: var(--sp-4); margin-bottom: var(--sp-5); }
+.teams-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--sp-5); padding: 0; list-style: none; }
+.team-card { display: grid; gap: var(--sp-3); align-content: start; overflow-wrap: anywhere; }
+.team-card .btn { justify-self: start; }

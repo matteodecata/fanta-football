@@ -424,6 +424,32 @@ controlli di autorizzazione del backend.
 
 ## 13. TO-DO frontend
 
+### Pagina squadre — aggiornamento del 7 settembre 2026
+
+- Aggiunta `/teams` alla navbar: selezione delle leghe dell'utente, selezione
+  automatica se unica, ricerca per nome squadra o fantallenatore e link alla rosa.
+- La lega selezionata resta nel query parameter `leagueId`, anche nel dettaglio
+  `/teams/:teamId`, con collegamento per tornare all'elenco della stessa lega.
+- Il dettaglio usa `GET /api/account/me/leagues` e
+  `GET /api/leagues/{leagueId}/teams` per nome squadra, fantallenatore, punti e
+  crediti. Swagger locale è stato verificato: `GET /api/teams/{teamId}` non esiste.
+  I link precedenti senza lega possono risolvere le squadre dell'utente tramite
+  la risposta account; per le altre squadre usare l'elenco con `leagueId`.
+- La rosa usa `GET /api/teams/{teamId}/players`, esclude i giocatori con
+  `transferDate` valorizzata e recupera il ruolo dal catalogo `/api/players`
+  abbinando `playerId`. Mostra il prezzo effettivo di acquisto, non la quotazione.
+- La fantamedia non è esposta dal contratto OpenAPI corrente: viene indicata
+  come non disponibile. Occorre un dato aggregato lato backend per completarla.
+- La lettura delle rose avversarie rimane soggetta ai permessi backend:
+  un 403 mostra un messaggio esplicito. Per consentirla a tutti i membri serve
+  un aggiornamento backend; nessuna autorizzazione viene aggirata dal frontend.
+- Rinomina visibile solo per la propria squadra; svincolo per proprietario o
+  admin contestuale. Per lo svincolo viene passato `playerId`, non l'ID della
+  relazione squadra-giocatore.
+- Aggiunti test HTTP/componenti per selezione lega, ricerca, collegamenti,
+  dettaglio avversario, ruoli, giocatori trasferiti e accesso negato.
+- Verifica AXE e prova end-to-end con utenti reali ancora da eseguire.
+
 Aggiornato dopo il briefing di team del 7 settembre 2026. Le fondamenta
 (Fasi 0-2 sotto) sono sostanzialmente completate: l'obiettivo ora è
 rifinire le feature già presenti fino ad avere una web app solida sulle
