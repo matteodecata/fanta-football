@@ -27,6 +27,7 @@ export class Register {
   private readonly passwordInput = viewChild<ElementRef<HTMLInputElement>>('passwordInput');
 
   protected readonly credentials = signal<RegisterFormValue>({username: '', email: '', password: ''})
+  protected readonly passwordVisible = signal(false);
 
   protected readonly registerForm = form(this.credentials, (path) => {
     required(path.username, {message: 'Inserisci username'});
@@ -40,6 +41,10 @@ export class Register {
 
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+
+  protected togglePasswordVisibility(): void {
+    this.passwordVisible.update((visible) => !visible);
+  }
 
     protected onSubmit(event: Event): void {
     event.preventDefault();

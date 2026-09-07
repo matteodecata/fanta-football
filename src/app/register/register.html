@@ -13,6 +13,7 @@
         class="input"
         type="text"
         autocomplete="username"
+        placeholder="Inserisci il tuo username"
         [formField]="registerForm.username"
         [attr.aria-invalid]="registerForm.username().touched() && registerForm.username().invalid() ? true : null"
         [attr.aria-describedby]="registerForm.username().touched() && registerForm.username().invalid() ? 'username-error' : null"
@@ -34,6 +35,7 @@
         class="input"
         type="email"
         autocomplete="email"
+        placeholder="es: mariorossi@gmail.com"
         [formField]="registerForm.email"
         [attr.aria-invalid]="registerForm.email().touched() && registerForm.email().invalid() ? true : null"
         [attr.aria-describedby]="registerForm.email().touched() && registerForm.email().invalid() ? 'email-error' : null"
@@ -49,16 +51,37 @@
 
     <div class="field">
       <label class="field__label" for="password">Password</label>
-      <input
-        id="password"
-        #passwordInput
-        class="input"
-        type="password"
-        autocomplete="current-password"
-        [formField]="registerForm.password"
-        [attr.aria-invalid]="registerForm.password().touched() && registerForm.password().invalid() ? true : null"
-        [attr.aria-describedby]="registerForm.password().touched() && registerForm.password().invalid() ? 'password-error' : null"
-      />
+      <div class="password-field">
+        <input
+          id="password"
+          #passwordInput
+          class="input"
+          [type]="passwordVisible() ? 'text' : 'password'"
+          autocomplete="current-password"
+          placeholder="Inserisci la tua password"
+          [formField]="registerForm.password"
+          [attr.aria-invalid]="registerForm.password().touched() && registerForm.password().invalid() ? true : null"
+          [attr.aria-describedby]="registerForm.password().touched() && registerForm.password().invalid() ? 'password-error' : null"
+        />
+        <button
+          class="password-toggle"
+          type="button"
+          [attr.aria-label]="passwordVisible() ? 'Nascondi password' : 'Mostra password'"
+          [attr.aria-pressed]="passwordVisible()"
+          (click)="togglePasswordVisibility()"
+        >
+          @if (passwordVisible()) {
+            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+              <path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10.8 10.8 0 0 1 12 5c5 0 8.5 4 9.5 6.5a12 12 0 0 1-3.1 4.2M6.2 6.2C4.5 7.4 3.4 9 2.5 11.5 3.5 14 7 18 12 18c1 0 2-.2 2.9-.5" />
+            </svg>
+          } @else {
+            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+              <path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" />
+              <circle cx="12" cy="12" r="2.5" />
+            </svg>
+          }
+        </button>
+      </div>
       @if (registerForm.password().touched() && registerForm.password().invalid()) {
         <div id="password-error">
           @for (error of registerForm.password().errors(); track error.kind) {
