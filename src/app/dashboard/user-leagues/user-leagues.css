@@ -9,8 +9,7 @@
 
 .leagues-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
-  gap: var(--sp-4);
+  gap: var(--sp-5);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -18,57 +17,64 @@
 
 .league-card {
   display: grid;
-  height: 100%;
   gap: var(--sp-4);
+  height: 100%;
   align-content: start;
+  padding: var(--sp-5);
 }
 
 .league-card-header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.league-card-meta {
+  display: flex;
+  align-items: center;
   gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.league-card-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .league-card-content {
   display: grid;
-  gap: var(--sp-4);
+  gap: var(--sp-3);
 }
 
-.league-card-content h3 {
-  margin: 0;
-}
-
-.league-card-content h3 a {
-  color: var(--c-text);
-}
-
-.league-card-content h3 a:hover {
-  color: var(--c-accent);
-}
-
-.team-details {
+.team-summary {
   display: grid;
-  gap: var(--sp-3);
-  margin: 0;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface-2);
 }
 
-.team-details > div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sp-3);
+.team-summary strong {
+  font-size: var(--fs-base);
 }
 
-.team-details dt {
+.team-summary span {
   color: var(--c-text-muted);
   font-size: var(--fs-sm);
 }
 
-.team-details dd {
-  margin: 0;
-  font-weight: 700;
-  text-align: right;
+.league-card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.league-card-links .chip {
+  text-decoration: none;
 }
 
 .team-missing {
