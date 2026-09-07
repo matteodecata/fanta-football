@@ -4,28 +4,6 @@ import { form, FormField } from '@angular/forms/signals';
 
 
 
-type TradeStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
-
-interface TradeDto {
-  id: number;
-  proposingTeamId: number;
-  proposingTeamName: string;
-  receivingTeamId: number;
-  receivingTeamName: string;
-  requestedPlayerName: string;
-  offeredPlayerName: string;
-  amount: number;
-  status: TradeStatus;
-  proposalDate: string;
-}
-
-interface CreateTradeDto {
-  receivingTeamId: string;
-  requestedPlayerId: string;
-  offeredPlayerId: string;
-  amount: number;
-}
-
 type TradeTab = 'received' | 'sent' | 'history';
 
 interface TeamOption {
@@ -33,10 +11,6 @@ interface TeamOption {
   name: string;
 }
 
-interface Player {
-  id: number;
-  name: string;
-}
 
 @Component({
   selector: 'app-team-trades',
@@ -58,12 +32,11 @@ export class TeamTrades {
 
   readonly leagueTeams = signal<TeamOption[]>([]);
   readonly availablePlayers = signal<Player[]>([]);
-
+  
   private http = inject(HttpClient);
 
   readonly activeTab = signal<TradeTab>('received');
   readonly loadError = signal<string | null>(null);
-
 
   readonly visibleTrades = computed(() => {
     const trades = this.proposals();
@@ -105,7 +78,6 @@ export class TeamTrades {
   selectTab(tab: TradeTab): void {
     this.activeTab.set(tab);
   }
-
 
   submitProposal(event: SubmitEvent): void {
     event.preventDefault();
