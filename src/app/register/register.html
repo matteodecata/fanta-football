@@ -61,7 +61,8 @@
           placeholder="Inserisci la tua password"
           [formField]="registerForm.password"
           [attr.aria-invalid]="registerForm.password().touched() && registerForm.password().invalid() ? true : null"
-          [attr.aria-describedby]="registerForm.password().touched() && registerForm.password().invalid() ? 'password-error' : null"
+          [attr.aria-describedby]="passwordFocused() || credentials().password ? 'password-requirements' : null"
+          (focus)="passwordFocused.set(true)"
         />
         <button
           class="password-toggle"
@@ -82,10 +83,13 @@
           }
         </button>
       </div>
-      @if (registerForm.password().touched() && registerForm.password().invalid()) {
-        <div id="password-error">
-          @for (error of registerForm.password().errors(); track error.kind) {
-            <p class="field__error">{{ error.message }}</p>
+      @if (passwordFocused() || credentials().password || registerForm.password().touched()) {
+        <div id="password-requirements" class="password-requirements" aria-live="polite">
+          @for (requirement of passwordRequirements(); track requirement.label) {
+            <span class="password-requirement" [class.password-requirement--valid]="requirement.met">
+              <span class="password-requirement__icon" aria-hidden="true">{{ requirement.met ? '✓' : '✕' }}</span>
+              {{ requirement.label }}
+            </span>
           }
         </div>
       }

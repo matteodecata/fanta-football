@@ -33,3 +33,38 @@
   stroke-linejoin: round;
   stroke-width: 1.8;
 }
+
+.password-requirements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-3);
+  margin-top: var(--sp-2);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
+}
+
+.password-requirement {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex: 1 1 40%;
+  min-width: min(10rem, 100%);
+  color: var(--c-danger);
+}
+
+.password-requirement--valid {
+  color: var(--c-success);
+}
+
+.password-requirement__icon {
+  flex: none;
+  width: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 30rem) {
+  .password-requirement {
+    flex-basis: 100%;
+  }
+}
