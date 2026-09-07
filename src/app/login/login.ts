@@ -30,6 +30,7 @@ export class Login {
 
   // modello da passare x la form
   protected readonly credentials = signal<LoginFormValue>({ username: '', password: '' });
+  protected readonly passwordVisible = signal(false);
 
   protected readonly loginForm = form(this.credentials, (path) => {
     // per fare login devono essere campi required
@@ -42,6 +43,10 @@ export class Login {
   // per mostrare un messaggio d'errore accessibile (aria-live).
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+
+  protected togglePasswordVisibility(): void {
+    this.passwordVisible.update((visible) => !visible);
+  }
 
   protected onSubmit(event: Event): void {
     event.preventDefault();
