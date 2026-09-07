@@ -1,13 +1,16 @@
 import { Component, computed, inject } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
+import { CalendarComponent } from '../Calendar/calendar.component';
 import { InviteLeague } from './invite-league/invite-league';
 import { Standings } from './standings/standings';
 import { LeagueDetailResponse, LeagueStandingResponse } from './league-detail.models';
 
+const hasAdminAccess = (league: LeagueDetailResponse | null): boolean => Boolean(league?.admin ?? false);
+
 @Component({
   selector: 'app-league-detail',
-  imports: [Standings, InviteLeague],
+  imports: [Standings, InviteLeague, CalendarComponent],
   templateUrl: './league-detail.html',
   styleUrl: './league-detail.css',
 })
@@ -51,6 +54,8 @@ export class LeagueDetail {
   );
 
   protected readonly league = computed(() => this.leagueResource.value() ?? null);
+
+  protected readonly isAdmin = computed(() => hasAdminAccess(this.league()));
 
   protected readonly standings = computed(() => this.standingsResource.value() ?? []);
 }
