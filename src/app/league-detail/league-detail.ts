@@ -66,8 +66,7 @@ export class LeagueDetail {
     () =>
       this.leagueResource.status() === 'loading' 
     // ||
-      // this.standingsResource.status() === 'loading'
-      this.leagueResource.status() === 'loading' 
+      // this.standingsResource.status() === 'loading' 
     // ||
       // this.standingsResource.status() === 'loading'
   );
@@ -77,18 +76,12 @@ export class LeagueDetail {
       this.leagueResource.error() !== undefined 
     // ||
       // this.standingsResource.error() !== undefined
-      this.leagueResource.error() !== undefined 
     // ||
       // this.standingsResource.error() !== undefined
   );
 
   protected readonly league = computed(() => this.leagueResource.hasValue() ? this.leagueResource.value() : null);
 
-  protected readonly isAdmin = computed(() => {
-    const league = this.league();
-    const userId = this.session.userId();
-    return league !== null && userId !== null && league.adminUserId === userId;
-  });
   protected readonly isAdmin = computed(() => {
     const league = this.league();
     const userId = this.session.userId();
