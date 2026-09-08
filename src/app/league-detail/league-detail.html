@@ -43,8 +43,10 @@
         }
 
         @if (isAdmin()) {
-          <button class="action-card action-card--primary" type="button">
-            <span class="action-card__label">Invita per username</span>
+          <button class="action-card action-card--primary" type="button"
+            [attr.aria-expanded]="inviteFormVisible()" aria-controls="league-invite-panel"
+            (click)="toggleInviteForm()">
+            <span class="action-card__label">Invita membro</span>
             <span class="action-card__meta">Azione admin</span>
           </button>
         }
@@ -68,9 +70,11 @@
       </section>
 
       @if (isAdmin()) {
-        <section class="card" aria-labelledby="invite-title">
-          <h2 id="invite-title" class="card__title">Invita per username</h2>
-          <app-invite-league [leagueId]="leagueId" />
+        <section id="league-invite-panel" class="card" aria-labelledby="invite-title" [hidden]="!inviteFormVisible()">
+          <h2 id="invite-title" class="card__title">Invita membro</h2>
+          @if (inviteFormVisible()) {
+            <app-invite-league [leagueId]="leagueId" />
+          }
         </section>
       }
     </div>

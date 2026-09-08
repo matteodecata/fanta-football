@@ -1,5 +1,5 @@
 <form class="form" novalidate (submit)="onSubmit($event)">
-  <h2 class="card__title">Invita un utente</h2>
+  <p id="invite-user-help">Inserisci lo username esatto di un utente già registrato. Entrerà nella lega soltanto dopo aver accettato l’invito.</p>
 
   @if (submitError()) {
     <p class="alert alert--danger" role="alert" aria-live="assertive">{{ submitError() }}</p>
@@ -13,11 +13,14 @@
     <label class="field__label" for="invite-user">Username</label>
     <input
       id="invite-user"
+      #usernameInput
+      autocomplete="off"
+      spellcheck="false"
       class="input"
       type="text"
       [formField]="inviteForm.username"
       [attr.aria-invalid]="inviteForm.username().touched() && inviteForm.username().invalid() ? 'true' : null"
-      [attr.aria-describedby]="inviteForm.username().touched() && inviteForm.username().invalid() ? 'invite-user-error' : null"
+      [attr.aria-describedby]="inviteForm.username().touched() && inviteForm.username().invalid() ? 'invite-user-help invite-user-error' : 'invite-user-help'"
     />
 
     @if (inviteForm.username().touched() && inviteForm.username().invalid()) {

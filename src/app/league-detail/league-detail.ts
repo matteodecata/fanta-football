@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { CalendarComponent } from '../Calendar/calendar.component';
@@ -16,6 +16,10 @@ import { LeagueDetailResponse } from './league-detail.models';
 export class LeagueDetail {
   private readonly route = inject(ActivatedRoute);
   private readonly session = inject(Session);
+  protected readonly inviteFormVisible = signal(false);
+  protected toggleInviteForm(): void {
+    this.inviteFormVisible.update(visible => !visible);
+  }
 
   protected readonly leagueId = Number(this.route.snapshot.paramMap.get('leagueId'));
 

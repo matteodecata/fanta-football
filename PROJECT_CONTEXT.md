@@ -654,6 +654,19 @@ reale del codice prima di considerarli aperti o chiusi.
 
 ## 14. TO-DO backend bloccanti o da concordare
 
+### Inviti: verifica Swagger dell'8 settembre 2026
+
+- Il form nei dettagli lega si apre con “Invita membro”, solo per l'admin.
+- L'invio usa `POST /api/leagues/{leagueId}/invites` con `{invitedUsername}`,
+  come confermato da `/v3/api-docs`; accettazione e rifiuto usano il PATCH esistente.
+- Il DTO `InviteResponse` corrente espone soltanto gli ID: per completare la
+  dashboard con i nomi, il backend deve aggiungere `leagueName` e
+  `invitedByUsername` alla risposta di `GET /api/invites/pending`.
+  Il frontend supporta questi campi opzionali e mantiene gli ID come fallback.
+- Dopo l'accettazione, l'utente viene accompagnato alla creazione della squadra.
+- Build e test mirati verificano il frontend; prova con utenti reali e audit AXE
+  restano da eseguire. Il backend non è incluso in questo repository.
+
 Questi elementi non sono implementabili soltanto nel frontend:
 
 - [ ] **Creazione/modifica lineup:** manca qualunque endpoint per schierare

@@ -85,6 +85,8 @@ describe('Dashboard', () => {
       {
         id: 21,
         leagueId: 9,
+        leagueName: 'Lega amici',
+        invitedByUsername: 'mario',
         invitedByUserId: 4,
         invitedUserId: 3,
         status: 'PENDING',
@@ -98,7 +100,8 @@ describe('Dashboard', () => {
     const page = fixture.nativeElement as HTMLElement;
     expect(page.querySelector('.league-card')?.textContent).toContain('Lega del lunedì');
     expect(page.querySelector('.league-card')?.textContent).toContain('Gli Imbattibili');
-    expect(page.querySelector('.invite-item')?.textContent).toContain('Invito alla lega n. 9');
+    expect(page.querySelector('.invite-item')?.textContent).toContain('Invito a Lega amici');
+    expect(page.querySelector('.invite-item')?.textContent).toContain('mario');
     expect(page.querySelector('.empty-leagues')).toBeNull();
     expect(page.querySelector('.empty-invites')).toBeNull();
   });
