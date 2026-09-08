@@ -40,6 +40,7 @@
 .match__teams { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--sp-3); font-weight: 600; }
 .match__teams span:last-child { text-align: right; }
 .match__teams strong { color: var(--c-accent); }
+.match__score { white-space: nowrap; }
 .match__date { color: var(--c-text-subtle); font-size: var(--fs-sm); white-space: nowrap; }
 .match__status { color: var(--c-text-muted); font-size: var(--fs-sm); }
 .match__status--error { color: var(--c-danger); }

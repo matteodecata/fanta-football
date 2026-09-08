@@ -32,7 +32,9 @@ export class CalendarComponent {
       const current = groups.get(match.roundNumber) ?? [];
       groups.set(match.roundNumber, [...current, match]);
     }
-    return [...groups.entries()].map(([roundNumber, matches]) => ({ roundNumber, matches }));
+    return [...groups.entries()]
+      .sort(([firstRound], [secondRound]) => firstRound - secondRound)
+      .map(([roundNumber, matches]) => ({ roundNumber, matches }));
   });
 
   readonly canGenerate = computed(() => this.isAdmin() && this.status() === 'not-generated');

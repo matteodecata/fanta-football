@@ -5,7 +5,7 @@ import { map, Observable } from 'rxjs';
 export interface CalendarMatch {
   readonly id: number;
   readonly roundNumber: number;
-  readonly matchDay?: string | null;
+  readonly matchDay?: string | number | null;
   readonly homeTeamId: number;
   readonly homeTeamName: string;
   readonly awayTeamId: number;
@@ -15,7 +15,7 @@ export interface CalendarMatch {
   readonly awayLineupId?: number;
   readonly homeScore?: number | null;
   readonly awayScore?: number | null;
-  readonly status?: 'scheduled' | 'played' | 'closed';
+  readonly status?: string | null;
 }
 
 export interface CalendarScore {
@@ -27,20 +27,27 @@ export interface CalendarScore {
 export class CalendarApiService {
   private readonly http = inject(HttpClient);
 
+  private readonly calendarUrl = (leagueId: number) => `/api/leagues/${leagueId}/matches`;
+
   generateCalendar(leagueId: number): Observable<CalendarMatch[]> {
-    return this.http.post<CalendarMatch[] | { matches?: CalendarMatch[]; calendar?: CalendarMatch[] }>(
-      `/api/leagues/${leagueId}/matches`,
-      null,
-    ).pipe(map((response) => Array.isArray(response) ? response : response.matches ?? response.calendar ?? []));
+    return this.http.post<CalendarResponse>(this.calendarUrl(leagueId), null).pipe(map((response) => this.toMatches(response)));
   }
 
   getCalendar(leagueId: number): Observable<CalendarMatch[]> {
-    return this.http.get<CalendarMatch[] | { matches?: CalendarMatch[]; calendar?: CalendarMatch[] }>(
-      `/api/leagues/${leagueId}/matches`,
-    ).pipe(map((response) => Array.isArray(response) ? response : response.matches ?? response.calendar ?? []));
+    return this.http.get<CalendarResponse>(this.calendarUrl(leagueId)).pipe(map((response) => this.toMatches(response)));
   }
 
   getScore(lineupId: number): Observable<CalendarScore> {
     return this.http.get<CalendarScore>(`/api/lineups/${lineupId}/score`);
   }
+
+  private toMatches(response: CalendarResponse): CalendarMatch[] {
+    if (Array.isArray(response)) return response;
+    return response.matches ?? response.calendar ?? [];
+  }
 }
+
+type CalendarResponse = CalendarMatch[] | {
+  readonly matches?: CalendarMatch[];
+  readonly calendar?: CalendarMatch[];
+};

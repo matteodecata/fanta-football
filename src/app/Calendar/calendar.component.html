@@ -35,7 +35,16 @@
                   <strong aria-hidden="true">–</strong>
                   <span>{{ match.awayTeamName }}</span>
                 </div>
-                @if (match.matchDay) { <time class="match__date">{{ match.matchDay | date: 'd MMM yyyy' }}</time> }
+                @if (match.homeScore !== null && match.homeScore !== undefined
+                  && match.awayScore !== null && match.awayScore !== undefined) {
+                  <strong class="match__score" [attr.aria-label]="'Risultato: ' + match.homeScore + ' a ' + match.awayScore">
+                    {{ match.homeScore }} – {{ match.awayScore }}
+                  </strong>
+                }
+                @if (match.matchDay !== null && match.matchDay !== undefined) {
+                  <time class="match__date">{{ match.matchDay | date: 'd MMM yyyy' }}</time>
+                }
+                @if (match.status) { <span class="match__status">{{ match.status }}</span> }
                 @if (match.lineupId !== undefined) {
                   @if (scoreFor(match); as score) {
                     <span class="badge badge--accent">{{ score.score }} punti · {{ score.goals }} gol</span>
