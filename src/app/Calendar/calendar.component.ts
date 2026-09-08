@@ -40,6 +40,13 @@ export class CalendarComponent {
   readonly canGenerate = computed(() => this.isAdmin() && this.status() === 'not-generated');
 
   private loadCalendar(leagueId: number): void {
+    // A new GET must always replace the previous backend snapshot completely.
+    // Scores and statuses are never inferred locally.
+    this.matches.set([]);
+    this.scoreByLineupId.set({});
+    this.scoreStatus.set({});
+    this.loadingScoreFor.set(null);
+
     if (!Number.isInteger(leagueId) || leagueId <= 0) {
       this.status.set('error');
       this.errorMessage.set('Identificativo della lega non valido.');
