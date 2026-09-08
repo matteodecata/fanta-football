@@ -10,9 +10,11 @@
     </div>
   </header>
 
-  <!-- TODO: mostrare questa pagina solo all'admin della lega.
-    Domanda guida: da dove recuperi l'id dell'utente corrente o un flag admin affidabile?
-    Hint: il frontend puo nascondere il link, ma il backend deve comunque bloccare i non admin. -->
+  <!-- TODO 7: verifica che l'accesso all'asta sia riservato all'admin della lega.
+    Domanda guida: poter leggere i disponibili come membro autorizza anche a registrare acquisti?
+    Hint: recupera il ruolo dai dati affidabili della lega; controlla link e accesso diretto alla
+    route. Il backend deve comunque verificare i permessi sul POST.
+    Verifica con un membro non admin: non deve poter usare il form per registrare acquisti. -->
 
   @if (isLoading()) {
     <div class="alert alert--info" role="status" aria-live="polite">
@@ -46,64 +48,95 @@
       <label class="field" for="auction-team">
         <span class="field__label">Squadra</span>
         <select
+          #teamSelect
           id="auction-team"
           class="select"
           [value]="selectedTeamId() ?? ''"
-          (change)="updateSelectedTeam($any($event.target).value)"
+          (change)="updateSelectedTeam(teamSelect.value)"
+          [disabled]="isLoading() || hasError() || isSubmitting()"
         >
           <option value="">Seleziona squadra</option>
-          @for (team of teamsResource.value(); track team.teamId) {
-            <option [value]="team.teamId">
-              {{ team.teamName }} - budget {{ team.budget }}
-            </option>
+          @if (teamsResource.hasValue()) {
+            @for (team of teamsResource.value(); track team.teamId) {
+              <option [value]="team.teamId">
+                {{ team.teamName }} - budget {{ team.budget }}
+              </option>
+            }
           }
         </select>
       </label>
       
 
-      <label class="field" for="auction-player">
-        <span class="field__label">Calciatore</span>
-        <!-- TODO: migliora la scelta del calciatore se il catalogo diventa lungo.
-          Domanda guida: un select con 500 giocatori resta comodo da usare?
-          Hint: puoi riusare l'idea dei suggerimenti della pagina Players: input di ricerca,
-          minilista filtrata e click sul risultato. -->
-        <select
+      <div class="field">
+        <label class="field__label" for="auction-player">Calciatore</label>
+
+        <input
+          #playerSearch
           id="auction-player"
-          class="select"
-          [value]="selectedPlayerId() ?? ''"
-          (change)="updateSelectedPlayer($any($event.target).value)"
-        >
-          <option value="">Seleziona calciatore</option>
-          @for (player of availablePlayers(); track player.id) {
-            <option [value]="player.id">
-              {{ player.name }} {{ player.surname }} - {{ player.role }} - {{ player.price }}
-            </option>
+          class="input"
+          type="search"
+          placeholder="Nome o cognome"
+          autocomplete="off"
+          [value]="searchText()"
+          (input)="changeSearchTextAndResetId(playerSearch.value)"
+          [disabled]="isLoading() || hasError() || isSubmitting()"
+        />
+
+        @if (!isLoading() && !hasError()) {
+          @if (selectedPlayerId() === null && suggestedPlayers().length > 0) {
+            <ul class="auction-suggestions" aria-label="Suggerimenti calciatori">
+              @for (player of suggestedPlayers(); track player.id) {
+                <li>
+                  <button
+                    class="auction-suggestion"
+                    type="button"
+                    [disabled]="isSubmitting()"
+                    (click)="selectSuggestedPlayer(player); playerSearch.focus()"
+                  >
+                    <span class="auction-suggestion__name">{{ player.name }} {{ player.surname }}</span>
+                    <small class="auction-suggestion__meta">{{ player.role }} - {{ player.realTeamName }}</small>
+                  </button>
+                </li>
+              }
+            </ul>
           }
-        </select>
-      </label>
+
+          <div role="status" aria-live="polite">
+            @if (playersResource.value().length === 0) {
+              <p class="auction-search-status">Non ci sono calciatori disponibili in questa lega.</p>
+            } @else if (hasNoSearchResults()) {
+              <p class="auction-search-status">Nessun calciatore corrisponde alla ricerca.</p>
+            }
+          </div>
+        }
+      </div>
 
       <label class="field" for="auction-price">
         <span class="field__label">Prezzo d'acquisto</span>
         <input
+          #priceInput
           id="auction-price"
           class="input"
           type="number"
           min="1"
           [value]="purchasePrice() ?? ''"
-          (input)="updatePurchasePrice($any($event.target).value)"
+          (input)="updatePurchasePrice(priceInput.value)"
+          [disabled]="isLoading() || hasError() || isSubmitting()"
+          [attr.aria-invalid]="purchasePrice() !== null && selectedTeamId() !== null && !isPriceValid()"
+          [attr.aria-describedby]="purchasePrice() !== null && selectedTeamId() !== null && !isPriceValid() ? 'auction-price-error' : null"
         />
         @if (!isPriceValid() && purchasePrice() !== null && selectedTeamId() !== null) {
-          <p class="field__error" role="alert">
+          <p id="auction-price-error" class="field__error" role="alert">
             Prezzo non valido. Deve essere maggiore di 0 e non superare il budget della squadra.
           </p>
         }
       </label>
 
-      @if (canSubmit()) {
+      @if (isFormValid()) {
         <section class="auction-summary" aria-labelledby="auction-summary-title" aria-live="polite">
           <div class="auction-summary__header">
             <h3 id="auction-summary-title">Riepilogo</h3>
-            <span class="auction-summary__badge">Pronto</span>
+            <span class="auction-summary__badge">{{ isSubmitting() ? 'In corso' : 'Pronto' }}</span>
           </div>
 
           <dl class="auction-summary__list">
@@ -124,7 +157,7 @@
 
             <div class="auction-summary__row auction-summary__row--strong">
               <dt>Budget rimanente</dt>
-              <dd>{{ (selectedTeam()?.budget ?? 0) - (purchasePrice() ?? 0) }} crediti</dd>
+              <dd>{{ remainingBudget() }} crediti</dd>
             </div>
           </dl>
         </section>

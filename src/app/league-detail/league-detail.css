@@ -1,4 +1,4 @@
-﻿:host { display: block; }
+:host { display: block; }
 .league-page { gap: var(--sp-8); }
 .back-link { justify-self: start; color: var(--c-text-muted); font-size: var(--fs-sm); }
 .league-header, .league-identity, .league-title, .league-actions { display: flex; align-items: center; gap: var(--sp-4); }

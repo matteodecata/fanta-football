@@ -6,15 +6,60 @@
   max-width: 44rem;
 }
 
+.auction-suggestions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.auction-suggestions li + li {
+  border-top: 1px solid var(--c-border);
+}
+
+.auction-suggestion {
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: var(--h-control);
+  padding: 0.75rem 1rem;
+  background: var(--c-surface);
+  border: 0;
+  color: var(--c-text);
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.auction-suggestion:hover {
+  background: var(--c-surface-hover);
+}
+
+.auction-suggestion:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -3px;
+}
+
+.auction-suggestion__name {
+  font-weight: 600;
+}
+
+.auction-suggestion__meta,
+.auction-search-status {
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
 .auction-summary {
   display: grid;
   gap: 0.85rem;
   padding: 1rem;
-  border: 1px solid color-mix(in srgb, var(--color-primary), transparent 72%);
+  border: 1px solid var(--c-border-strong);
   border-radius: 0.5rem;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(248, 250, 252, 0.94)),
-    color-mix(in srgb, var(--color-primary), white 92%);
+  background: var(--c-surface-2);
 }
 
 .auction-summary__header {
@@ -28,7 +73,7 @@
   margin: 0;
   font-size: 0.98rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--c-text);
 }
 
 .auction-summary__badge {
@@ -37,8 +82,8 @@
   min-height: 1.65rem;
   padding: 0 0.65rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-success), white 84%);
-  color: color-mix(in srgb, var(--color-success), black 22%);
+  background: var(--c-success-soft);
+  color: var(--c-success);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -55,7 +100,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid var(--c-border);
 }
 
 .auction-summary__row:last-child {
@@ -64,19 +109,21 @@
 }
 
 .auction-summary__row dt {
-  color: var(--color-muted);
+  color: var(--c-text-muted);
   font-size: 0.88rem;
 }
 
 .auction-summary__row dd {
   margin: 0;
-  color: var(--color-text);
+  color: var(--c-text);
   font-weight: 700;
   text-align: right;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .auction-summary__row--strong dd {
-  color: color-mix(in srgb, var(--color-primary), black 18%);
+  color: var(--c-accent);
 }
 
 @media (max-width: 520px) {
