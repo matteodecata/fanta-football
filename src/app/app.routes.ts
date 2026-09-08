@@ -115,7 +115,7 @@ export const routes: Routes = [
             .then((component) => component.TeamTrades),
     },
     {
-        path: 'leagues/:leagueId/trades',
+        path: 'leagues/:leagueId/:teamId/trades',
         title: 'Scambi della lega',
         loadComponent: () =>
             import('./team-trades/team-trades')

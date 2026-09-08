@@ -1,6 +1,6 @@
-type TradeStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
+export type TradeStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
 
-interface TradeDto {
+export interface TradeDto {
   id: number;
   proposingTeamId: number;
   proposingTeamName: string;
@@ -13,14 +13,18 @@ interface TradeDto {
   proposalDate: string;
 }
 
-interface CreateTradeDto {
+export interface CreateTradeDto {
   receivingTeamId: string;
   requestedPlayerId: string;
   offeredPlayerId: string;
   amount: number;
 }
 
-interface Player {
-  id: number;
-  name: string;
+export interface TeamStandingResponse {
+  teamId: number;
+  teamName: string;
+  username: string;
+  budget: number;
+  totalPoints: number;
 }
+
