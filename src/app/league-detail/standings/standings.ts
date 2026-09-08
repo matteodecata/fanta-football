@@ -1,28 +1,15 @@
-import { Component, input } from '@angular/core';
-import { httpResource } from '@angular/common/http';
+﻿import { Component, input } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { LeagueStandingResponse } from '../league-detail.models';
 
 @Component({
   selector: 'app-standings',
-  imports: [],
+  imports: [RouterLink, DecimalPipe],
   templateUrl: './standings.html',
   styleUrl: './standings.css',
 })
 export class Standings {
-  leagueId = input.required<number>();
-
-  protected readonly standingsResource = httpResource<LeagueStandingResponse[]>(() => {
-    const id = this.leagueId();
-
-    if (!id || Number.isNaN(id)) {
-      return undefined;
-    }
-
-    return {
-      url: `/api/leagues/${id}/teams`,
-      method: 'GET',
-    };
-  });
-
-  protected readonly standings = this.standingsResource.value;
+  readonly leagueId = input.required<number>();
+  readonly teams = input.required<readonly LeagueStandingResponse[]>();
 }

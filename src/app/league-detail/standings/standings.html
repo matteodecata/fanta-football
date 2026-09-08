@@ -1,36 +1,13 @@
-@if (standingsResource.status() === 'loading') {
-  <p aria-live="polite">Caricamento classifica...</p>
-} @else if (standingsResource.error()) {
-  <p role="alert">Impossibile caricare la classifica.</p>
-} @else if ((standings() ?? []).length === 0) {
-  <div class="empty-state">
-    <h3>Classifica vuota</h3>
-    <p>Non ci sono squadre in classifica.</p>
-  </div>
-} @else {
-  <div class="table-wrap">
-    <table class="table">
-      <caption>Classifica della lega</caption>
-      <thead>
-        <tr>
-          <th scope="col">#</th>
-          <th scope="col">Squadra</th>
-          <th scope="col">Proprietario</th>
-          <th scope="col" class="numeric">Budget</th>
-          <th scope="col" class="numeric">Punti</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (team of standings() ?? []; track team.teamId) {
-          <tr>
-            <th scope="row">{{ $index + 1 }}</th>
-            <td>{{ team.teamName }}</td>
-            <td>{{ team.username }}</td>
-            <td class="numeric">{{ team.budget }}</td>
-            <td class="numeric">{{ team.totalPoints }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-}
+﻿<ol class="standings-list" aria-label="Classifica per punti">
+  @for (team of teams(); track team.teamId) {
+    <li class="standing-row">
+      <span class="position"><span class="visually-hidden">Posizione </span>{{ $index + 1 }}</span>
+      <span class="team-mark" aria-hidden="true">{{ team.teamName.slice(0, 1).toUpperCase() }}</span>
+      <div class="team-identity"><h3>{{ team.teamName }}</h3><p>{{ team.username }}</p></div>
+      <div class="score"><strong>{{ team.budget | number }}</strong><span>crediti</span></div>
+      <div class="score points"><strong>{{ team.totalPoints | number }}</strong><span>punti</span></div>
+      <a class="btn btn--sm" [routerLink]="['/teams', team.teamId]" [queryParams]="{ leagueId: leagueId() }"
+        [attr.aria-label]="'Visualizza rosa di ' + team.teamName">Rosa</a>
+    </li>
+  } @empty { <li class="empty-state">Non ci sono ancora squadre in classifica.</li> }
+</ol>

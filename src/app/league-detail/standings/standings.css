@@ -1,7 +1,18 @@
-:host {
-  display: block;
-}
-
-.table-wrap {
-  overflow-x: auto;
+﻿:host { display: block; }
+.standings-list { display: grid; gap: var(--sp-3); }
+.standing-row { display: grid; grid-template-columns: 1.5rem 2.25rem minmax(0, 1fr) minmax(3.5rem, auto) minmax(3.5rem, auto) auto; align-items: center; gap: var(--sp-4); padding: var(--sp-4) var(--sp-5); border: 1px solid var(--c-border); border-radius: var(--r-md); background: var(--c-surface); }
+.position { text-align: center; color: var(--c-text-muted); font-weight: 700; }
+.team-mark { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border: 1px solid var(--c-border-strong); border-radius: var(--r-sm); background: var(--c-surface-2); color: var(--c-accent); font-weight: 700; }
+.team-identity { min-width: 0; overflow-wrap: anywhere; }
+.team-identity h3 { font-size: var(--fs-base); }
+.team-identity p, .score span { color: var(--c-text-muted); font-size: var(--fs-xs); }
+.score { display: grid; text-align: right; font-variant-numeric: tabular-nums; }
+.points strong { color: var(--c-accent); }
+@media (max-width: 40rem) {
+  .standing-row { grid-template-columns: 1.25rem minmax(0, 1fr) auto; gap: var(--sp-3); padding: var(--sp-4); }
+  .team-mark { display: none; }
+  .team-identity { grid-column: 2; }
+  .standing-row > a { grid-column: 3; grid-row: 1; min-height: var(--h-control); }
+  .score { grid-column: 2; grid-row: 2; text-align: left; display: flex; align-items: baseline; gap: var(--sp-2); }
+  .points { grid-column: 3; }
 }

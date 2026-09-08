@@ -66,9 +66,10 @@ export class Login {
     // Il componente è il "chiamante" di cui parlavamo per AuthApiService: qui
     // decidiamo noi quando iscriverci (subscribe) e cosa fare nei due casi,
     // successo ed errore.
-    this.authApi.login(this.credentials()).subscribe({
+    const credentials = this.credentials();
+    this.authApi.login(credentials).subscribe({
       next: (response) => {
-        this.session.login(response);
+        this.session.login(response, credentials.username);
         this.submitting.set(false);
         this.router.navigateByUrl('/dashboard');
       },
