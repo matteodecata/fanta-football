@@ -19,7 +19,7 @@ export class Standings {
     }
 
     return {
-      url: `/api/leagues/${id}/standings`,
+      url: `/api/leagues/${id}/teams`,
       method: 'GET',
     };
   });

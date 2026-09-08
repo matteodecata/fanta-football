@@ -2,11 +2,10 @@ import { Component, computed, inject } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { CalendarComponent } from '../Calendar/calendar.component';
+import { Session } from '../core/auth/session';
 import { InviteLeague } from './invite-league/invite-league';
 import { Standings } from './standings/standings';
-import { LeagueDetailResponse, LeagueStandingResponse } from './league-detail.models';
-
-const hasAdminAccess = (league: LeagueDetailResponse | null): boolean => Boolean(league?.admin ?? false);
+import { LeagueDetailResponse } from './league-detail.models';
 
 @Component({
   selector: 'app-league-detail',
@@ -16,6 +15,7 @@ const hasAdminAccess = (league: LeagueDetailResponse | null): boolean => Boolean
 })
 export class LeagueDetail {
   private readonly route = inject(ActivatedRoute);
+  private readonly session = inject(Session);
 
   protected readonly leagueId = Number(this.route.snapshot.paramMap.get('leagueId'));
 
@@ -30,32 +30,38 @@ export class LeagueDetail {
     };
   });
 
-  protected readonly standingsResource = httpResource<LeagueStandingResponse[]>(() => {
-    if (!this.leagueId || Number.isNaN(this.leagueId)) {
-      return undefined;
-    }
+  // protected readonly standingsResource = httpResource<LeagueStandingResponse[]>(() => {
+  //   if (!this.leagueId || Number.isNaN(this.leagueId)) {
+  //     return undefined;
+  //   }
 
-    return {
-      url: `/api/leagues/${this.leagueId}/standings`,
-      method: 'GET',
-    };
-  });
+  //   return {
+  //     url: `/api/leagues/${this.leagueId}/standings`,
+  //     method: 'GET',
+  //   };
+  // });
 
   protected readonly isLoading = computed(
     () =>
-      this.leagueResource.status() === 'loading' ||
-      this.standingsResource.status() === 'loading'
+      this.leagueResource.status() === 'loading' 
+    // ||
+      // this.standingsResource.status() === 'loading'
   );
 
   protected readonly hasError = computed(
     () =>
-      this.leagueResource.error() !== undefined ||
-      this.standingsResource.error() !== undefined
+      this.leagueResource.error() !== undefined 
+    // ||
+      // this.standingsResource.error() !== undefined
   );
 
   protected readonly league = computed(() => this.leagueResource.value() ?? null);
 
-  protected readonly isAdmin = computed(() => hasAdminAccess(this.league()));
+  protected readonly isAdmin = computed(() => {
+    const league = this.league();
+    const userId = this.session.userId();
+    return league !== null && userId !== null && league.adminUserId === userId;
+  });
 
-  protected readonly standings = computed(() => this.standingsResource.value() ?? []);
+  // protected readonly standings = computed(() => this.standingsResource.value() ?? []);
 }
