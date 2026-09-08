@@ -1,8 +1,8 @@
-<section class="calendar card" aria-labelledby="calendar-title">
+<section class="calendar card" aria-labelledby="calendar-component-title">
   <div class="calendar__header">
     <div>
       <p class="card__title">Calendario lega</p>
-      <h2 id="calendar-title">Partite tra fantallenatori</h2>
+      <h2 id="calendar-component-title">Partite tra fantallenatori</h2>
       <p class="calendar__intro">Genera una sola volta il calendario della lega e consulta qui le giornate.</p>
     </div>
     @if (canGenerate()) {
@@ -26,7 +26,10 @@
       <p class="calendar__result-count">Calendario generato · {{ matches().length }} partite</p>
       @for (group of groupedMatches(); track group.roundNumber) {
         <section class="matchday" [attr.aria-labelledby]="'matchday-' + group.roundNumber">
-          <h3 [id]="'matchday-' + group.roundNumber">Giornata {{ group.roundNumber }}</h3>
+          <div class="matchday__header">
+            <h3 [id]="'matchday-' + group.roundNumber">Giornata {{ group.roundNumber }}</h3>
+            <span class="matchday__count">{{ group.matches.length }} {{ group.matches.length === 1 ? 'partita' : 'partite' }}</span>
+          </div>
           <div class="matchday__matches">
             @for (match of group.matches; track match.id) {
               <article class="match">
@@ -35,6 +38,7 @@
                   <strong aria-hidden="true">–</strong>
                   <span>{{ match.awayTeamName }}</span>
                 </div>
+                <div class="match__aside">
                 @if (match.homeScore !== null && match.homeScore !== undefined
                   && match.awayScore !== null && match.awayScore !== undefined) {
                   <strong class="match__score" [attr.aria-label]="'Risultato: ' + match.homeScore + ' a ' + match.awayScore">
@@ -58,6 +62,7 @@
                     </button>
                   }
                 }
+                </div>
               </article>
             }
           </div>
