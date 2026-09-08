@@ -7,9 +7,10 @@
 
   <div class="account-layout">
     <nav class="account-nav card" aria-label="Sezioni dell'account">
-      <a href="#username">Nome utente</a>
-      <a href="#password">Password</a>
-      <a href="#disable-account">Disattiva account</a>
+      <a routerLink="/account" fragment="username">Nome utente</a>
+      <a routerLink="/account" fragment="password">Password</a>
+      <a routerLink="/account" fragment="disable-account">Disattiva account</a>
+      <a routerLink="/account" fragment="logout">Esci dall'account</a>
     </nav>
 
     <div class="account-content">
@@ -35,6 +36,16 @@
           <p>Questa operazione limita l'accesso al profilo e richiede una conferma.</p>
         </div>
         <app-disable-account />
+      </section>
+
+      <section id="logout" class="account-section card" aria-labelledby="logout-title">
+        <div class="section-heading">
+          <h2 id="logout-title">Esci dall'account</h2>
+          <p>Termina la sessione corrente e torna alla pagina di login.</p>
+        </div>
+        <button class="btn" type="button" (click)="logout()">
+          Esci dall'account
+        </button>
       </section>
     </div>
   </div>

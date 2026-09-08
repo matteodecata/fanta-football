@@ -45,6 +45,7 @@ export class PendingInvites {
         this.pendingInvitesService.respondToInvite(invite.id, 'ACCEPTED'),
       );
       this.statusMessage.set('Invito accettato. Ora puoi creare la tua squadra.');
+      this.invites.reload();
       await this.router.navigate(['/leagues', invite.leagueId, 'team', 'new']);
     } catch (error: unknown) {
       this.actionError.set(this.getActionErrorMessage(error, 'accettare'));

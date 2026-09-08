@@ -1,28 +1,82 @@
-<main class="container page">
-  <header class="page-header">
-    <div class="row-between">
-      <div>
-        <h1 data-route-heading tabindex="-1">Dettaglio lega</h1>
-        <p>Gestisci classifica, inviti e asta della lega.</p>
+<main class="page-shell">
+  @if (isLoading()) {
+    <p aria-live="polite">Caricamento della lega...</p>
+  } @else if (hasError()) {
+    <p role="alert">Non è stato possibile caricare i dettagli della lega.</p>
+  } @else if (league(); as league) {
+    <section class="card" aria-labelledby="league-title">
+      <div class="page-header">
+        <div>
+          <p class="eyebrow">Lega</p>
+          <h1 id="league-title" data-route-heading tabindex="-1">{{ league.name }}</h1>
+        </div>
+        <span class="badge" [class.badge--accent]="isAdmin()" [class.badge--info]="!isAdmin()">
+          {{ isAdmin() ? 'Admin' : 'Partecipante' }}
+        </span>
       </div>
 
-      <!-- TODO: mostrare questo link solo all'admin della lega.
-        Domanda guida: da dove recuperi un flag admin affidabile per questa lega?
-        Hint: il dashboard riceve gia un campo admin per ogni lega; valuta se il backend
-        deve esporre anche un endpoint di dettaglio lega con admin/current user permissions. -->
-      <a class="btn btn--primary" [routerLink]="['/leagues', leagueId, 'auction']">
-        Gestisci asta
-      </a>
+      <div class="stats-grid">
+        <div class="metric">
+          <span class="metric__label">Budget iniziale</span>
+          <span class="metric__value">{{ league.budget }}</span>
+        </div>
+        <div class="metric">
+          <span class="metric__label">Utente admin</span>
+          <span class="metric__value">{{ league.adminUserId }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="league-actions-title">
+      <h2 id="league-actions-title" class="card__title">Gestisci lega</h2>
+      <div class="action-grid" aria-label="Azioni lega">
+        <button class="action-card" type="button">
+          <span class="action-card__label">Calendario</span>
+          <span class="action-card__meta">Giornate e partite</span>
+        </button>
+
+        @if (isAdmin()) {
+          <button class="action-card action-card--primary" type="button">
+            <span class="action-card__label">Gestisci Asta</span>
+            <span class="action-card__meta">Azione admin</span>
+          </button>
+        }
+
+        @if (isAdmin()) {
+          <button class="action-card action-card--primary" type="button"
+            [attr.aria-expanded]="inviteFormVisible()" aria-controls="league-invite-panel"
+            (click)="toggleInviteForm()">
+            <span class="action-card__label">Invita membro</span>
+            <span class="action-card__meta">Azione admin</span>
+          </button>
+        }
+
+        <button class="action-card action-card--active" type="button">
+          <span class="action-card__label">Classifica</span>
+          <span class="action-card__meta">Posizioni e punti</span>
+        </button>
+      </div>
+    </section>
+
+    <div class="stack">
+      <section class="card" aria-labelledby="standings-title">
+        <h2 id="standings-title" class="card__title">Classifica</h2>
+        <app-standings [leagueId]="leagueId" />
+      </section>
+
+      <section class="card" aria-labelledby="calendar-title">
+        <h2 id="calendar-title" class="card__title">Calendario</h2>
+        <app-calendar [leagueId]="leagueId" [isAdmin]="isAdmin()" />
+      </section>
+
+      @if (isAdmin()) {
+        <section id="league-invite-panel" class="card" aria-labelledby="invite-title" [hidden]="!inviteFormVisible()">
+          <h2 id="invite-title" class="card__title">Invita membro</h2>
+          @if (inviteFormVisible()) {
+            <app-invite-league [leagueId]="leagueId" />
+          }
+        </section>
+      }
     </div>
-  </header>
-
-  <section aria-labelledby="standings-title">
-    <h2 id="standings-title">Classifica</h2>
-    <app-standings [leagueId]="leagueId" />
-  </section>
-
-  <section aria-labelledby="invite-title">
-    <h2 id="invite-title">Inviti</h2>
-    <app-invite-league [leagueId]="leagueId" />
-  </section>
+  }
 </main>

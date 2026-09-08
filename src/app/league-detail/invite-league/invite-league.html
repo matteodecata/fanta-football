@@ -1,22 +1,38 @@
-<form novalidate (submit)="onSubmit($event)">
-  <h2>Invita un utente</h2>
+<form class="form" novalidate (submit)="onSubmit($event)">
+  <p id="invite-user-help">Inserisci lo username esatto di un utente già registrato. Entrerà nella lega soltanto dopo aver accettato l’invito.</p>
 
-  <label for="invite-user">Username</label>
-  <input
-    id="invite-user"
-    type="text"
-    [formField]="inviteForm.username"
-    [attr.aria-invalid]="inviteForm.username().touched() && inviteForm.username().invalid() ? 'true' : null"
-    [attr.aria-describedby]="inviteForm.username().touched() && inviteForm.username().invalid() ? 'invite-user-error' : null"
-  />
-
-  @if (inviteForm.username().touched() && inviteForm.username().invalid()) {
-    <ul id="invite-user-error" class="error-list" role="alert">
-      @for (error of inviteForm.username().errors(); track error.kind) {
-        <li>{{ error.message }}</li>
-      }
-    </ul>
+  @if (submitError()) {
+    <p class="alert alert--danger" role="alert" aria-live="assertive">{{ submitError() }}</p>
   }
 
-  <button type="submit">Invita</button>
+  @if (submitSuccess()) {
+    <p class="alert alert--success" role="status" aria-live="polite">{{ submitSuccess() }}</p>
+  }
+
+  <div class="field">
+    <label class="field__label" for="invite-user">Username</label>
+    <input
+      id="invite-user"
+      #usernameInput
+      autocomplete="off"
+      spellcheck="false"
+      class="input"
+      type="text"
+      [formField]="inviteForm.username"
+      [attr.aria-invalid]="inviteForm.username().touched() && inviteForm.username().invalid() ? 'true' : null"
+      [attr.aria-describedby]="inviteForm.username().touched() && inviteForm.username().invalid() ? 'invite-user-help invite-user-error' : 'invite-user-help'"
+    />
+
+    @if (inviteForm.username().touched() && inviteForm.username().invalid()) {
+      <ul id="invite-user-error" class="field__error" role="alert">
+        @for (error of inviteForm.username().errors(); track error) {
+          <li>{{ error.message }}</li>
+        }
+      </ul>
+    }
+  </div>
+
+  <button class="btn btn--primary" type="submit" [disabled]="isSubmitting()">
+    {{ isSubmitting() ? 'Invio in corso...' : 'Invita' }}
+  </button>
 </form>

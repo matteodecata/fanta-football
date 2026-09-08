@@ -5,6 +5,18 @@
 > `intro-angular` e lo snapshot delle API del backend ricevuto il 2 settembre
 > 2026. Se il backend cambia, verificare e aggiornare questa guida usando
 > Swagger (`http://localhost:8081/swagger-ui.html`) e la documentazione backend.
+>
+> Aggiornato il 7 settembre 2026 dopo il merge dei branch `feature/daniele` e
+> `myriam-spagnuolo`: gran parte delle feature di base è stata implementata
+> dal team. La sezione 13 riflette ora il briefing di allineamento del team
+> (rifinitura UI e feature da confermare), non più il TO-DO da zero.
+>
+> Aggiornato l'8 settembre 2026 dopo una verifica puntuale dello stato reale
+> del codice (sessione Jacopo): parecchi punti della sezione 13 risultano
+> completati rispetto al 7 settembre (login, register, dashboard, calendario,
+> classifica, inviti, verifica admin) e sono stati marcati di conseguenza;
+> `team-trades` resta l'area più indietro. È emerso anche un bug non ancora
+> documentato sulla cache delle leghe in dashboard (vedi 13.1bis).
 
 ## 1. Obiettivo
 
@@ -19,16 +31,30 @@ bloccate.
 
 ## 2. Stato attuale del repository
 
-Il progetto è stato generato con Angular CLI ed è ancora allo stato iniziale:
+Il progetto è stato generato con Angular CLI. Dopo i merge di più branch del
+team, le fondamenta e la maggior parte delle feature principali esistono già
+in una prima versione funzionante; il lavoro rimanente è soprattutto di
+rifinitura UI/UX e di alcune feature ancora da confermare col backend.
 
 - Angular `22.1.x`, TypeScript `6.0.x`, RxJS `7.8.x`;
 - npm 11 e test con Vitest;
 - applicazione standalone, senza `AppModule`;
-- `src/app/app.routes.ts` contiene ancora un array di route vuoto;
-- `src/app/app.html` contiene il template dimostrativo di Angular CLI;
-- `src/app/app.config.ts` configura il router ma non ancora `HttpClient`;
-- non esistono ancora feature, modelli API, servizi, form o autenticazione;
+- `src/app/app.routes.ts` definisce già tutte le route principali (pubbliche
+  sotto `public-layout`, protette sotto `app-shell` con `authGuard`);
+- `provideHttpClient()`, interceptor Bearer (`core/auth/auth.interceptor.ts`)
+  e servizio di sessione (`core/auth/session.ts`) sono implementati;
+- feature presenti in `src/app/`: `landing-page`, `login`, `register`,
+  `forgot-password`, `reset-password`, `dashboard` (con `user-leagues` e
+  `pending-invites`), `account` (con `change-username`, `change-password`,
+  `disable-account`), `players`, `league-create` (con `create-admin-team`),
+  `league-detail` (con `invite-league` e `standings`), `team-create`,
+  `team-detail` (con `team-roster`, `rename-team`, `player-release`),
+  `team-trades`, `Calendar`;
 - il backend non è contenuto in questo repository.
+
+**Non assumere che queste feature siano complete o rifinite**: sono
+implementazioni di prima passata dai vari branch; verificare sempre lo stato
+reale del file prima di modificarlo (vedi sezione 15).
 
 Comandi disponibili:
 
@@ -141,6 +167,19 @@ temporale di esposizione del token (sparisce alla chiusura della tab, non è
 condiviso tra tab diverse), accettando come contropartita un login più
 frequente per l'utente. L'accesso allo storage non va sparso nei componenti:
 va incapsulato in un servizio di sessione (`core/auth/`).
+
+### Id utente lato frontend (aggiunto l'8 settembre 2026)
+
+`Session` (`core/auth/session.ts`) espone ora anche `userId`, un `computed()`
+che decodifica il payload del JWT (`core/auth/jwt.ts`, funzione pura
+`decodeJwtPayload`) per leggere il claim `uid`. Un JWT standard non è
+cifrato, solo firmato: il payload è già leggibile da chiunque abbia il
+token, quindi decodificarlo lato client non espone nulla di nuovo. Serve
+solo a decisioni di UI (es. `league-detail.ts` confronta
+`league.adminUserId === session.userId()` per mostrare le azioni admin);
+**non sostituisce mai** il controllo di autorizzazione reale, che resta
+sempre lato backend. Nessun altro componente deve decodificare il token
+direttamente: si passa sempre da `session.userId()`.
 
 ## 7. Errori API
 
@@ -289,6 +328,7 @@ tipo Java preciso o il formato di tutte le date.
 | Metodo | Endpoint | Request | Response / permesso |
 | --- | --- | --- | --- |
 | POST | `/api/leagues` | `{name, teamName, budget}` | crea lega e prima squadra, 201 |
+| GET | `/api/leagues/{leagueId}` | — | dettaglio lega (`id, name, budget, adminUserId, createdAt?`); confermato l'8 settembre 2026, non era ancora documentato |
 | GET | `/api/leagues/{leagueId}/teams` | — | classifica; solo membri della lega |
 | POST | `/api/teams` | `{teamName, leagueId}` | crea squadra dopo invito accettato, 201 |
 | GET | `/api/teams/me` | — | squadre dell'utente corrente |
@@ -405,8 +445,171 @@ controlli di autorizzazione del backend.
 
 ## 13. TO-DO frontend
 
-La checklist è ordinata per dipendenze: completare una fase prima di costruire
-feature che dipendono da essa.
+### Pagina squadre — aggiornamento del 7 settembre 2026
+
+- Aggiunta `/teams` alla navbar: selezione delle leghe dell'utente, selezione
+  automatica se unica, ricerca per nome squadra o fantallenatore e link alla rosa.
+- La lega selezionata resta nel query parameter `leagueId`, anche nel dettaglio
+  `/teams/:teamId`, con collegamento per tornare all'elenco della stessa lega.
+- Il dettaglio usa `GET /api/account/me/leagues` e
+  `GET /api/leagues/{leagueId}/teams` per nome squadra, fantallenatore, punti e
+  crediti. Swagger locale è stato verificato: `GET /api/teams/{teamId}` non esiste.
+  I link precedenti senza lega possono risolvere le squadre dell'utente tramite
+  la risposta account; per le altre squadre usare l'elenco con `leagueId`.
+- La rosa usa `GET /api/teams/{teamId}/players`, esclude i giocatori con
+  `transferDate` valorizzata e recupera il ruolo dal catalogo `/api/players`
+  abbinando `playerId`. Mostra il prezzo effettivo di acquisto, non la quotazione.
+- La fantamedia non è esposta dal contratto OpenAPI corrente: viene indicata
+  come non disponibile. Occorre un dato aggregato lato backend per completarla.
+- La lettura delle rose avversarie rimane soggetta ai permessi backend:
+  un 403 mostra un messaggio esplicito. Per consentirla a tutti i membri serve
+  un aggiornamento backend; nessuna autorizzazione viene aggirata dal frontend.
+- Rinomina visibile solo per la propria squadra; svincolo per proprietario o
+  admin contestuale. Per lo svincolo viene passato `playerId`, non l'ID della
+  relazione squadra-giocatore.
+- Aggiunti test HTTP/componenti per selezione lega, ricerca, collegamenti,
+  dettaglio avversario, ruoli, giocatori trasferiti e accesso negato.
+- Verifica AXE e prova end-to-end con utenti reali ancora da eseguire.
+
+Aggiornato dopo il briefing di team del 7 settembre 2026. Le fondamenta
+(Fasi 0-2 sotto) sono sostanzialmente completate: l'obiettivo ora è
+rifinire le feature già presenti fino ad avere una web app solida sulle
+funzionalità più importanti, tenendo marginali le funzionalità accessorie.
+
+### 13.1 Rifinitura prioritaria (confermata dal team)
+
+Feature esistenti da sistemare, in ordine di priorità concordato:
+
+- [x] **Landing page**: non più il placeholder Angular CLI, ha già hero,
+  copy e CTA verso `/login` (`landing-page.html`). Resta aperto solo il
+  dettaglio "nav bar": la landing in sé ha solo il CTA, la vera `<nav>` è
+  nel `public-layout` che la wrappa — verificare se copre il requisito o se
+  ne serve una dedicata.
+- [x] **Login**: aggiungere la possibilità di mostrare/nascondere la password
+  (toggle visibilità sul campo password). Fatto, vedi
+  `login.ts` (`togglePasswordVisibility`).
+- [x] **Register**: aggiungere placeholder ai campi e messaggi di errore
+  chiari per i campi compilati in modo errato. Fatto, vedi `register.html`
+  (placeholder, errori di validazione, requisiti password in tempo reale,
+  toggle password).
+- [x] **Dashboard**: nella card lega, tenere solo l'azione "Dettagli lega" ed
+  evidenziare meglio (testo più grande) punti e crediti. Fatto, vedi
+  `user-leagues.html`.
+- [ ] **New League page**: sistemare la grafica e, al termine della
+  creazione, tornare alla dashboard aggiornata con la nuova lega. La
+  navigazione post-creazione (`router.navigateByUrl('/dashboard')` in
+  `league-create.ts`) c'è, ma la dashboard può mostrare dati non aggiornati:
+  vedi il bug "cache leghe non invalidata" in 13.1bis.
+- [ ] **Players**: migliorare il layout dei filtri (leggibilità e
+  disposizione, non la logica di filtro già presente). Nota: oggi i filtri
+  sono tutti client-side dopo aver scaricato l'intero catalogo; i filtri
+  lato backend documentati in sezione 10 (`role`, `realTeamName`,
+  `minPrice`, `maxPrice`, `injured`) non vengono mai usati nella chiamata
+  HTTP. Non bloccante ora, da tenere d'occhio se il catalogo cresce.
+- [ ] **Trades**: garantire tre viste distinte —
+  - scambi dell'utente corrente,
+  - scambi dell'intera lega,
+  - scambi di ogni singola squadra/team.
+
+### 13.1bis Bug noti da correggere
+
+Emersi da una verifica del codice il 7 settembre 2026; più urgenti della pura
+rifinitura grafica elencata sopra perché rompono funzionalità esistenti.
+Aggiornato l'8 settembre 2026 dopo una nuova verifica puntuale.
+
+- [ ] **`team-trades.ts` usa un `teamId` hardcoded**: `currentTeamId = 1` con
+  commento `// Replace with the logged-in team's ID`. La pagina scambi mostra
+  sempre i dati della squadra 1, mai quelli dell'utente loggato. Ancora
+  presente, invariato.
+- [ ] **`submitProposal()` in `team-trades.ts` non chiama nessuna API**: legge
+  il valore del form e basta; il bottone di creazione scambio sembra
+  funzionare ma non fa nulla. Ancora presente, invariato.
+- [ ] **`team-trades.ts` chiama `HttpClient` direttamente nel componente**
+  invece di usare un service dedicato: viola l'organizzazione per feature
+  della sezione 11 (i componenti non devono contenere regole di trasporto
+  HTTP). Ancora presente, invariato.
+- [x] **`Calendar` (`src/app/Calendar`) è orfano** — RISOLTO l'8 settembre
+  2026: ora è agganciato dentro `league-detail.html`
+  (`<app-calendar [leagueId]="leagueId" [isAdmin]="isAdmin()" />`), con
+  generazione, gestione di `calendar_already_generated`/`no_open_matchday`/
+  `matchday_not_closed` e lettura punteggio.
+- [x] **Mismatch di endpoint classifica/standings** — RISOLTO l'8 settembre
+  2026: `standings.ts` ora chiama `GET /api/leagues/{leagueId}/teams`
+  (confermato reale sul backend, restituisce l'array ordinato per punti
+  decrescenti), non più `/standings`. Il bottone "Membri" separato nel
+  dettaglio lega è stato rimosso perché ridondante con "Classifica", che usa
+  la stessa risorsa.
+- [ ] **Nav bar con TODO irrisolti** — parzialmente risolto l'8 settembre
+  2026: in `app-shell.html` "Squadre" punta ora correttamente a `/teams`.
+  "Scambi" punta **ancora** a `/dashboard` con lo stesso commento TODO; resta
+  legato allo sblocco di `team-trades.ts` sopra.
+- [x] **`landing-page.html` non è più il placeholder di Angular CLI** —
+  vedi punto Landing page in 13.1 per il dettaglio.
+
+### 13.1bis-2 Bug nuovo trovato l'8 settembre 2026
+
+- [ ] **Cache leghe non invalidata dopo la creazione**:
+  `UserLeaguesService.userLeagues` (`dashboard/user-leagues/user-leagues.service.ts`)
+  è un `httpResource` singleton (`providedIn: root`) caricato una sola volta.
+  `LeagueCreate.onSubmit` (`league-create.ts`), dopo aver creato la lega, fa
+  solo `router.navigateByUrl('/dashboard')` senza chiamare `.reload()` sulla
+  risorsa. Risultato: tornando alla dashboard la nuova lega potrebbe non
+  comparire finché l'utente non ricarica manualmente la pagina — non
+  soddisfa il requisito "tornare alla dashboard aggiornata con la nuova
+  lega" del punto "New League page" in 13.1.
+
+### 13.1ter Accessibilità
+
+Requisiti già previsti in sezione 4 ma non ancora rispettati nel codice
+attuale.
+
+- [ ] `index.html` ha `<html lang="en">` mentre tutta la UI è in italiano:
+  cambiare in `lang="it"`.
+- [ ] Manca uno skip link al contenuto principale, sia in `app-shell` che in
+  `public-layout`.
+
+### 13.1quater Test mancanti
+
+- [ ] Aggiornato l'8 settembre 2026: ora 12 file `.spec.ts` (non più 7) —
+  aggiunti `team-detail`, `team-roster`, `teams`, `pending-invites`,
+  `invite-league` rispetto al 7 settembre. Mancano ancora test per
+  `auth-api.service`, `session` (più critico ora: contiene la decodifica
+  JWT per `userId`, vedi sezione 6), `auth.interceptor`, `auth.guard`,
+  `players.service`, `league-detail`, `standings`, `team-trades`,
+  `calendar-api.service`. La Fase 8 richiede esplicitamente test con
+  `HttpTestingController` per servizi e form.
+
+### 13.2 Da confermare (dipendono da verifica/allineamento col backend)
+
+Non ancora impegnate come lavoro certo: verificare fattibilità e contratto
+API prima di investire tempo di implementazione.
+
+- [ ] Acquisto giocatori tramite asta. Non iniziato: solo TODO commentati
+  in `players.ts` che preparano il terreno (leagueId/teamId/playerId/
+  purchasePrice necessari, punto di partenza probabile dal dettaglio
+  lega/squadra).
+- [ ] Esecuzione scambi (trade) end-to-end. Non iniziato/rotto, vedi i bug
+  di `team-trades.ts` in 13.1bis.
+- [x] Invito utenti e ingresso in lega tramite invito — confermato e
+  implementato, vedi nota Swagger dell'8 settembre 2026 in sezione 14.
+- [x] Creazione del calendario — confermato e implementato in
+  `CalendarComponent`/`CalendarApiService` (generazione una sola volta,
+  gestione dei relativi error code).
+- [x] Verifica/consultazione della classifica — confermato: l'endpoint
+  reale è `GET /api/leagues/{leagueId}/teams` (già in sezione 10), risolto
+  il mismatch documentato in 13.1bis.
+
+### 13.3 Marginale (bassa priorità, non bloccante per l'MVP)
+
+- [ ] **Reset password** (`/forgot-password`, `/reset-password`): il flusso
+  esiste già come scaffolding minimo; non investirci lavoro finché le
+  feature core sopra non sono rifinite.
+
+### Fasi storiche (fondamenta, sostanzialmente completate)
+
+Le fasi seguenti restano come riferimento della progettazione iniziale.
+Molti punti sono già implementati dai branch mergiati: verificare lo stato
+reale del codice prima di considerarli aperti o chiusi.
 
 ### Fase 0 — verifica del contratto
 
@@ -507,6 +710,19 @@ feature che dipendono da essa.
 - [ ] Documentare avvio con frontend, backend e proxy.
 
 ## 14. TO-DO backend bloccanti o da concordare
+
+### Inviti: verifica Swagger dell'8 settembre 2026
+
+- Il form nei dettagli lega si apre con “Invita membro”, solo per l'admin.
+- L'invio usa `POST /api/leagues/{leagueId}/invites` con `{invitedUsername}`,
+  come confermato da `/v3/api-docs`; accettazione e rifiuto usano il PATCH esistente.
+- Il DTO `InviteResponse` corrente espone soltanto gli ID: per completare la
+  dashboard con i nomi, il backend deve aggiungere `leagueName` e
+  `invitedByUsername` alla risposta di `GET /api/invites/pending`.
+  Il frontend supporta questi campi opzionali e mantiene gli ID come fallback.
+- Dopo l'accettazione, l'utente viene accompagnato alla creazione della squadra.
+- Build e test mirati verificano il frontend; prova con utenti reali e audit AXE
+  restano da eseguire. Il backend non è incluso in questo repository.
 
 Questi elementi non sono implementabili soltanto nel frontend:
 

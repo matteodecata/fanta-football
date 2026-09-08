@@ -10,7 +10,7 @@
     </div>
   }
 
-  @if (invites.isLoading() && invites.value().length === 0) {
+  @if (invites.isLoading() && (!invites.hasValue() || invites.value().length === 0)) {
     <div class="invites-status" role="status">
       <span class="spinner" aria-hidden="true"></span>
       <span>Caricamento degli inviti…</span>
@@ -34,11 +34,18 @@
           <article [attr.aria-labelledby]="'invite-title-' + invite.id">
             <div class="invite-content">
               <h3 [id]="'invite-title-' + invite.id">
-                Invito alla lega n. {{ invite.leagueId }}
+                @if (invite.leagueName) {
+                  Invito a {{ invite.leagueName }}
+                } @else {
+                  Invito alla lega n. {{ invite.leagueId }}
+                }
               </h3>
               <p>
-                Inviato dall'utente n.
-                <strong>{{ invite.invitedByUserId }}</strong>
+                @if (invite.invitedByUsername) {
+                  Inviato da <strong>{{ invite.invitedByUsername }}</strong>
+                } @else {
+                  Inviato dall'utente n. <strong>{{ invite.invitedByUserId }}</strong>
+                }
               </p>
               <p class="invite-date">
                 Ricevuto il
@@ -57,6 +64,7 @@
                 type="button"
                 [disabled]="isProcessing(invite.id)"
                 (click)="acceptInvite(invite)"
+                [attr.aria-label]="'Accetta invito alla lega ' + (invite.leagueName || invite.leagueId)"
               >
                 @if (isProcessing(invite.id)) {
                   Attendi…
@@ -69,6 +77,7 @@
                 type="button"
                 [disabled]="isProcessing(invite.id)"
                 (click)="rejectInvite(invite)"
+                [attr.aria-label]="'Rifiuta invito alla lega ' + (invite.leagueName || invite.leagueId)"
               >
                 Rifiuta
               </button>

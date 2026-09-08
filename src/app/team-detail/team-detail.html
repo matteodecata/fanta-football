@@ -1,1 +1,38 @@
-<h1 data-route-heading tabindex="-1">Squadra</h1>
+﻿<div class="container page page-shell">
+  <a class="btn" routerLink="/teams" [queryParams]="{ leagueId: leagueId() }">Torna alle squadre</a>
+  <h1 data-route-heading tabindex="-1">Dettaglio squadra</h1>
+  @if (isLoading()) {
+    <p role="status">Caricamento squadra…</p>
+  } @else if (hasError()) {
+    <div class="alert alert--danger" role="alert">
+      <p>Non è stato possibile caricare la squadra.</p>
+      <button class="btn" type="button" (click)="retry()">Riprova</button>
+    </div>
+  } @else if (team(); as currentTeam) {
+    <section class="card" aria-labelledby="team-title">
+      <div class="page-header">
+        <div>
+          <p class="eyebrow">{{ membership()?.league?.name }}</p>
+          <h2 id="team-title">{{ currentTeam.teamName }}</h2>
+          <p>Fantallenatore: <strong>{{ currentTeam.username }}</strong></p>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="metric"><span class="metric__label">Crediti disponibili</span><span class="metric__value">{{ currentTeam.budget }}</span></div>
+        <div class="metric"><span class="metric__label">Punti</span><span class="metric__value">{{ currentTeam.totalPoints }}</span></div>
+      </div>
+    </section>
+    <section class="card" aria-labelledby="team-roster-title">
+      <h2 id="team-roster-title">Rosa</h2>
+      <app-team-roster [teamId]="teamId()" [canManage]="canManageRoster()" />
+    </section>
+    @if (isOwner()) {
+      <section class="card" aria-labelledby="rename-team-title">
+        <h2 id="rename-team-title">Rinomina squadra</h2>
+        <app-rename-team [teamId]="teamId()" (updated)="teamResource.reload()" />
+      </section>
+    }
+  } @else {
+    <p role="status">Squadra non trovata. Torna all’elenco e seleziona la lega di cui vuoi consultare le squadre.</p>
+  }
+</div>

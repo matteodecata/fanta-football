@@ -1,0 +1,59 @@
+<div class="container page">
+  <header class="page-header">
+    <h1 data-route-heading tabindex="-1">Squadre</h1>
+    <p>Scegli una lega e consulta le squadre dei suoi fantallenatori.</p>
+  </header>
+  @if (leagues.isLoading()) {
+    <p role="status">Caricamento delle leghe…</p>
+  } @else if (leagues.error()) {
+    <div class="alert alert--danger" role="alert">
+      <p>Non è stato possibile caricare le leghe.</p>
+      <button class="btn" type="button" (click)="leagues.reload()">Riprova</button>
+    </div>
+  } @else if (leagues.value().length === 0) {
+    <p class="empty-state">Non partecipi ancora a nessuna lega. Crea una lega o accetta un invito dalla dashboard.</p>
+    <a class="btn" routerLink="/dashboard">Vai alla dashboard</a>
+  } @else {
+    <div class="card filters">
+      <div class="field">
+        <label for="teams-league">Lega</label>
+        <select #leagueSelect id="teams-league" class="input" [value]="selectedLeagueId() ?? ''" (change)="selectLeague(leagueSelect.value)">
+          <option value="">Seleziona una lega</option>
+          @for (item of leagues.value(); track item.league.id) {
+            <option [value]="item.league.id">{{ item.league.name }}</option>
+          }
+        </select>
+      </div>
+      @if (selectedLeagueId()) {
+        <div class="field">
+          <label for="teams-search">Cerca squadra o fantallenatore</label>
+          <input #searchInput id="teams-search" class="input" type="search" [value]="search()" (input)="search.set(searchInput.value)" placeholder="Nome squadra o fantallenatore" />
+        </div>
+      }
+    </div>
+    @if (selectedLeagueId()) {
+      @if (teams.isLoading()) {
+        <p role="status">Caricamento delle squadre…</p>
+      } @else if (teams.error()) {
+        <div class="alert alert--danger" role="alert">
+          <p>Non è stato possibile caricare le squadre della lega.</p>
+          <button class="btn" type="button" (click)="teams.reload()">Riprova</button>
+        </div>
+      } @else {
+        <p role="status">Squadre trovate: {{ visibleTeams().length }}</p>
+        <ul class="teams-grid">
+          @for (team of visibleTeams(); track team.teamId) {
+            <li class="card team-card">
+              <h2>{{ team.teamName }}</h2>
+              <p>Fantallenatore: <strong>{{ team.username }}</strong></p>
+              <p>{{ team.budget | number }} crediti · {{ team.totalPoints | number }} punti</p>
+              <a class="btn btn--primary" [routerLink]="['/teams', team.teamId]" [queryParams]="{ leagueId: selectedLeagueId() }" [attr.aria-label]="'Visualizza rosa di ' + team.teamName">Visualizza rosa</a>
+            </li>
+          } @empty {
+            <li class="empty-state">Nessuna squadra trovata.</li>
+          }
+        </ul>
+      }
+    }
+  }
+</div>

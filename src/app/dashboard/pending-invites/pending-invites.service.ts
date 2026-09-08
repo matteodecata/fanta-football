@@ -8,6 +8,9 @@ export type InviteDecision = Extract<InviteStatus, 'ACCEPTED' | 'DECLINED'>;
 export interface InviteResponse {
   id: number;
   leagueId: number;
+  // Richiedono l'estensione del DTO backend; compatibili con la risposta attuale.
+  leagueName?: string;
+  invitedByUsername?: string;
   invitedByUserId: number;
   invitedUserId: number;
   status: InviteStatus;
