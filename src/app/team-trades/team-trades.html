@@ -1,7 +1,9 @@
 <div class="trades-page">
     <header class="trades-header">
         <h1>Scambi</h1>
-        <p>Real Fantacalcio · Lega dei Bootcampers</p>
+        @if (leagueId !== null && leagueName(); as leagueNameValue) {
+            <p>{{ currentTeamName() }} · {{ leagueNameValue }}</p>
+        }
     </header>
 
 
@@ -13,7 +15,7 @@
             type="button" 
             role="tab" 
             (click)="selectTab('received')">
-            Ricevuti <span>(receivedNumber)</span>
+            Ricevuti <span>({{ receivedTrades().length }})</span>
         </button>
         <button
             class="trade-tab"
@@ -22,7 +24,7 @@
             type="button" 
             role="tab" 
             (click)="selectTab('sent')">
-            Inviati <span>(sentNumbers)</span>
+            Inviati <span>({{ sentTrades().length }})</span>
         </button>
         <button 
             class="trade-tab" 
@@ -76,57 +78,55 @@
             </section>
         }
 
+        @if (leagueId !== null) {
+            <aside class="trades-sidebar">
+                <section class="proposal-panel" aria-labelledby="proposal-title">
+                    <h2 id="proposal-title">Proponi uno scambio</h2>
+                    <p class="panel-description">Un calciatore per parte, più un eventuale conguaglio.</p>
+                    <form (submit)="submitProposal($event)" class="proposal-form" >
+                        <label class="trade-field">
+                            <span>Squadra ricevente</span>
+                            <p></p>
+                        </label>
+                        <label class="trade-field">
+                            <span>Il tuo calciatore</span>
+                            <select id="receiving-team" [formField]="proposalForm.receivingTeamId">
+                                @for(team of leagueTeams(); track team.teamId){
+                                    <option [value]="team.teamId">
+                                        {{ team.teamName }}
+                                    </option>
+                                }
+                            </select>
+                        </label>
+                        <label class="trade-field">
+                            <span>Calciatore richiesto</span>
+                            <select>
+                                @for(player of availablePlayers(); track player.id){
+                                    <option [value]="player.id">
+                                        {{ player.name }}
+                                    </option>
+                                }
+                            </select>
+                        </label>
+                        <label class="trade-field">
+                            <span>Conguaglio</span>
+                            <input type="number" [formField]="proposalForm.amount"/>
+                        </label>
+                        <p class="field-hint">Positivo: paghi tu. Negativo: paga chi riceve la proposta.</p>
+                        <button class="btn btn--primary proposal-submit" type="submit">Invia proposta</button>
+                    </form>
+                </section>
 
-        <aside class="trades-sidebar">
-            <section class="proposal-panel" aria-labelledby="proposal-title">
-                <h2 id="proposal-title">Proponi uno scambio</h2>
-                <p class="panel-description">Un calciatore per parte, più un eventuale conguaglio.</p>
-                <form (submit)="submitProposal($event)" class="proposal-form" >
-                    <label class="trade-field">
-                        <span>Squadra ricevente</span>
-                        @for(team of leagueTeams(); track team.id){
-                            <option [value]="team.id">
-                                {{ team.name }}
-                            </option>
-                        }
-                    </label>
-                    <label class="trade-field">
-                        <span>Il tuo calciatore</span>
-                        <select id="receiving-team" [formField]="proposalForm.receivingTeamId">
-                            @for(team of leagueTeams(); track team.id){
-                                <option [value]="team.id">
-                                    {{ team.name }}
-                                </option>
-                            }
-                        </select>
-                    </label>
-                    <label class="trade-field">
-                        <span>Calciatore richiesto</span>
-                        <select>
-                            @for(player of availablePlayers(); track player.id){
-                                <option [value]="player.id">
-                                    {{ player.name }}
-                                </option>
-                            }
-                        </select>
-                    </label>
-                    <label class="trade-field">
-                        <span>Conguaglio</span>
-                        <input type="number" [formField]="proposalForm.amount"/>
-                    </label>
-                    <p class="field-hint">Positivo: paghi tu. Negativo: paga chi riceve la proposta.</p>
-                    <button class="btn btn--primary proposal-submit" type="submit">Invia proposta</button>
-                </form>
-            </section>
-
-            <section class="reminder-panel" aria-labelledby="reminder-title">
-                <h2 id="reminder-title">Da ricordare</h2>
-                <ul>
-                    <li>Accetta solo chi riceve la proposta.</li>
-                    <li>Rifiutare può farlo chiunque dei due.</li>
-                    <li>Se accetti uno scambio, quelli in conflitto si annullano.</li>
-                </ul>
-            </section>
-        </aside>
+                <section class="reminder-panel" aria-labelledby="reminder-title">
+                    <h2 id="reminder-title">Da ricordare</h2>
+                    <ul>
+                        <li>Accetta solo chi riceve la proposta.</li>
+                        <li>Rifiutare può farlo chiunque dei due.</li>
+                        <li>Se accetti uno scambio, quelli in conflitto si annullano.</li>
+                    </ul>
+                </section>
+            </aside>
+        }
+        
     </div>
 </div>

@@ -46,7 +46,16 @@ export class LeagueDetail {
   //   if (!this.leagueId || Number.isNaN(this.leagueId)) {
   //     return undefined;
   //   }
+  // protected readonly standingsResource = httpResource<LeagueStandingResponse[]>(() => {
+  //   if (!this.leagueId || Number.isNaN(this.leagueId)) {
+  //     return undefined;
+  //   }
 
+  //   return {
+  //     url: `/api/leagues/${this.leagueId}/standings`,
+  //     method: 'GET',
+  //   };
+  // });
   //   return {
   //     url: `/api/leagues/${this.leagueId}/standings`,
   //     method: 'GET',
@@ -58,10 +67,16 @@ export class LeagueDetail {
       this.leagueResource.status() === 'loading' 
     // ||
       // this.standingsResource.status() === 'loading'
+      this.leagueResource.status() === 'loading' 
+    // ||
+      // this.standingsResource.status() === 'loading'
   );
 
   protected readonly hasError = computed(
     () =>
+      this.leagueResource.error() !== undefined 
+    // ||
+      // this.standingsResource.error() !== undefined
       this.leagueResource.error() !== undefined 
     // ||
       // this.standingsResource.error() !== undefined
@@ -74,6 +89,12 @@ export class LeagueDetail {
     const userId = this.session.userId();
     return league !== null && userId !== null && league.adminUserId === userId;
   });
+  protected readonly isAdmin = computed(() => {
+    const league = this.league();
+    const userId = this.session.userId();
+    return league !== null && userId !== null && league.adminUserId === userId;
+  });
 
+  // protected readonly standings = computed(() => this.standingsResource.value() ?? []);
   // protected readonly standings = computed(() => this.standingsResource.value() ?? []);
 }

@@ -1,50 +1,32 @@
-import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
+import { TeamTradesService } from './team-trades.service';
+import { ActivatedRoute } from '@angular/router';
+import { PlayerResponse } from '../players/players-response';
+import { CreateTradeDto, TeamStandingResponse, TradeDto } from './team-trades.models';
 
-
-
-type TradeStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
-
-interface TradeDto {
-  id: number;
-  proposingTeamId: number;
-  proposingTeamName: string;
-  receivingTeamId: number;
-  receivingTeamName: string;
-  requestedPlayerName: string;
-  offeredPlayerName: string;
-  amount: number;
-  status: TradeStatus;
-  proposalDate: string;
-}
-
-interface CreateTradeDto {
-  receivingTeamId: string;
-  requestedPlayerId: string;
-  offeredPlayerId: string;
-  amount: number;
-}
 
 type TradeTab = 'received' | 'sent' | 'history';
 
-interface TeamOption {
-  id: number;
-  name: string;
-}
-
-interface Player {
-  id: number;
-  name: string;
-}
-
 @Component({
-  selector: 'app-team-trades',
   imports: [FormField],
   templateUrl: './team-trades.html',
   styleUrl: './team-trades.css',
 })
 export class TeamTrades {
+  private readonly tradeService = inject(TeamTradesService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly leagueIdParam = this.route.snapshot.paramMap.get('leagueId');
+  readonly leagueId: number | null = this.leagueIdParam === null
+    ? null
+    : Number(this.leagueIdParam);
+
+  private readonly teamIdParam = this.route.snapshot.paramMap.get('teamId');
+  readonly teamId: number | null = this.teamIdParam === null
+    ? null
+    : Number(this.teamIdParam);
+  readonly leagueName = signal<string | null>(null);
+
   private readonly _proposals = signal<TradeDto[]>([]);
   readonly proposals = this._proposals.asReadonly();
 
@@ -54,62 +36,132 @@ export class TeamTrades {
     offeredPlayerId: '0',
     amount: 0,
   });
+
   readonly proposalForm = form(this.newProposal);
 
-  readonly leagueTeams = signal<TeamOption[]>([]);
-  readonly availablePlayers = signal<Player[]>([]);
+  readonly leagueTeams = signal<TeamStandingResponse[]>([]);
+  private readonly userTeamIds = signal<number[]>([]);
 
-  private http = inject(HttpClient);
+  readonly currentTeamName = computed(() =>
+    this.leagueTeams().find(team => team.teamId === this.teamId)?.teamName ?? null,
+  );
+
+  readonly availablePlayers = signal<PlayerResponse[]>([]);
 
   readonly activeTab = signal<TradeTab>('received');
   readonly loadError = signal<string | null>(null);
 
+  private readonly ownedTeamIds = computed(() => {
+    if (this.leagueId !== null) {
+      return this.teamId === null ? [] : [this.teamId];
+    }
+
+    return this.userTeamIds();
+  });
+
+  readonly receivedTrades = computed(() => {
+    const ownedTeamIds = new Set(this.ownedTeamIds());
+
+    return this.proposals().filter(
+      trade =>
+        ownedTeamIds.has(trade.receivingTeamId) &&
+        trade.status === 'PENDING',
+    );
+  });
+
+  readonly sentTrades = computed(() => {
+    const ownedTeamIds = new Set(this.ownedTeamIds());
+
+    return this.proposals().filter(
+      trade =>
+        ownedTeamIds.has(trade.proposingTeamId) &&
+        trade.status === 'PENDING',
+    );
+  });
 
   readonly visibleTrades = computed(() => {
-    const trades = this.proposals();
     const tab = this.activeTab();
-    const currentTeamId = 1; // Replace with the logged-in team's ID
 
     if (tab === 'received') {
-      return trades.filter(
-        trade =>
-          trade.receivingTeamId === currentTeamId &&
-          trade.status === 'PENDING',
-      );
+      return this.receivedTrades();
     }
 
     if (tab === 'sent') {
-      return trades.filter(
-        trade =>
-          trade.proposingTeamId === currentTeamId &&
-          trade.status === 'PENDING',
-      );
+      return this.sentTrades();
     }
 
-    return trades.filter(trade => trade.status !== 'PENDING');
+    const ownedTeamIds = new Set(this.ownedTeamIds());
+    return this.proposals().filter(
+      trade =>
+        trade.status !== 'PENDING' &&
+        (ownedTeamIds.has(trade.proposingTeamId) ||
+          ownedTeamIds.has(trade.receivingTeamId)),
+    );
   });
 
   ngOnInit(): void {
-    this.http.get<TradeDto[]>('/api/trades').subscribe({
-      next: (data) => {
-        this._proposals.set(data);
-        this.loadError.set(null);
-      },
-      error: (error) => {
-        console.error(error);
-        this.loadError.set('Impossibile caricare gli scambi.');
-      },
-    });
+    if(this.leagueId === null){
+      this.tradeService
+        .getUserTeams()
+        .subscribe({
+          next: (teams) => this.userTeamIds.set(teams.map(team => team.id)),
+          error: (error) => {
+            console.error('Errore nel caricamento dei team utente:', error);
+            this.loadError.set('Impossibile caricare i tuoi team.');
+          },
+        });
+
+      this.tradeService.getUserTrades()
+      .subscribe({
+          next: (trades) => this._proposals.set(trades),
+          error: (error) => {
+            console.error('Errore nel caricamento degli scambi:', error);
+            this.loadError.set('Impossibile caricare gli scambi.');
+          },
+      });
+
+    }else{
+      this.tradeService
+        .getLeague(this.leagueId)
+        .subscribe({
+          next: (league) => this.leagueName.set(league.name),
+          error: (error) => {
+            console.error('Errore nel caricamento della lega:', error);
+            this.loadError.set('Impossibile caricare la lega.');
+          },
+        });
+
+      this.tradeService
+        .getLeagueTrades(this.leagueId)
+        .subscribe({
+          next: (trades) => this._proposals.set(trades),
+          error: (error) => {
+            console.error('Errore nel caricamento degli scambi:', error);
+            this.loadError.set('Impossibile caricare gli scambi.');
+          },
+      });
+
+      this.tradeService
+        .getLeagueTeams(this.leagueId)
+        .subscribe({
+            next: (teams) => this.leagueTeams.set(teams),
+            error: (error) => {
+              console.error('Errore nel caricamento dei team', error);
+              this.loadError.set('Impossibile caricare i team.');
+            },
+      });
+    }
+
+    
   }
 
   selectTab(tab: TradeTab): void {
     this.activeTab.set(tab);
   }
 
-
   submitProposal(event: SubmitEvent): void {
     event.preventDefault();
 
-    const proposal = this.newProposal();
+    this.tradeService.createTrade(this.newProposal());
   }
 }
