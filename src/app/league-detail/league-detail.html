@@ -1,89 +1,83 @@
-<main>
-  <main>
-  <h1 data-route-heading tabindex="-1">Dettaglio lega</h1>
-
+<main class="page-shell">
   @if (isLoading()) {
     <p aria-live="polite">Caricamento della lega...</p>
   } @else if (hasError()) {
     <p role="alert">Non è stato possibile caricare i dettagli della lega.</p>
   } @else if (league(); as league) {
-    <section aria-labelledby="league-title">
-      <h2 id="league-title">{{ league.name }}</h2>
+    <section class="card" aria-labelledby="league-title">
+      <div class="page-header">
+        <div>
+          <p class="eyebrow">Lega</p>
+          <h1 id="league-title" data-route-heading tabindex="-1">{{ league.name }}</h1>
+        </div>
+        <span class="badge" [class.badge--accent]="isAdmin()" [class.badge--info]="!isAdmin()">
+          {{ isAdmin() ? 'Admin' : 'Partecipante' }}
+        </span>
+      </div>
 
-      <dl>
-        <div>
-          <dt>Budget iniziale</dt>
-          <dd>{{ league.budget }}</dd>
+      <div class="stats-grid">
+        <div class="metric">
+          <span class="metric__label">Budget iniziale</span>
+          <span class="metric__value">{{ league.budget }}</span>
         </div>
-        <div>
-          <dt>Admin</dt>
-          <dd>{{ league.adminUserId }}</dd>
+        <div class="metric">
+          <span class="metric__label">Utente admin</span>
+          <span class="metric__value">{{ league.adminUserId }}</span>
         </div>
-      </dl>
+      </div>
     </section>
 
-    <section aria-labelledby="standings-title">
-      <h2 id="standings-title">Classifica</h2>
-      <app-standings [leagueId]="leagueId" />
+    <section class="card" aria-labelledby="league-actions-title">
+      <h2 id="league-actions-title" class="card__title">Gestisci lega</h2>
+      <div class="action-grid" aria-label="Azioni lega">
+        <button class="action-card" type="button">
+          <span class="action-card__label">Membri</span>
+          <span class="action-card__meta">Squadre iscritte</span>
+        </button>
+
+        <button class="action-card" type="button">
+          <span class="action-card__label">Calendario</span>
+          <span class="action-card__meta">Giornate e partite</span>
+        </button>
+
+        @if (isAdmin()) {
+          <button class="action-card action-card--primary" type="button">
+            <span class="action-card__label">Gestisci Asta</span>
+            <span class="action-card__meta">Azione admin</span>
+          </button>
+        }
+
+        @if (isAdmin()) {
+          <button class="action-card action-card--primary" type="button">
+            <span class="action-card__label">Invita per username</span>
+            <span class="action-card__meta">Azione admin</span>
+          </button>
+        }
+
+        <button class="action-card action-card--active" type="button">
+          <span class="action-card__label">Classifica</span>
+          <span class="action-card__meta">Posizioni e punti</span>
+        </button>
+      </div>
     </section>
 
-    <section aria-labelledby="invite-title">
-      <h2 id="invite-title">Inviti</h2>
-      <app-invite-league [leagueId]="leagueId" />
-    </section>
-  }
-</main>
+    <div class="stack">
+      <section class="card" aria-labelledby="standings-title">
+        <h2 id="standings-title" class="card__title">Classifica</h2>
+        <app-standings [leagueId]="leagueId" />
+      </section>
 
-  @if (isLoading()) {
-    <p aria-live="polite">Caricamento della lega...</p>
-  } @else if (hasError()) {
-    <p role="alert">Non è stato possibile caricare i dettagli della lega.</p>
-  } @else if (league(); as league) {
-    <section aria-labelledby="league-title">
-      <h2 id="league-title">{{ league.name }}</h2>
+      <section class="card" aria-labelledby="calendar-title">
+        <h2 id="calendar-title" class="card__title">Calendario</h2>
+        <app-calendar [leagueId]="leagueId" [isAdmin]="isAdmin()" />
+      </section>
 
-      <dl>
-        <div>
-          <dt>Budget iniziale</dt>
-          <dd>{{ league.budget }}</dd>
-        </div>
-        <div>
-          <dt>Admin</dt>
-          <dd>{{ league.adminUserId }}</dd>
-        </div>
-      </dl>
-    </section>
-
-    <section aria-labelledby="standings-title">
-      <h2 id="standings-title">Classifica</h2>
-
-      @if (standings().length === 0) {
-        <p>Non ci sono squadre nella classifica.</p>
-      } @else {
-        <table>
-          <caption>Classifica della lega</caption>
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Squadra</th>
-              <th scope="col">Proprietario</th>
-              <th scope="col">Budget</th>
-              <th scope="col">Punti</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (team of standings(); track team.teamId) {
-              <tr>
-                <th scope="row">{{ $index + 1 }}</th>
-                <td>{{ team.teamName }}</td>
-                <td>{{ team.username }}</td>
-                <td>{{ team.budget }}</td>
-                <td>{{ team.totalPoints }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+      @if (isAdmin()) {
+        <section class="card" aria-labelledby="invite-title">
+          <h2 id="invite-title" class="card__title">Invita per username</h2>
+          <app-invite-league [leagueId]="leagueId" />
+        </section>
       }
-    </section>
+    </div>
   }
 </main>

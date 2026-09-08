@@ -1,1 +1,24 @@
-<p>landing-page works!</p>
+<main class="landing" aria-labelledby="landing-title">
+  <div class="landing__overlay" aria-hidden="true"></div>
+
+  <div class="landing__content container">
+    <div class="landing__brand" aria-label="FantaFootball">
+      <span class="landing__mark" aria-hidden="true">FF</span>
+      <span>FantaFootball</span>
+    </div>
+
+    <div class="landing__copy">
+      <p class="landing__eyebrow">Il tuo calcio. Le tue scelte.</p>
+      <h1 id="landing-title">Non basta tifare,<br /><span>devi schierare.</span></h1>
+      <p class="landing__intro">
+        Crea la tua squadra, sfida i tuoi amici e porta in campo la tua strategia.
+      </p>
+      <a class="btn btn--primary landing__cta" routerLink="/login" aria-label="Accedi o registrati a FantaFootball">
+        Login / Registrati
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+
+    <p class="landing__hint">Il campionato inizia dalla tua formazione.</p>
+  </div>
+</main>

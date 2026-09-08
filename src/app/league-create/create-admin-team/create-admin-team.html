@@ -1,7 +1,8 @@
-<div>
-  <label for="admin-team-name">Nome della tua squadra</label>
+<div class="field">
+  <label class="field__label" for="admin-team-name">Nome della tua squadra</label>
   <input
     id="admin-team-name"
+    class="input"
     type="text"
     [formField]="teamNameField()"
     [attr.aria-describedby]="teamNameField()().touched() && teamNameField()().invalid() ? 'admin-team-name-error' : null"
@@ -9,7 +10,7 @@
   />
 
   @if (teamNameField()().touched() && teamNameField()().invalid()) {
-    <ul id="admin-team-name-error" class="error-list" role="alert">
+    <ul id="admin-team-name-error" class="field__error" role="alert">
       @for (error of teamNameField()().errors(); track error) {
         <li>{{ error.message }}</li>
       }
