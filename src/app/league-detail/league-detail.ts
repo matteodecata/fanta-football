@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CalendarComponent } from '../Calendar/calendar.component';
 import { Session } from '../core/auth/session';
 import { InviteLeague } from './invite-league/invite-league';
@@ -9,7 +9,7 @@ import { LeagueDetailResponse } from './league-detail.models';
 
 @Component({
   selector: 'app-league-detail',
-  imports: [Standings, InviteLeague, CalendarComponent],
+  imports: [Standings, InviteLeague, CalendarComponent, RouterLink],
   templateUrl: './league-detail.html',
   styleUrl: './league-detail.css',
 })

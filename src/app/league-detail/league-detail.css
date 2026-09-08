@@ -42,6 +42,7 @@
   background: linear-gradient(180deg, var(--c-surface-2), var(--c-surface));
   color: var(--c-text);
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   transition: border-color var(--t-fast), transform var(--t-fast), background var(--t-fast);
 }

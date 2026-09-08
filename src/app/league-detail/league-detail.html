@@ -36,10 +36,10 @@
         </button>
 
         @if (isAdmin()) {
-          <button class="action-card action-card--primary" type="button">
+          <a class="action-card action-card--primary" [routerLink]="['/leagues', leagueId, 'auction']">
             <span class="action-card__label">Gestisci Asta</span>
             <span class="action-card__meta">Azione admin</span>
-          </button>
+          </a>
         }
 
         @if (isAdmin()) {

@@ -48,97 +48,95 @@
       <label class="field" for="auction-team">
         <span class="field__label">Squadra</span>
         <select
+          #teamSelect
           id="auction-team"
           class="select"
           [value]="selectedTeamId() ?? ''"
-          (change)="updateSelectedTeam($any($event.target).value)"
+          (change)="updateSelectedTeam(teamSelect.value)"
+          [disabled]="isLoading() || hasError() || isSubmitting()"
         >
           <option value="">Seleziona squadra</option>
-          @for (team of teamsResource.value(); track team.teamId) {
-            <option [value]="team.teamId">
-              {{ team.teamName }} - budget {{ team.budget }}
-            </option>
+          @if (teamsResource.hasValue()) {
+            @for (team of teamsResource.value(); track team.teamId) {
+              <option [value]="team.teamId">
+                {{ team.teamName }} - budget {{ team.budget }}
+              </option>
+            }
           }
         </select>
       </label>
       
 
-      <label class="field" for="auction-player">
-        <span class="field__label">Calciatore</span>
-        <!-- TODO 6: gestisci il caso in cui non ci siano piu giocatori disponibili.
-          Domanda guida: un array vuoto indica sempre che sono stati acquistati tutti,
-          oppure puo essere il valore iniziale durante il caricamento?
-          Hint: mostra il messaggio di lista vuota solo dopo una GET riuscita e terminata.
-          Valuta quando disabilitare la ricerca; mantieni distinti errore e lista vuota.
-          Non confondere catalogo vuoto con ricerca senza corrispondenze (vedi R7). -->
-        <!-- TODO R5: sostituisci la select del calciatore con un input di ricerca.
-          Collegamento da completare: updateSelectedPlayer e availablePlayers non esistono
-          piu nel TS attivo, ma questa select li usa ancora; finche restano la build fallisce.
-          Domanda guida: come passa il testo dal TS all'input e dall'input al TS?
-          Hint: [value] legge searchText; (input) chiama changeSearchTextAndResetId.
-          Usa type="search". Una reference di template, per esempio #playerSearch,
-          ti permette di leggere playerSearch.value nell'evento senza usare $any.
-          Conserva una label collegata all'id dell'input. Trasforma il contenitore esterno
-          in un div e lascia la label sul solo input: i pulsanti dei risultati vanno fuori
-          dalla label. Vedi il blocco players-search in players.html. -->
-        <!-- TODO R6: sotto l'input mostra la minilista dei suggerimenti.
-          Domanda guida: quando deve apparire e che cosa ripeti per ogni risultato?
-          Hint: @if decide se mostrare la lista; @for percorre il computed di R2.
-          Nel TS oggi si chiama playerSelected: usa il nome finale che scegli nel TODO R2.
-          Usa track player.id: due giocatori possono avere lo stesso nome, ma id diversi.
-          Parti da ul, li e button type="button", come nella pagina Players.
-          Nel pulsante mostra nome, cognome, ruolo e realTeamName con le interpolazioni.
-          (click) deve passare il player corrente a selectSuggestedPlayer, gia scritto nel TS.
-          Nascondi la lista dopo la scelta: puoi usare l'assenza di selectedPlayerId
-          come condizione insieme alla presenza dei risultati. R3 annulla l'id e la riapre.
-          I pulsanti devono essere raggiungibili con Tab e attivabili con Invio o Spazio;
-          mantieni il focus visibile e, dopo la scelta, riportalo all'input se il bottone sparisce.
-          Una normale lista di pulsanti e un buon primo passo: non aggiungere role="combobox"
-          senza implementare anche la relativa navigazione da tastiera. -->
-        <!-- TODO R7: distingui ricerca vuota, nessun risultato e giocatore scelto.
-          Domanda guida: se non hai ancora scritto niente, ha senso dire "Nessun risultato"?
-          Hint: quel messaggio serve con almeno 2 caratteri, nessuna selezione, GET riuscita
-          e terminata, catalogo non vuoto e zero suggerimenti. Puoi derivare la condizione nel TS.
-          Un messaggio con role="status" puo annunciare l'assenza di risultati.
-          Verifica: scrivi una parte di cognome, scegli, modifica il testo, poi cancella tutto.
-          Controlla anche Tab e Invio, e in Network che digitare non avvii nuove GET.
-          R8 e gia scritto nel TS: verifica che dopo il successo il testo sia vuoto. -->
-        <select
+      <div class="field">
+        <label class="field__label" for="auction-player">Calciatore</label>
+
+        <input
+          #playerSearch
           id="auction-player"
-          class="select"
-          [value]="selectedPlayerId() ?? ''"
-          (change)="selectSuggestedPlayer($any($event.target).value)"
-        >
-          <option value="">Seleziona calciatore</option>
-        </select>
-      </label>
+          class="input"
+          type="search"
+          placeholder="Nome o cognome"
+          autocomplete="off"
+          [value]="searchText()"
+          (input)="changeSearchTextAndResetId(playerSearch.value)"
+          [disabled]="isLoading() || hasError() || isSubmitting()"
+        />
+
+        @if (!isLoading() && !hasError()) {
+          @if (selectedPlayerId() === null && suggestedPlayers().length > 0) {
+            <ul class="auction-suggestions" aria-label="Suggerimenti calciatori">
+              @for (player of suggestedPlayers(); track player.id) {
+                <li>
+                  <button
+                    class="auction-suggestion"
+                    type="button"
+                    [disabled]="isSubmitting()"
+                    (click)="selectSuggestedPlayer(player); playerSearch.focus()"
+                  >
+                    <span class="auction-suggestion__name">{{ player.name }} {{ player.surname }}</span>
+                    <small class="auction-suggestion__meta">{{ player.role }} - {{ player.realTeamName }}</small>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+
+          <div role="status" aria-live="polite">
+            @if (playersResource.value().length === 0) {
+              <p class="auction-search-status">Non ci sono calciatori disponibili in questa lega.</p>
+            } @else if (hasNoSearchResults()) {
+              <p class="auction-search-status">Nessun calciatore corrisponde alla ricerca.</p>
+            }
+          </div>
+        }
+      </div>
 
       <label class="field" for="auction-price">
         <span class="field__label">Prezzo d'acquisto</span>
         <input
+          #priceInput
           id="auction-price"
           class="input"
           type="number"
           min="1"
           [value]="purchasePrice() ?? ''"
-          (input)="updatePurchasePrice($any($event.target).value)"
+          (input)="updatePurchasePrice(priceInput.value)"
+          [disabled]="isLoading() || hasError() || isSubmitting()"
+          [attr.aria-invalid]="purchasePrice() !== null && selectedTeamId() !== null && !isPriceValid()"
+          [attr.aria-describedby]="purchasePrice() !== null && selectedTeamId() !== null && !isPriceValid() ? 'auction-price-error' : null"
         />
         @if (!isPriceValid() && purchasePrice() !== null && selectedTeamId() !== null) {
-          <p class="field__error" role="alert">
+          <p id="auction-price-error" class="field__error" role="alert">
             Prezzo non valido. Deve essere maggiore di 0 e non superare il budget della squadra.
           </p>
         }
       </label>
 
-      <!-- TODO extra: mantieni il riepilogo visibile anche durante l'invio.
-        Domanda guida: cosa succede a canSubmit quando isSubmitting diventa true?
-        Hint: distingui dati validi da permesso di premere il pulsante in questo momento;
-        valuta anche il testo del badge mentre aspetti la risposta. -->
-      @if (canSubmit()) {
+      @if (isFormValid()) {
         <section class="auction-summary" aria-labelledby="auction-summary-title" aria-live="polite">
           <div class="auction-summary__header">
             <h3 id="auction-summary-title">Riepilogo</h3>
-            <span class="auction-summary__badge">Pronto</span>
+            <span class="auction-summary__badge">{{ isSubmitting() ? 'In corso' : 'Pronto' }}</span>
           </div>
 
           <dl class="auction-summary__list">
@@ -159,10 +157,7 @@
 
             <div class="auction-summary__row auction-summary__row--strong">
               <dt>Budget rimanente</dt>
-              <!-- TODO extra: riusa il computed che hai gia scritto nel TS.
-                Domanda guida: quale computed rappresenta proprio questa sottrazione?
-                Hint: leggilo come un signal, cosi il calcolo resta in un solo punto. -->
-              <dd>{{ (selectedTeam()?.budget ?? 0) - (purchasePrice() ?? 0) }} crediti</dd>
+              <dd>{{ remainingBudget() }} crediti</dd>
             </div>
           </dl>
         </section>

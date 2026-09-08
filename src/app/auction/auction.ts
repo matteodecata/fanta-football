@@ -69,6 +69,7 @@ export class Auction {
   );
 
   protected readonly selectedTeam = computed(() => {
+    if (!this.teamsResource.hasValue()) return undefined;
     return this.teamsResource.value().find((team) => team.teamId === this.selectedTeamId());
   });
 
@@ -79,6 +80,7 @@ export class Auction {
   });
 
   protected readonly selectedPlayer = computed(() => {
+    if (!this.playersResource.hasValue()) return undefined;
     const playerId = this.selectedPlayerId();
     return this.playersResource.value().find((player) => player.id === playerId);
   });
@@ -92,33 +94,35 @@ export class Auction {
     return team.budget - price;
   });
 
-  // TODO R2: slice taglia ancora la stringa, anche dopo averlo spostato su toLowerCase().
-  // Domanda guida: toLowerCase() restituisce il nome in minuscolo o un array di giocatori?
-  // Hint: conserva il nome completo per includes; applica il limite all'array restituito
-  // da filter, dopo la chiusura della sua callback. Il nome suggestedPlayers ora va bene.
-  // Verifica: "rossi" deve trovare "Mario Rossi" e i risultati devono essere al massimo 5.
-  protected readonly suggestedPlayers = computed(()=> {
+  protected readonly suggestedPlayers = computed(() => {
     const searchText = this.searchText().trim().toLowerCase();
-    const players= this.playersResource.value().slice(0,5);
-    if (searchText.length < 2) {
+    if (searchText.length < 2 || !this.playersResource.hasValue()) {
       return [];
     }
-    return players.filter((player) => {
+    return this.playersResource.value().filter((player) => {
       const fullname = `${player.name} ${player.surname}`.toLowerCase();
       return fullname.includes(searchText);
-    })
+    }).slice(0, 5);
   });
 
-  protected readonly canSubmit = computed(
+  protected readonly hasNoSearchResults = computed(
+    () => !this.isLoading() && !this.hasError() &&
+      this.playersResource.hasValue() && this.playersResource.value().length > 0 &&
+      this.selectedPlayerId() === null && this.searchText().trim().length >= 2 &&
+      this.suggestedPlayers().length === 0,
+  );
+
+  protected readonly isFormValid = computed(
     () =>
       this.isLoading() === false &&
       this.hasError() === false &&
       this.selectedTeam() !== undefined &&
       this.selectedTeamId() !== null &&
       this.selectedPlayer() !== undefined &&
-      this.isPriceValid() &&
-      !this.isSubmitting()
+      this.isPriceValid()
   );
+
+  protected readonly canSubmit = computed(() => this.isFormValid() && !this.isSubmitting());
 
   protected updateSelectedTeam(value: string) {
     this.selectedTeamId.set(value ? Number(value) : null);
