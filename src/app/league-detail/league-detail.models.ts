@@ -3,7 +3,6 @@ export interface LeagueDetailResponse {
   name: string;
   budget: number;
   adminUserId: number;
-  admin?: boolean;
   createdAt?: string;
 }
 

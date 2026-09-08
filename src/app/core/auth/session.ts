@@ -1,9 +1,16 @@
 import { computed, Service, signal } from '@angular/core';
 import { LoginResponse } from '../models/auth.models';
+import { decodeJwtPayload } from './jwt';
 
 // Chiave unica sotto cui salviamo la sessione in sessionStorage. Costante di
 // modulo (non di classe) perché non dipende da nessuna istanza.
 const STORAGE_KEY = 'ff.session';
+
+// Unico claim del JWT che ci serve lato frontend: l'id dell'utente loggato
+// (PROJECT_CONTEXT.md sezione 6: il backend lo usa per identificare l'utente).
+interface AuthTokenPayload {
+  uid: number;
+}
 
 @Service()
 export class Session {
@@ -21,6 +28,17 @@ export class Session {
   readonly isAuthenticated = computed(() => this.state() !== null);
   readonly token = computed(() => this.state()?.token ?? null);
   readonly roles = computed(() => this.state()?.roles ?? []);
+
+  // Decodifica il token solo per leggere l'id utente: uso di UI (es. "sono io
+  // l'admin di questa lega?"), mai come controllo di sicurezza reale.
+  readonly userId = computed(() => {
+    const token = this.token();
+    if (!token) {
+      return null;
+    }
+
+    return decodeJwtPayload<AuthTokenPayload>(token)?.uid ?? null;
+  });
 
   login(response: LoginResponse): void {
     this.state.set(response);
