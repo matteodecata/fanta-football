@@ -6,6 +6,10 @@ import { decodeJwtPayload } from './jwt';
 // modulo (non di classe) perché non dipende da nessuna istanza.
 const STORAGE_KEY = 'ff.session';
 
+interface SessionState extends LoginResponse {
+  username?: string;
+}
+
 // Unico claim del JWT che ci serve lato frontend: l'id dell'utente loggato
 // (PROJECT_CONTEXT.md sezione 6: il backend lo usa per identificare l'utente).
 interface AuthTokenPayload {
@@ -17,7 +21,7 @@ export class Session {
   // Il signal parte già valorizzato leggendo da sessionStorage: così, se
   // l'utente ricarica la pagina, `state` contiene subito la sessione salvata
   // invece di partire da null e "sganciare" l'utente per un istante.
-  private readonly state = signal<LoginResponse | null>(readFromStorage());
+  private readonly state = signal<SessionState | null>(readFromStorage());
 
   // Stato derivato: NON un signal separato aggiornato a mano. Se avessimo
   // `isAuthenticated` come signal indipendente, ogni volta che cambiamo
@@ -28,6 +32,7 @@ export class Session {
   readonly isAuthenticated = computed(() => this.state() !== null);
   readonly token = computed(() => this.state()?.token ?? null);
   readonly roles = computed(() => this.state()?.roles ?? []);
+  readonly username = computed(() => this.state()?.username ?? null);
 
   // Decodifica il token solo per leggere l'id utente: uso di UI (es. "sono io
   // l'admin di questa lega?"), mai come controllo di sicurezza reale.
@@ -40,9 +45,10 @@ export class Session {
     return decodeJwtPayload<AuthTokenPayload>(token)?.uid ?? null;
   });
 
-  login(response: LoginResponse): void {
-    this.state.set(response);
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(response));
+  login(response: LoginResponse, username: string): void {
+    const session: SessionState = { ...response, username };
+    this.state.set(session);
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
   }
 
   logout(): void {
@@ -53,7 +59,7 @@ export class Session {
 
 // Funzione di modulo (non un metodo): serve solo a calcolare il valore
 // iniziale del signal, prima ancora che esista un'istanza di Session.
-function readFromStorage(): LoginResponse | null {
+function readFromStorage(): SessionState | null {
   const raw = sessionStorage.getItem(STORAGE_KEY);
   if (!raw) {
     return null;
@@ -74,7 +80,7 @@ function readFromStorage(): LoginResponse | null {
   return isLoginResponse(parsed) ? parsed : null;
 }
 
-function isLoginResponse(value: unknown): value is LoginResponse {
+function isLoginResponse(value: unknown): value is SessionState {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
@@ -82,6 +88,7 @@ function isLoginResponse(value: unknown): value is LoginResponse {
   const candidate = value as Record<string, unknown>;
   return (
     typeof candidate['token'] === 'string' &&
+    (candidate['username'] === undefined || typeof candidate['username'] === 'string') &&
     Array.isArray(candidate['roles']) &&
     candidate['roles'].every((role) => typeof role === 'string')
   );

@@ -1,82 +1,77 @@
-<main class="page-shell">
+﻿<div class="container page league-page">
+  <a class="back-link" routerLink="/dashboard">← Dashboard</a>
   @if (isLoading()) {
-    <p aria-live="polite">Caricamento della lega...</p>
+    <p role="status">Caricamento della lega…</p>
   } @else if (hasError()) {
-    <p role="alert">Non è stato possibile caricare i dettagli della lega.</p>
-  } @else if (league(); as league) {
-    <section class="card" aria-labelledby="league-title">
-      <div class="page-header">
+    <div class="alert alert--danger" role="alert">
+      <p>Non è stato possibile caricare la lega.</p>
+      <button class="btn" type="button" (click)="leagueResource.reload()">Riprova</button>
+    </div>
+  } @else if (league(); as currentLeague) {
+    <header class="league-header">
+      <div class="league-identity">
+        <span class="league-mark" aria-hidden="true">L</span>
         <div>
-          <p class="eyebrow">Lega</p>
-          <h1 id="league-title" data-route-heading tabindex="-1">{{ league.name }}</h1>
-        </div>
-        <span class="badge" [class.badge--accent]="isAdmin()" [class.badge--info]="!isAdmin()">
-          {{ isAdmin() ? 'Admin' : 'Partecipante' }}
-        </span>
-      </div>
-
-      <div class="stats-grid">
-        <div class="metric">
-          <span class="metric__label">Budget iniziale</span>
-          <span class="metric__value">{{ league.budget }}</span>
-        </div>
-        <div class="metric">
-          <span class="metric__label">Utente admin</span>
-          <span class="metric__value">{{ league.adminUserId }}</span>
+          <div class="league-title">
+            <h1 data-route-heading tabindex="-1">{{ currentLeague.name }}</h1>
+            <span class="badge" [class.badge--accent]="isAdmin()">{{ isAdmin() ? 'Admin lega' : 'Partecipante' }}</span>
+          </div>
+          <p class="league-summary">
+            @if (teamsResource.hasValue() && !teamsResource.isLoading()) { {{ teams().length }} squadre · }
+            Budget iniziale {{ currentLeague.budget }} crediti
+          </p>
+          @if (connectedUsername()) {
+            <p class="league-summary">{{ isAdmin() ? 'Amministratore: ' : 'Utente connesso: ' }}<strong>{{ connectedUsername() }}</strong></p>
+          }
         </div>
       </div>
-    </section>
-
-    <section class="card" aria-labelledby="league-actions-title">
-      <h2 id="league-actions-title" class="card__title">Gestisci lega</h2>
-      <div class="action-grid" aria-label="Azioni lega">
-        <button class="action-card" type="button">
-          <span class="action-card__label">Calendario</span>
-          <span class="action-card__meta">Giornate e partite</span>
-        </button>
-
-        @if (isAdmin()) {
-          <button class="action-card action-card--primary" type="button">
-            <span class="action-card__label">Gestisci Asta</span>
-            <span class="action-card__meta">Azione admin</span>
-          </button>
-        }
-
-        @if (isAdmin()) {
-          <button class="action-card action-card--primary" type="button"
-            [attr.aria-expanded]="inviteFormVisible()" aria-controls="league-invite-panel"
-            (click)="toggleInviteForm()">
-            <span class="action-card__label">Invita membro</span>
-            <span class="action-card__meta">Azione admin</span>
-          </button>
-        }
-
-        <button class="action-card action-card--active" type="button">
-          <span class="action-card__label">Classifica</span>
-          <span class="action-card__meta">Posizioni e punti</span>
-        </button>
-      </div>
-    </section>
-
-    <div class="stack">
-      <section class="card" aria-labelledby="standings-title">
-        <h2 id="standings-title" class="card__title">Classifica</h2>
-        <app-standings [leagueId]="leagueId" />
-      </section>
-
-      <section class="card" aria-labelledby="calendar-title">
-        <h2 id="calendar-title" class="card__title">Calendario</h2>
-        <app-calendar [leagueId]="leagueId" [isAdmin]="isAdmin()" />
-      </section>
-
       @if (isAdmin()) {
-        <section id="league-invite-panel" class="card" aria-labelledby="invite-title" [hidden]="!inviteFormVisible()">
-          <h2 id="invite-title" class="card__title">Invita membro</h2>
-          @if (inviteFormVisible()) {
-            <app-invite-league [leagueId]="leagueId" />
+        <div class="league-actions">
+          <a class="btn" [routerLink]="['/leagues', leagueId, 'auction']">Gestisci asta</a>
+          <button class="btn btn--primary" type="button" [attr.aria-expanded]="inviteFormVisible()"
+            aria-controls="league-invite-panel" (click)="toggleInviteForm()">Invita membro</button>
+        </div>
+      }
+    </header>
+    @if (isAdmin()) {
+      <section id="league-invite-panel" class="card invite-panel" aria-labelledby="invite-title" [hidden]="!inviteFormVisible()">
+        <h2 id="invite-title">Invita membro</h2>
+        @if (inviteFormVisible()) { <app-invite-league [leagueId]="leagueId" /> }
+      </section>
+    }
+    <div class="league-layout">
+      <section class="standings-section" aria-labelledby="standings-title">
+        <h2 id="standings-title" class="section-title">Classifica</h2>
+        @if (teamsResource.isLoading()) {
+          <p role="status">Caricamento classifica…</p>
+        } @else if (teamsResource.error()) {
+          <div class="alert alert--danger" role="alert">
+            <p>Non è stato possibile caricare le squadre.</p>
+            <button class="btn" type="button" (click)="teamsResource.reload()">Riprova</button>
+          </div>
+        } @else { <app-standings [leagueId]="leagueId" [teams]="teams()" /> }
+      </section>
+      <aside class="league-sidebar" aria-label="Calendario e partecipanti">
+        <app-calendar [leagueId]="leagueId" [isAdmin]="isAdmin()" />
+        <section class="card members-panel" aria-labelledby="members-title">
+          <h2 id="members-title" class="section-title">Partecipanti</h2>
+          <p class="members-hint">Fantallenatori con una squadra nella lega.</p>
+          @if (teamsResource.isLoading()) {
+            <p role="status">Caricamento partecipanti…</p>
+          } @else if (teamsResource.error()) {
+            <p>Partecipanti non disponibili.</p>
+          } @else {
+            <ul class="members-list">
+              @for (team of teams(); track team.teamId) {
+                <li>
+                  <span class="member-mark" aria-hidden="true">{{ team.username.slice(0, 1).toUpperCase() }}</span>
+                  <span class="member-name">{{ team.username }}</span>
+                </li>
+              } @empty { <li>Nessuna squadra presente.</li> }
+            </ul>
           }
         </section>
-      }
+      </aside>
     </div>
-  }
-</main>
+  } @else { <p role="status">Lega non trovata.</p> }
+</div>
