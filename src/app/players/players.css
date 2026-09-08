@@ -12,6 +12,7 @@
 
 .players-search {
   position: relative;
+  width: min(100%, 22rem);
 }
 
 .players-suggestions {
@@ -47,22 +48,74 @@
   flex: none;
 }
 
-.players-filter-groups {
+.players-filters,
+.players-filter-panel {
   display: grid;
   gap: var(--sp-3);
+}
+
+.players-filters {
+  padding-block: var(--sp-4);
 }
 
 .players-filter-group {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
   flex-wrap: wrap;
+}
+
+.players-filter-group--roles .chip {
+  min-width: 2.5rem;
+  justify-content: center;
+}
+
+.players-search-row {
+  display: flex;
+  align-items: end;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.players-role-chip {
+  font-weight: 800;
+}
+
+.players-role-chip--p[aria-pressed="true"] {
+  background: var(--c-info-soft);
+  border-color: var(--c-info);
+  color: var(--c-info);
+}
+
+.players-role-chip--d[aria-pressed="true"] {
+  background: var(--c-success-soft);
+  border-color: var(--c-success);
+  color: var(--c-success);
+}
+
+.players-role-chip--c[aria-pressed="true"] {
+  background: var(--c-warning-soft);
+  border-color: var(--c-warning);
+  color: var(--c-warning);
+}
+
+.players-role-chip--a[aria-pressed="true"] {
+  background: var(--c-danger-soft);
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+}
+
+.players-filter-group--teams {
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-border);
 }
 
 .players-price-filter {
   display: grid;
-  gap: var(--sp-3);
+  gap: var(--sp-2);
   max-width: 34rem;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--c-border);
 }
 
 .players-price-filter__summary {
@@ -92,4 +145,77 @@
 .players-role-badge--a {
   background: var(--c-danger-soft);
   border-color: var(--c-danger);
+}
+
+.players-team-chip {
+  min-height: 2.5rem;
+  padding-left: var(--sp-2);
+  background: var(--c-bg-elevated);
+  border-color: var(--c-border);
+  gap: var(--sp-2);
+}
+
+.players-team-chip[aria-pressed="true"] {
+  background: var(--c-info-soft);
+  border-color: var(--c-info);
+  color: var(--c-info);
+}
+
+.players-team-chip__mark {
+  width: 1.625rem;
+  height: 1.625rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: var(--c-surface-2);
+  color: var(--c-text-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.players-team-chip[aria-pressed="true"] .players-team-chip__mark {
+  background: var(--c-info);
+  color: var(--c-bg);
+}
+
+.players-status-chip--available[aria-pressed="true"] {
+  background: var(--c-success-soft);
+  border-color: var(--c-success);
+  color: var(--c-success);
+}
+
+.players-status-chip--injured[aria-pressed="true"] {
+  background: var(--c-warning-soft);
+  border-color: var(--c-warning);
+  color: var(--c-warning);
+}
+
+.players-status-chip {
+  padding-left: var(--sp-2);
+}
+
+.players-status-chip__mark {
+  min-width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: var(--c-surface-2);
+  color: var(--c-text-muted);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+}
+
+.players-status-chip--available[aria-pressed="true"] .players-status-chip__mark {
+  background: var(--c-success);
+  color: var(--c-bg);
+}
+
+.players-status-chip--injured[aria-pressed="true"] .players-status-chip__mark {
+  background: var(--c-warning);
+  color: var(--c-bg);
+}
+
+.players-reset-button {
+  justify-self: start;
 }

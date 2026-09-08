@@ -13,56 +13,78 @@
           Aggiorna catalogo
         }
       </button>
-      <button class="btn" type="button" (click)="resetFilters()" [disabled]="!hasFilterActive()">Reset filtri</button>
     </div>
   </header>
 
-  <section class="card form form--wide" aria-labelledby="players-filters-title">
+  <section class="card players-filters" aria-labelledby="players-filters-title">
     <h2 id="players-filters-title" class="card__title">Filtri catalogo</h2>
 
-      
-    <div class="field players-search">
-      <label class="field__label" for="players-search">Cerca calciatore</label>
-      <input
-        id="players-search"
-        class="input"
-        type="search"
-        [value]="searchTerm()"
-        (input)="updateSearchTerm($any($event.target).value)"
-        placeholder="Nome o cognome"
-        autocomplete="off"
-      />
+    <div class="players-filter-panel">
+      <div class="players-search-row">
+        <div class="field players-search">
+          <label class="field__label" for="players-search">Cerca calciatore</label>
+          <input
+            id="players-search"
+            class="input"
+            type="search"
+            [value]="searchTerm()"
+            (input)="updateSearchTerm($any($event.target).value)"
+            placeholder="Nome o cognome"
+            autocomplete="off"
+          />
 
-      @if (suggestedPlayers().length > 0) {
-        <ul class="players-suggestions" aria-label="Suggerimenti calciatori">
-          @for (player of suggestedPlayers(); track player.id) {
-            <li>
-              <button
-                class="players-suggestion"
-                type="button"
-                (click)="selectSuggestedPlayer(player)"
-              >
-                <span>{{ player.name }} {{ player.surname }}</span>
-                <small>{{ player.realTeamName }} - {{ player.role }}</small>
-              </button>
-            </li>
+          @if (suggestedPlayers().length > 0) {
+            <ul class="players-suggestions" aria-label="Suggerimenti calciatori">
+              @for (player of suggestedPlayers(); track player.id) {
+                <li>
+                  <button
+                    class="players-suggestion"
+                    type="button"
+                    (click)="selectSuggestedPlayer(player)"
+                  >
+                    <span>{{ player.name }} {{ player.surname }}</span>
+                    <small>{{ player.realTeamName }} - {{ player.role }}</small>
+                  </button>
+                </li>
+              }
+            </ul>
           }
-        </ul>
+        </div>
+
+        <div class="players-filter-group players-filter-group--roles" aria-label="Filtro ruolo">
+          <button class="chip players-role-chip players-role-chip--p" type="button" (click)="updateRoleFilter('P')" [attr.aria-pressed]="isRoleSelected('P')" aria-label="Filtra portieri">P</button>
+          <button class="chip players-role-chip players-role-chip--d" type="button" (click)="updateRoleFilter('D')" [attr.aria-pressed]="isRoleSelected('D')" aria-label="Filtra difensori">D</button>
+          <button class="chip players-role-chip players-role-chip--c" type="button" (click)="updateRoleFilter('C')" [attr.aria-pressed]="isRoleSelected('C')" aria-label="Filtra centrocampisti">C</button>
+          <button class="chip players-role-chip players-role-chip--a" type="button" (click)="updateRoleFilter('A')" [attr.aria-pressed]="isRoleSelected('A')" aria-label="Filtra attaccanti">A</button>
+        </div>
+      </div>
+
+      <div class="players-filter-group players-filter-group--status" aria-label="Filtro stato">
+        <button class="chip players-status-chip players-status-chip--available" type="button" (click)="updateInjuredFilter(false)" [attr.aria-pressed]="injuredFilter() === false">
+          <span class="players-status-chip__mark" aria-hidden="true">OK</span>
+          <span>Disponibili</span>
+        </button>
+        <button class="chip players-status-chip players-status-chip--injured" type="button" (click)="updateInjuredFilter(true)" [attr.aria-pressed]="injuredFilter() === true">
+          <span class="players-status-chip__mark" aria-hidden="true">!</span>
+          <span>Infortunati</span>
+        </button>
+      </div>
+
+      @if (realTeamNames().length > 0) {
+        <div class="players-filter-group players-filter-group--teams" aria-label="Filtro squadre reali">
+          @for (realTeamName of realTeamNames(); track realTeamName) {
+            <button
+              class="chip players-team-chip"
+              type="button"
+              (click)="updateRealTeamNameFilter(realTeamName)"
+              [attr.aria-pressed]="isRealTeamNameSelected(realTeamName)"
+            >
+              <span class="players-team-chip__mark" aria-hidden="true">{{ teamInitials(realTeamName) }}</span>
+              <span>{{ realTeamName }}</span>
+            </button>
+          }
+        </div>
       }
-    </div>
-  </section>
-
-  <section class="players-filter-groups" aria-label="Filtri rapidi">
-    <div class="players-filter-group" aria-label="Filtro ruolo">
-      <button class="chip" type="button" (click)="updateRoleFilter('P')" [attr.aria-pressed]="isRoleSelected('P')" aria-label="Filtra portieri">P</button>
-      <button class="chip" type="button" (click)="updateRoleFilter('D')" [attr.aria-pressed]="isRoleSelected('D')" aria-label="Filtra difensori">D</button>
-      <button class="chip" type="button" (click)="updateRoleFilter('C')" [attr.aria-pressed]="isRoleSelected('C')" aria-label="Filtra centrocampisti">C</button>
-      <button class="chip" type="button" (click)="updateRoleFilter('A')" [attr.aria-pressed]="isRoleSelected('A')" aria-label="Filtra attaccanti">A</button>
-    </div>
-
-    <div class="players-filter-group" aria-label="Filtro stato">
-      <button class="chip" type="button" (click)="updateInjuredFilter(false)" [attr.aria-pressed]="injuredFilter() === false">Disponibili</button>
-      <button class="chip" type="button" (click)="updateInjuredFilter(true)" [attr.aria-pressed]="injuredFilter() === true">Infortunati</button>
     </div>
 
     <section class="players-price-filter" aria-label="Filtro prezzo">
@@ -97,20 +119,7 @@
       </div>
     </section>
 
-    @if (realTeamNames().length > 0) {
-      <div class="players-filter-group" aria-label="Filtro squadre reali">
-        @for (realTeamName of realTeamNames(); track realTeamName) {
-          <button
-            class="chip"
-            type="button"
-            (click)="updateRealTeamNameFilter(realTeamName)"
-            [attr.aria-pressed]="isRealTeamNameSelected(realTeamName)"
-          >
-            {{ realTeamName }}
-          </button>
-        }
-      </div>
-    }
+    <button class="btn players-reset-button" type="button" (click)="resetFilters()" [disabled]="!hasFilterActive()">Reset filtri</button>
   </section>
   
   @if (playersResource.isLoading()) {
