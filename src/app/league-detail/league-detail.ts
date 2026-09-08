@@ -14,6 +14,25 @@ import { LeagueDetailResponse, LeagueStandingResponse } from './league-detail.mo
   styleUrl: './league-detail.css',
 })
 export class LeagueDetail {
+  protected readonly sections = [
+    { id: 'standings', label: 'Classifica' },
+    { id: 'calendar', label: 'Calendario' },
+    { id: 'members', label: 'Partecipanti' },
+  ] as const;
+  protected readonly activeSection = signal<string>('standings');
+
+  protected navigateTabs(event: KeyboardEvent, index: number): void {
+    let next: number;
+    if (event.key === 'ArrowRight') next = (index + 1) % this.sections.length;
+    else if (event.key === 'ArrowLeft') next = (index + this.sections.length - 1) % this.sections.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = this.sections.length - 1;
+    else return;
+    event.preventDefault();
+    this.activeSection.set(this.sections[next].id);
+    const button = event.currentTarget as HTMLButtonElement;
+    button.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
+  }
   private readonly route = inject(ActivatedRoute);
   private readonly session = inject(Session);
   protected readonly connectedUsername = this.session.username;

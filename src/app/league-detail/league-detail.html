@@ -39,8 +39,16 @@
         @if (inviteFormVisible()) { <app-invite-league [leagueId]="leagueId" /> }
       </section>
     }
-    <div class="league-layout">
-      <section class="standings-section" aria-labelledby="standings-title">
+    <div class="league-tabs" role="tablist" aria-label="Sezioni della lega">
+      @for (section of sections; track section.id; let index = $index) {
+        <button type="button" role="tab" [id]="'tab-' + section.id"
+          [attr.aria-controls]="'panel-' + section.id" [attr.aria-selected]="activeSection() === section.id"
+          [tabIndex]="activeSection() === section.id ? 0 : -1"
+          (click)="activeSection.set(section.id)" (keydown)="navigateTabs($event, index)">{{ section.label }}</button>
+      }
+    </div>
+    <div class="league-content">
+      <section id="panel-standings" role="tabpanel" tabindex="0" class="standings-section" aria-labelledby="tab-standings" [hidden]="activeSection() !== 'standings'">
         <h2 id="standings-title" class="section-title">Classifica</h2>
         @if (teamsResource.isLoading()) {
           <p role="status">Caricamento classifica…</p>
@@ -51,9 +59,10 @@
           </div>
         } @else { <app-standings [leagueId]="leagueId" [teams]="teams()" /> }
       </section>
-      <aside class="league-sidebar" aria-label="Calendario e partecipanti">
+      <section id="panel-calendar" role="tabpanel" tabindex="0" aria-labelledby="tab-calendar" [hidden]="activeSection() !== 'calendar'">
         <app-calendar [leagueId]="leagueId" [isAdmin]="isAdmin()" />
-        <section class="card members-panel" aria-labelledby="members-title">
+      </section>
+        <section id="panel-members" role="tabpanel" tabindex="0" class="card members-panel" aria-labelledby="tab-members" [hidden]="activeSection() !== 'members'">
           <h2 id="members-title" class="section-title">Partecipanti</h2>
           <p class="members-hint">Fantallenatori con una squadra nella lega.</p>
           @if (teamsResource.isLoading()) {
@@ -71,7 +80,6 @@
             </ul>
           }
         </section>
-      </aside>
     </div>
   } @else { <p role="status">Lega non trovata.</p> }
 </div>
