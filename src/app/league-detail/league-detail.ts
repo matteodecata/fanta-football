@@ -5,7 +5,6 @@ import { CalendarComponent } from '../Calendar/calendar.component';
 import { Session } from '../core/auth/session';
 import { InviteLeague } from './invite-league/invite-league';
 import { Standings } from './standings/standings';
-import { LeagueDetailResponse, LeagueStandingResponse } from './league-detail.models';
 
 @Component({
   selector: 'app-league-detail',

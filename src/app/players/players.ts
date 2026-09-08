@@ -184,6 +184,15 @@ export class Players {
     return this.selectedRealTeamNames().includes(realTeamName);
   }
 
+  teamInitials(realTeamName: string) {
+    return realTeamName
+      .split(' ')
+      .filter((word) => word.length > 0)
+      .slice(0, 2)
+      .map((word) => word[0].toUpperCase())
+      .join('');
+  }
+
   roleBadgeClass(role: PlayerRole) {
     return `badge players-role-badge players-role-badge--${role.toLowerCase()}`;
   }
