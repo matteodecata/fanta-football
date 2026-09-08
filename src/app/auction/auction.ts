@@ -1,10 +1,10 @@
-import { httpResource } from '@angular/common/http';
+import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { extractApiError } from '../core/http/api-error';
 import { PlayerResponse } from '../players/players-response';
 import { AuctionService } from './auction.service';
-import { HttpErrorResponse } from '@angular/common/http';
 
 interface AuctionTeam {
   teamId: number;
@@ -28,6 +28,8 @@ export class Auction {
 
   protected readonly selectedTeamId = signal<number | null>(null);
   protected readonly selectedPlayerId = signal<number | null>(null);
+  protected readonly searchText = signal<string>('');
+  
   protected readonly purchasePrice = signal<number | null>(null);
   protected readonly isSubmitting = signal(false);
   protected readonly submitSuccess = signal<string | null>(null);
@@ -46,10 +48,15 @@ export class Auction {
     defaultValue: [],
   });
 
-  protected readonly playersResource = httpResource<PlayerResponse[]>(() => ({
-    url: '/api/players',
-    method: 'GET',
-  }), {
+  protected readonly playersResource = httpResource<PlayerResponse[]>(() => {
+      if (!this.leagueId || Number.isNaN(this.leagueId)) {
+      return undefined;
+    }
+    return {
+      url: `/api/leagues/${this.leagueId}/players/available`,
+      method: 'GET',
+    };
+  }, {
     defaultValue: [],
   });
 
@@ -85,18 +92,28 @@ export class Auction {
     return team.budget - price;
   });
 
-  protected readonly availablePlayers = computed(() => {
-    const selectedPlayerId = this.selectedPlayerId();
-    return this.playersResource.value().filter((player) => player.id !== selectedPlayerId);
+  // TODO R2: slice taglia ancora la stringa, anche dopo averlo spostato su toLowerCase().
+  // Domanda guida: toLowerCase() restituisce il nome in minuscolo o un array di giocatori?
+  // Hint: conserva il nome completo per includes; applica il limite all'array restituito
+  // da filter, dopo la chiusura della sua callback. Il nome suggestedPlayers ora va bene.
+  // Verifica: "rossi" deve trovare "Mario Rossi" e i risultati devono essere al massimo 5.
+  protected readonly suggestedPlayers = computed(()=> {
+    const searchText = this.searchText().trim().toLowerCase();
+    const players= this.playersResource.value().slice(0,5);
+    if (searchText.length < 2) {
+      return [];
+    }
+    return players.filter((player) => {
+      const fullname = `${player.name} ${player.surname}`.toLowerCase();
+      return fullname.includes(searchText);
+    })
   });
-
-  // TODO: quando avrai il backend completo, mostra solo i giocatori ancora acquistabili.
-  // Domanda guida: come capisci se un calciatore e gia stato preso da una squadra della lega?
-  // Hint: puoi chiedere al backend un catalogo gia filtrato, oppure ricevere le rose della lega
-  // e creare un computed che esclude gli id gia presenti.
 
   protected readonly canSubmit = computed(
     () =>
+      this.isLoading() === false &&
+      this.hasError() === false &&
+      this.selectedTeam() !== undefined &&
       this.selectedTeamId() !== null &&
       this.selectedPlayer() !== undefined &&
       this.isPriceValid() &&
@@ -107,9 +124,18 @@ export class Auction {
     this.selectedTeamId.set(value ? Number(value) : null);
   }
 
-  protected updateSelectedPlayer(value: string) {
-    this.selectedPlayerId.set(value ? Number(value) : null);
+  
+  changeSearchTextAndResetId(value: string) {
+    this.searchText.set(value);
+    this.selectedPlayerId.set(null);
   }
+
+
+  selectSuggestedPlayer(player: PlayerResponse) {
+    this.selectedPlayerId.set(player.id);
+    this.searchText.set(`${player.name} ${player.surname}`);   
+  }
+
 
   protected updatePurchasePrice(value: string) {
     this.purchasePrice.set(value ? Number(value) : null);
@@ -141,30 +167,44 @@ export class Auction {
           { purchasePrice: price },
         ),
       );
-
       this.submitSuccess.set('Acquisto registrato correttamente.');
+      this.searchText.set('');
       this.selectedPlayerId.set(null);
+      this.selectedTeamId.set(null)
       this.purchasePrice.set(null);
       this.teamsResource.reload();
       this.playersResource.reload();
+      
     } catch (error: unknown) {
       if (error instanceof HttpErrorResponse && error.status === 409) {
-        this.submitError.set('Giocatore già acquistato o budget insufficiente.');
+        const apiError = extractApiError(error);
+        if (apiError?.errorCode === 'budget_too_low') {
+          this.submitError.set('Budget insufficiente. Controlla il budget aggiornato e modifica il prezzo.');
+          this.purchasePrice.set(null);
+          this.teamsResource.reload();
+          return;
+        }
+
+        if (apiError?.errorCode === 'player_already_owned') {
+          this.submitError.set('Giocatore gia acquistato nella lega. Seleziona un altro calciatore.');
+          this.selectedPlayerId.set(null);
+          this.playersResource.reload();
+          return;
+        }
+
+        const message = apiError?.message.trim() || 'Acquisto non registrato per un conflitto.';
+        this.submitError.set(`${message} Verifica il budget e seleziona nuovamente il calciatore.`);
+        this.selectedPlayerId.set(null);
+        this.teamsResource.reload();
+        this.playersResource.reload();
         return;
       }
-      console.error('Errore durante la registrazione acquisto:', error);
+      console.error('Errore durante la registrazione acquisto: ', error);
       this.submitError.set('Non e stato possibile registrare l\'acquisto. Riprova.');
     } finally {
       this.isSubmitting.set(false);
-      this.selectedTeamId.set(null);
-      this.selectedPlayerId.set(null);
-      this.purchasePrice.set(null);
+      
+      
     }
-
-    // TODO: dopo una registrazione riuscita, aggiorna i dati visibili.
-    // Domanda guida: cosa deve cambiare subito nella pagina dopo l'acquisto?
-    // Hint: puoi fare reload delle resource, svuotare i campi selezionati e mostrare un messaggio
-    // di successo; cosi l'admin capisce che l'azione e andata a buon fine.
-
   }
 }

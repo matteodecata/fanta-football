@@ -10,9 +10,11 @@
     </div>
   </header>
 
-  <!-- TODO: mostrare questa pagina solo all'admin della lega.
-    Domanda guida: da dove recuperi l'id dell'utente corrente o un flag admin affidabile?
-    Hint: il frontend puo nascondere il link, ma il backend deve comunque bloccare i non admin. -->
+  <!-- TODO 7: verifica che l'accesso all'asta sia riservato all'admin della lega.
+    Domanda guida: poter leggere i disponibili come membro autorizza anche a registrare acquisti?
+    Hint: recupera il ruolo dai dati affidabili della lega; controlla link e accesso diretto alla
+    route. Il backend deve comunque verificare i permessi sul POST.
+    Verifica con un membro non admin: non deve poter usare il form per registrare acquisti. -->
 
   @if (isLoading()) {
     <div class="alert alert--info" role="status" aria-live="polite">
@@ -63,22 +65,51 @@
 
       <label class="field" for="auction-player">
         <span class="field__label">Calciatore</span>
-        <!-- TODO: migliora la scelta del calciatore se il catalogo diventa lungo.
-          Domanda guida: un select con 500 giocatori resta comodo da usare?
-          Hint: puoi riusare l'idea dei suggerimenti della pagina Players: input di ricerca,
-          minilista filtrata e click sul risultato. -->
+        <!-- TODO 6: gestisci il caso in cui non ci siano piu giocatori disponibili.
+          Domanda guida: un array vuoto indica sempre che sono stati acquistati tutti,
+          oppure puo essere il valore iniziale durante il caricamento?
+          Hint: mostra il messaggio di lista vuota solo dopo una GET riuscita e terminata.
+          Valuta quando disabilitare la ricerca; mantieni distinti errore e lista vuota.
+          Non confondere catalogo vuoto con ricerca senza corrispondenze (vedi R7). -->
+        <!-- TODO R5: sostituisci la select del calciatore con un input di ricerca.
+          Collegamento da completare: updateSelectedPlayer e availablePlayers non esistono
+          piu nel TS attivo, ma questa select li usa ancora; finche restano la build fallisce.
+          Domanda guida: come passa il testo dal TS all'input e dall'input al TS?
+          Hint: [value] legge searchText; (input) chiama changeSearchTextAndResetId.
+          Usa type="search". Una reference di template, per esempio #playerSearch,
+          ti permette di leggere playerSearch.value nell'evento senza usare $any.
+          Conserva una label collegata all'id dell'input. Trasforma il contenitore esterno
+          in un div e lascia la label sul solo input: i pulsanti dei risultati vanno fuori
+          dalla label. Vedi il blocco players-search in players.html. -->
+        <!-- TODO R6: sotto l'input mostra la minilista dei suggerimenti.
+          Domanda guida: quando deve apparire e che cosa ripeti per ogni risultato?
+          Hint: @if decide se mostrare la lista; @for percorre il computed di R2.
+          Nel TS oggi si chiama playerSelected: usa il nome finale che scegli nel TODO R2.
+          Usa track player.id: due giocatori possono avere lo stesso nome, ma id diversi.
+          Parti da ul, li e button type="button", come nella pagina Players.
+          Nel pulsante mostra nome, cognome, ruolo e realTeamName con le interpolazioni.
+          (click) deve passare il player corrente a selectSuggestedPlayer, gia scritto nel TS.
+          Nascondi la lista dopo la scelta: puoi usare l'assenza di selectedPlayerId
+          come condizione insieme alla presenza dei risultati. R3 annulla l'id e la riapre.
+          I pulsanti devono essere raggiungibili con Tab e attivabili con Invio o Spazio;
+          mantieni il focus visibile e, dopo la scelta, riportalo all'input se il bottone sparisce.
+          Una normale lista di pulsanti e un buon primo passo: non aggiungere role="combobox"
+          senza implementare anche la relativa navigazione da tastiera. -->
+        <!-- TODO R7: distingui ricerca vuota, nessun risultato e giocatore scelto.
+          Domanda guida: se non hai ancora scritto niente, ha senso dire "Nessun risultato"?
+          Hint: quel messaggio serve con almeno 2 caratteri, nessuna selezione, GET riuscita
+          e terminata, catalogo non vuoto e zero suggerimenti. Puoi derivare la condizione nel TS.
+          Un messaggio con role="status" puo annunciare l'assenza di risultati.
+          Verifica: scrivi una parte di cognome, scegli, modifica il testo, poi cancella tutto.
+          Controlla anche Tab e Invio, e in Network che digitare non avvii nuove GET.
+          R8 e gia scritto nel TS: verifica che dopo il successo il testo sia vuoto. -->
         <select
           id="auction-player"
           class="select"
           [value]="selectedPlayerId() ?? ''"
-          (change)="updateSelectedPlayer($any($event.target).value)"
+          (change)="selectSuggestedPlayer($any($event.target).value)"
         >
           <option value="">Seleziona calciatore</option>
-          @for (player of availablePlayers(); track player.id) {
-            <option [value]="player.id">
-              {{ player.name }} {{ player.surname }} - {{ player.role }} - {{ player.price }}
-            </option>
-          }
         </select>
       </label>
 
@@ -99,6 +130,10 @@
         }
       </label>
 
+      <!-- TODO extra: mantieni il riepilogo visibile anche durante l'invio.
+        Domanda guida: cosa succede a canSubmit quando isSubmitting diventa true?
+        Hint: distingui dati validi da permesso di premere il pulsante in questo momento;
+        valuta anche il testo del badge mentre aspetti la risposta. -->
       @if (canSubmit()) {
         <section class="auction-summary" aria-labelledby="auction-summary-title" aria-live="polite">
           <div class="auction-summary__header">
@@ -124,6 +159,9 @@
 
             <div class="auction-summary__row auction-summary__row--strong">
               <dt>Budget rimanente</dt>
+              <!-- TODO extra: riusa il computed che hai gia scritto nel TS.
+                Domanda guida: quale computed rappresenta proprio questa sottrazione?
+                Hint: leggilo come un signal, cosi il calcolo resta in un solo punto. -->
               <dd>{{ (selectedTeam()?.budget ?? 0) - (purchasePrice() ?? 0) }} crediti</dd>
             </div>
           </dl>
