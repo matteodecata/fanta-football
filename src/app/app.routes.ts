@@ -94,14 +94,14 @@ export const routes: Routes = [
         loadComponent: () => import('./league-detail/league-detail')
             .then((component) => component.LeagueDetail),
     },
-    /*
     {
         path: 'teams',
         title: 'Squadre',
         loadComponent: () => import('./teams/teams').then(component => component.Teams),
-    },
-    {
-        path: 'teams/:teamId/trades',
+        },
+        /*
+        {
+            path: 'teams/:teamId/trades',
         title: 'Scambi squadra',
         loadComponent: () => import('./team-trades/team-trades')
             .then((component) => component.TeamTrades),
