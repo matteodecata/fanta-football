@@ -12,12 +12,15 @@ import { PlayersService } from './players.service';
 export class Players {
   private playersService = inject(PlayersService);
 
+  currentPage = signal<number>(0);
   selectedRoles = signal<PlayerRole[]>([]);
   selectedRealTeamNames = signal<string[]>([]);
   minPriceFilter = signal<number | null>(null);
   maxPriceFilter = signal<number | null>(null);
   injuredFilter = signal<boolean | null>(null);
   searchTerm = signal('');
+
+  
 
   hasFilterActive = computed(() => {
     return (
@@ -30,16 +33,39 @@ export class Players {
     );
   });
 
-  playersResource = 
-      this.playersService.getPlayersResource();
+  playersResource = this.playersService.getPlayersResource(() => this.currentPage());
 
+  // TODO PAG 3: le letture di .content sono corrette; ora gestisci anche una GET fallita.
+  // Crea sopra visiblePlayers un computed chiamato pagePlayers: deve restituire PlayerResponse[].
+  // Hint: prima controlla playersResource.hasValue(); se manca il valore restituisci [], altrimenti content.
+  // Poi usa pagePlayers() in visiblePlayers, realTeamNames, minCatalogPrice e maxCatalogPrice.
+  // Prova con il backend spento: deve comparire l'errore senza tentare map/filter su dati mancanti.
+  //
+   pagePlayers = computed(() => {
+    if(!this.playersResource.hasValue()) {
+      return [];
+    }
+    return this.playersResource.value().content;
+  })
+
+  totalPages = computed(() => {
+    if(!this.playersResource.hasValue()) {
+      return 0;
+    }
+    return this.playersResource.value().totalPages;
+  });
+   // TODO PAG 6, dopo i pulsanti: fai cercare e filtrare TUTTO il catalogo al backend.
+  // Ora questo filter vede solo i 20 ricevuti. Prima prova la ricerca per nome usando il parametro reale dell'API.
+  // Poi aggiungi ruolo, squadra, prezzo e infortunio; verifica come inviare piu ruoli/squadre insieme.
+  // Quando il backend applica un filtro, evita di rifarlo qui con regole diverse.
+  // Prova un cognome che non era nella pagina corrente. Se l'API non supporta il filtro, va completata prima.
   visiblePlayers = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
     const selectedRoles = this.selectedRoles();
     const selectedRealTeamNames = this.selectedRealTeamNames();
     const minPrice = this.minPriceFilter();
     const maxPrice = this.maxPriceFilter();
-    const players = this.playersResource.value();
+    const players = this.playersResource.value().content;
     const injured = this.injuredFilter();
     return players.filter((player) => {
       const fullName = `${player.name} ${player.surname}`.toLowerCase();
@@ -56,6 +82,8 @@ export class Players {
   });
 
   playersGroupedByRole = computed(() => {
+    // PAG 6, ordine: questo sort ordina solo i 20 ricevuti. Per ordinare tutto per P, D, C, A,
+    // chiedi l'ordinamento al backend prima della paginazione, con un criterio stabile a parita di ruolo.
     const roleOrder: Record<PlayerRole, number> = {
       P: 0,
       D: 1,
@@ -68,15 +96,21 @@ export class Players {
     });
   });
 
+  // TODO PAG 8: evita che bottoni squadra e limiti degli slider cambino passando pagina.
+  // Esempio: se nei primi 20 manca la Roma, il suo filtro sparisce anche se esiste nel catalogo.
+  // Chiedi al backend tutte le squadre e il minimo/massimo del catalogo, separati dalla pagina.
+  // Usa quei dati qui e in minCatalogPrice/maxCatalogPrice. Non inventare URL se l'endpoint manca.
   realTeamNames = computed(() => {
     return [...new Set(
-      this.playersResource.value().map((player) =>
+      this.playersResource.value().content.map((player) =>
                player.realTeamName))]
                   .sort((first, second) => first.localeCompare(second));
   });
 
 
   suggestedPlayers = computed(() => {
+    // PAG 6: anche i suggerimenti devono leggere i risultati della ricerca backend.
+    // slice(0, 5) qui va bene: limita i suggerimenti, non decide quali giocatori cercare.
     const term = this.searchTerm().trim().toLowerCase();
     if (term.length < 2) {
       return [];
@@ -85,7 +119,7 @@ export class Players {
   });
 
    minCatalogPrice = computed(() => {
-    const prices = this.playersResource.value().map((player) => player.price);
+    const prices = this.playersResource.value().content.map((player) => player.price);
     if (prices.length === 0) {
       return 0;
     }
@@ -93,7 +127,7 @@ export class Players {
    });
 
    maxCatalogPrice = computed(() => {
-    const prices = this.playersResource.value().map((player) => player.price);
+    const prices = this.playersResource.value().content.map((player) => player.price);
     if (prices.length === 0) {
       return 0;
     }
@@ -109,7 +143,50 @@ export class Players {
   // Hint: prima guarda con console/log o debug che forma ha l'errore HTTP, poi decidi se mostrare
   // un messaggio diverso per 401, 403, 404 o backend spento.
 
+  previousPage()  {
+    if(!this.playersResource.hasValue() || this.playersResource.isLoading() 
+      || this.playersResource.value().totalPages === 0 || this.playersResource.error()) {
+      return;
+    }
+    const currentPage = this.currentPage();
+    if(currentPage > 0) {
+      this.currentPage.set(currentPage - 1);
+    }
+  };
 
+  nextPage(){
+    if(!this.playersResource.hasValue() || this.playersResource.isLoading() ||
+         this.playersResource.value().totalPages === 0 || this.playersResource.error()) {
+      return;
+    }
+    const totalPages = this.playersResource.value().totalPages;
+    const currentPage = this.currentPage();
+    if(currentPage < totalPages -1) {
+      this.currentPage.set(currentPage + 1);
+    }
+  };
+
+  isPreviousDisabled = computed(() => {
+    return !this.playersResource.hasValue() || this.playersResource.isLoading() 
+       || this.totalPages() === 0 || this.currentPage() <= 0
+  });
+
+  isNextDisabled = computed(() => {
+    return !this.playersResource.hasValue() || this.playersResource.isLoading()
+    || this.totalPages() === 0 || this.currentPage() >= this.totalPages() - 1
+  });
+
+
+  // TODO PAG 4: aggiungi qui previousPage() e nextPage(), prima dei metodi dei filtri.
+  // Devono diminuire/aumentare currentPage di 1. Dopo PAG 2, la GET parte da sola: niente reload aggiuntivo.
+  // Controlla i limiti PRIMA di cambiare il signal, anche dentro i metodi: non basta disabilitare il bottone.
+  // Hint: con pagine da 0 e totalPages = 3, gli indici validi sono 0, 1, 2. Con zero pagine non avanzare.
+  // Leggi totalPages solo se hasValue() e vero; durante caricamento/errori non cambiare pagina.
+  //
+  // TODO PAG 7, insieme ai filtri backend: quando cambia un filtro, torna alla prima pagina.
+  // Esempio: sei a pagina 5 e cerchi un nome con 2 risultati; devi richiedere la prima, non la quinta.
+  // Aggiungi il reset di currentPage ai metodi di filtro sotto, incluso updateSearchTerm e resetFilters.
+  // Ricordati anche selectSuggestedPlayer: cambia il testo della ricerca, quindi deve resettare la pagina.
   updateRealTeamNameFilter(value: string) {
     this.selectedRealTeamNames.update((selectedNames) =>
       selectedNames.includes(value)
@@ -161,18 +238,9 @@ export class Players {
     this.injuredFilter.set(null);
   }
 
-  // TODO: prepara il prossimo pezzo della fase 5: asta admin.
-  // Domanda guida: questa pagina deve solo mostrare il catalogo o deve anche aprire un flusso
-  // per acquistare un calciatore?
-  // Hint: per l'asta servono almeno leagueId, teamId, playerId e purchasePrice. Se non hai
-  // leagueId/teamId in questa pagina, forse il flusso deve partire dal dettaglio lega o squadra.
-
-  // TODO: prepara il fantavoto senza implementarlo subito.
-  // Domanda guida: da dove arriva il matchdayId necessario a /players/{playerId}/matchdays/{matchdayId}/rating?
-  // Hint: nel PROJECT_CONTEXT questo punto e indicato come da verificare lato backend; evita una UI
-  // che promette una consultazione se non sai ancora dove prendere la giornata.
 
   selectSuggestedPlayer(player: PlayerResponse) {
+    // PAG 7: applica anche qui lo stesso reset della pagina usato quando digiti un nome.
     this.searchTerm.set(`${player.name} ${player.surname}`);
   }
 

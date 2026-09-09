@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { httpResource, HttpResourceRef } from "@angular/common/http";
-import { PlayerResponse } from "./players-response";
+import { PageResponse } from "./players-response";
 
 
 @Injectable ({
@@ -8,15 +8,24 @@ import { PlayerResponse } from "./players-response";
 })
 
 export class PlayersService {
-  
-    getPlayersResource(): HttpResourceRef<PlayerResponse[]> {
-        return httpResource<PlayerResponse[]>(() => ({
+    // readPage legge il signal del component: non serve una seconda copia della pagina nel service.
+    getPlayersResource(readPage: () => number): HttpResourceRef<PageResponse> {
+        return httpResource<PageResponse>(() => ({
             url: '/api/players',
             method: 'GET',
+            params: {
+                page: readPage().toString(),
+                size: '20',
+            }
         }), {
-            defaultValue: []
+            defaultValue: {
+                content: [],
+                totalPages: 0,
+                totalElements: 0,
+                number: 0
+            }
         });
-     }
+    }
 
 
 }

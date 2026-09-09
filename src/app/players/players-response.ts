@@ -14,3 +14,10 @@ export interface PlayerResponse {
 
 }
 
+export interface PageResponse {
+    content: PlayerResponse[];
+    totalPages: number;
+    totalElements: number;
+    number: number;
+}
+
