@@ -17,6 +17,16 @@
 > classifica, inviti, verifica admin) e sono stati marcati di conseguenza;
 > `team-trades` resta l'area più indietro. È emerso anche un bug non ancora
 > documentato sulla cache delle leghe in dashboard (vedi 13.1bis).
+>
+> **Da leggere prima di lavorare sulle formazioni**: l'8 settembre 2026 è
+> stato confermato su Swagger il contratto per le Lineup (sezioni 8, 9, 10),
+> ma era emerso un buco nel DTO di `GET /api/leagues/{leagueId}/matches`
+> (mancava lo stato "chiusa" della matchday, il punteggio e il lineupId per
+> squadra). Il 9 settembre 2026 il backend ha aggiunto `matchdayClosed`,
+> `homeScore`/`awayScore` e `homeGoals`/`awayGoals`: il Calendario ora
+> mostra il risultato reale. Resta solo il buco sul `homeLineupId`/
+> `awayLineupId` per squadra — dettaglio in sezione 14, blocco "Formazioni
+> (Lineup)".
 
 ## 1. Obiettivo
 
@@ -214,6 +224,20 @@ generico mostrare il `message` restituito dal backend.
   frontend non deve avviare la simulazione.
 - L'admin di lega gestisce gli acquisti dell'asta per tutte le squadre; non sono
   acquisti self-service dei proprietari.
+- Una **Lineup** è la formazione che una squadra schiera per una propria
+  `LeagueMatch`: vincolo univoco `(teamId, leagueMatchId)`, una sola
+  formazione per squadra per partita (confermato su Swagger l'8 settembre
+  2026, vedi sezioni 9-10 e 14).
+- Il modulo (`LineupType`) fissa il numero di difensori/centrocampisti/
+  attaccanti; il portiere è sempre 1, implicito, non va scelto.
+- I `LineupPlayer` sono titolari o panchina (`starter: boolean`); i subentri
+  per ruolo, se un titolare non ha giocato, sono calcolati dal backend — il
+  frontend non deve replicare questa logica, solo raccogliere la selezione.
+- La Lineup è modificabile solo finché la `Matchday` reale collegata non è
+  `closed`; dopo la chiusura il fantavoto diventa calcolabile e la
+  formazione si blocca. **Questo stato non è ancora esposto da nessuna
+  risposta API disponibile al frontend** — vedi il blocco backend in
+  sezione 14 prima di costruire la UI di editing.
 
 ## 9. Modelli TypeScript da creare
 
@@ -300,11 +324,52 @@ export interface TradeDto {
 export interface LeagueMatchDto {
   id: number;
   roundNumber: number;
-  matchDay: unknown; // verificare la forma esatta nella spec OpenAPI
+  matchDay: unknown; // verificato l'8 settembre 2026: è una stringa ISO
+  // (timestamp), non un riferimento alla Matchday. Non basta a sapere se la
+  // giornata è "closed", né a leggere punteggi/lineupId. Vedi sezione 14,
+  // blocco "Formazioni (Lineup)": il DTO reale va integrato lato backend.
   homeTeamId: number;
   homeTeamName: string;
   awayTeamId: number;
   awayTeamName: string;
+}
+
+// Confermate su Swagger l'8 settembre 2026 (request/response reali, non
+// proposte). Vedi sezione 10 "Formazioni (Lineup)" per gli endpoint.
+export interface LineupTypeResponse {
+  id: number;
+  numDefenders: number;
+  numMidfielders: number;
+  numForwards: number;
+}
+
+export interface LineupPlayerRequest {
+  teamPlayerId: number;
+  starter: boolean;
+}
+
+export interface LineupPlayerResponse {
+  teamPlayerId: number;
+  playerId: number;
+  name: string;
+  surname: string;
+  role: PlayerRole;
+  starter: boolean;
+}
+
+export interface LineupRequest {
+  lineupTypeId: number;
+  defensive: boolean; // semantica gestita interamente lato backend
+  players: LineupPlayerRequest[];
+}
+
+export interface LineupResponse {
+  id: number;
+  teamId: number;
+  leagueMatchId: number;
+  lineupTypeId: number;
+  defensive: boolean;
+  players: LineupPlayerResponse[];
 }
 ```
 
@@ -389,6 +454,29 @@ Il calendario può essere generato una sola volta. Il frontend usa anche
 il backend deve restituire 404 (o `calendar_not_found`) se non è ancora presente.
 Il punteggio è disponibile solo per lineup già esistenti e dopo la chiusura della
 giornata.
+
+**Attenzione**: la risposta reale di `GET /api/leagues/{leagueId}/matches`,
+verificata l'8 settembre 2026, non contiene punteggi né alcun riferimento a
+lineup o allo stato "chiusa" della matchday — vedi il dettaglio nel blocco
+"Formazioni (Lineup)" in sezione 14 prima di costruire UI che ne dipendono.
+
+### Formazioni (Lineup)
+
+Confermato su Swagger l'8 settembre 2026 (request/response reali, tipi in
+sezione 9).
+
+| Metodo | Endpoint | Request | Response / permesso |
+| --- | --- | --- | --- |
+| GET | `/api/lineup-type` | — | `LineupTypeResponse[]`, catalogo moduli |
+| GET | `/api/teams/{teamId}/matches/{leagueMatchId}/lineup` | — | `LineupResponse` della squadra per quella partita |
+| POST | `/api/teams/{teamId}/matches/{leagueMatchId}/lineup` | `LineupRequest` | crea la formazione, `LineupResponse` |
+| PUT | `/api/teams/{teamId}/matches/{leagueMatchId}/lineup` | `LineupRequest` | aggiorna la formazione, `LineupResponse` |
+
+Vincolo di dominio (sezione 8): una sola Lineup per coppia `(teamId,
+leagueMatchId)`, modificabile solo finché la Matchday collegata non è
+`closed`. Nessuno dei payload sopra espone questo stato, e non è ancora
+stato verificato se POST/PUT restituiscono un errore esplicito quando si
+tenta di modificare una formazione a giornata chiusa — vedi sezione 14.
 
 ## 11. Architettura frontend proposta
 
@@ -724,23 +812,80 @@ reale del codice prima di considerarli aperti o chiusi.
 - Build e test mirati verificano il frontend; prova con utenti reali e audit AXE
   restano da eseguire. Il backend non è incluso in questo repository.
 
+### Formazioni (Lineup): verifica Swagger dell'8 settembre 2026
+
+- Il backend ora espone `GET /api/lineup-type` e
+  `GET/POST/PUT /api/teams/{teamId}/matches/{leagueMatchId}/lineup`, con
+  request/response confermate (tipi in sezione 9, tabella in sezione 10).
+  Il blocco storico "Creazione/modifica lineup" qui sotto è quindi
+  **risolto**: l'endpoint esiste davvero, non è più un blocco backend.
+- **Aggiornamento del 9 settembre 2026**: il DTO di
+  `GET /api/leagues/{leagueId}/matches` è stato ampliato lato backend.
+  Risposta reale verificata:
+
+  ```json
+  [
+    {
+      "id": 0,
+      "roundNumber": 0,
+      "matchDay": "2026-09-09T08:17:54.194Z",
+      "homeTeamId": 0,
+      "homeTeamName": "string",
+      "awayTeamId": 0,
+      "awayTeamName": "string",
+      "homeScore": 0,
+      "awayScore": 0,
+      "homeGoals": 0,
+      "awayGoals": 0,
+      "matchdayClosed": true
+    }
+  ]
+  ```
+
+  Semantica confermata: `homeScore`/`awayScore` sono i fantapunti delle due
+  squadre; `homeGoals`/`awayGoals` sono i "fantagol" derivati dallo score
+  con una regola di conversione lato backend e determinano il vincitore;
+  `matchdayClosed` indica se la giornata collegata è chiusa (prima della
+  chiusura questi valori non sono ancora significativi). Il modello
+  `CalendarMatch` (`Calendar/calendar-api.service.ts`) e il template
+  (`Calendar/calendar.component.html`) sono stati aggiornati di conseguenza:
+  il risultato (fantagol + fantapunti in aria-label) viene mostrato
+  direttamente quando `matchdayClosed` è `true`, senza passare da
+  `GET /api/lineups/{lineupId}/score`.
+
+  Resta un solo buco, non ancora risolto:
+  - **Id lineup per squadra**: mancano ancora `homeLineupId`/`awayLineupId`
+    (o equivalente) nel DTO del match. Il frontend mantiene per ora i campi
+    `lineupId`/`homeLineupId`/`awayLineupId` in `CalendarMatch` come
+    opzionali/speculativi, insieme al vecchio flusso a bottone
+    "Leggi punteggio" via `GET /api/lineups/{lineupId}/score` (tenuto per
+    scelta esplicita, non più necessario per il risultato base del match ma
+    potenzialmente utile per un dettaglio per-lineup in futuro).
+  - Non è ancora stato verificato se POST/PUT su una lineup di matchday
+    chiusa restituiscano un errore esplicito: prima di costruire la UI di
+    editing formazione, usare comunque `matchdayClosed` per disabilitare il
+    form in anticipo, non affidarsi solo a un eventuale errore del backend.
+
 Questi elementi non sono implementabili soltanto nel frontend:
 
-- [ ] **Creazione/modifica lineup:** manca qualunque endpoint per schierare
-  titolari e panchina. È il blocco principale per la feature formazione.
-- [ ] **Lettura calendario:** manca un GET per recuperare un calendario già
-  generato; il POST lo restituisce soltanto al momento della creazione.
+- [x] **Creazione/modifica lineup** — RISOLTO l'8 settembre 2026, vedi il
+  blocco "Formazioni (Lineup)" sopra.
+- [x] **Lettura calendario** — l'endpoint esiste ed è già usato da
+  `CalendarApiService.getCalendar()`; il problema reale non era
+  l'esistenza del GET ma i campi mancanti nel suo DTO, vedi punto sotto.
 - [ ] **Join con invite code:** `League.inviteCode` esiste, ma nessun endpoint lo
   usa. Oggi l'ingresso avviene soltanto tramite invito nominale.
-- [ ] **Scoperta giornate:** verificare se esiste o aggiungere un endpoint che
-  permetta al frontend di ottenere i `matchdayId` necessari per i fantavoti.
-- [ ] **Lettura lineup:** verificare come il frontend possa ottenere i lineup ID
-  richiesti dall'endpoint score.
+- [ ] **DTO di `GET /api/leagues/{leagueId}/matches` — buco residuo**:
+  `matchdayClosed`, `homeScore`/`awayScore` e `homeGoals`/`awayGoals` sono
+  stati aggiunti il 9 settembre 2026 e sono già usati dal Calendario.
+  Manca ancora `homeLineupId`/`awayLineupId`. Vedi il dettaglio nel blocco
+  "Formazioni (Lineup)" sopra.
 - [ ] Uniformare, se possibile, il casing di `errorCode` nel backend.
 - [ ] Aggiungere descrizioni OpenAPI per regole, errori e autorizzazioni.
 
 Finché questi punti non vengono risolti, non progettare interfacce che fingano
-di poter salvare formazioni, rileggere calendari o entrare tramite codice.
+di poter bloccare la modifica formazione a giornata chiusa o mostrare
+punteggi/risultati nel Calendario.
 
 ## 15. Regole operative per sessioni future
 

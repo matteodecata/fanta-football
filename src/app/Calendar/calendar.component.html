@@ -46,11 +46,24 @@
                   <span>{{ match.awayTeamName }}</span>
                 </div>
                 <div class="match__aside">
-                @if (match.homeScore !== null && match.homeScore !== undefined
-                  && match.awayScore !== null && match.awayScore !== undefined) {
-                  <strong class="match__score" [attr.aria-label]="'Risultato: ' + match.homeScore + ' a ' + match.awayScore">
-                    {{ match.homeScore }} – {{ match.awayScore }}
+                @if (match.matchdayClosed) {
+                  <!--
+                    TODO(studio): questo è un risultato minimo (fantagol +
+                    fantapunti in aria-label). Valuta come evidenziare il
+                    vincitore in modo accessibile senza affidarti solo al
+                    colore (es. grassetto sul nome squadra vincente in
+                    match__teams, icona con testo alternativo, ecc. — vedi
+                    requisito "il colore non deve essere l'unico mezzo per
+                    comunicare uno stato" in AGENTS.md sezione 4).
+                  -->
+                  <strong
+                    class="match__score"
+                    [attr.aria-label]="'Risultato: ' + match.homeGoals + ' a ' + match.awayGoals + ', fantapunti ' + match.homeScore + ' a ' + match.awayScore"
+                  >
+                    {{ match.homeGoals }} – {{ match.awayGoals }}
                   </strong>
+                } @else {
+                  <span class="match__status">Risultato disponibile alla chiusura della giornata</span>
                 }
                 @if (match.matchDay !== null && match.matchDay !== undefined) {
                   <time class="match__date">{{ match.matchDay | date: 'd MMM yyyy' }}</time>
