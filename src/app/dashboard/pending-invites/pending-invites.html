@@ -10,7 +10,7 @@
     </div>
   }
 
-  @if (invites.isLoading() && (!invites.hasValue() || invites.value().length === 0)) {
+  @if (invites.status() === 'loading') {
     <div class="invites-status" role="status">
       <span class="spinner" aria-hidden="true"></span>
       <span>Caricamento degli inviti…</span>
@@ -35,16 +35,16 @@
             <div class="invite-content">
               <h3 [id]="'invite-title-' + invite.id">
                 @if (invite.leagueName) {
-                  Invito a {{ invite.leagueName }}
+                  Invito alla lega: {{ invite.leagueName }}
                 } @else {
-                  Invito alla lega n. {{ invite.leagueId }}
+                  Invito alla lega: nome non disponibile
                 }
               </h3>
               <p>
                 @if (invite.invitedByUsername) {
-                  Inviato da <strong>{{ invite.invitedByUsername }}</strong>
+                  Inviato dall'utente: <strong>{{ invite.invitedByUsername }}</strong>
                 } @else {
-                  Inviato dall'utente n. <strong>{{ invite.invitedByUserId }}</strong>
+                  Inviato dall'utente: <strong>nome non disponibile</strong>
                 }
               </p>
               <p class="invite-date">

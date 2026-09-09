@@ -1,0 +1,8 @@
+:host { display: grid; gap: var(--sp-4); }
+.section-title { font-size: var(--fs-sm); color: var(--c-text-muted); text-transform: uppercase; letter-spacing: .08em; }
+.trade-intro { color: var(--c-text-muted); font-size: var(--fs-sm); }
+.trade-card__meta { flex-wrap: wrap; }
+.trade-card__meta > span:first-child, .player-offer__label { overflow-wrap: anywhere; }
+.status-badge { color: var(--c-text); background: var(--c-surface-2); }
+.player-info strong, .player-info small { white-space: normal; overflow-wrap: anywhere; }
+button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 3px; }

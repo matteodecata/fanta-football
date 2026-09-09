@@ -5,6 +5,53 @@ import { provideRouter, Router } from '@angular/router';
 import { PendingInvites } from './pending-invites';
 
 describe('PendingInvites', () => {
+  it('aggiorna automaticamente gli inviti e interrompe il controllo quando si lascia la pagina', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    try {
+      TestBed.configureTestingModule({
+        imports: [PendingInvites],
+        providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      });
+      const http = TestBed.inject(HttpTestingController);
+      const fixture = TestBed.createComponent(PendingInvites);
+      fixture.detectChanges();
+      http.expectOne('/api/invites/pending').flush([]);
+      await fixture.whenStable();
+
+      vi.advanceTimersByTime(15_000);
+      TestBed.tick();
+      http.expectOne('/api/invites/pending').flush([{
+        id: 21, leagueId: 9, leagueName: 'Lega amici', invitedByUserId: 4,
+        invitedUserId: 3, status: 'PENDING', sentDate: '2026-09-04T10:00:00Z', responseDate: null,
+      }]);
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect((fixture.nativeElement as HTMLElement).textContent).toContain('Invito alla lega: Lega amici');
+
+      visibility.mockReturnValue('hidden');
+      vi.advanceTimersByTime(15_000);
+      TestBed.tick();
+      http.expectNone('/api/invites/pending');
+
+      visibility.mockReturnValue('visible');
+      document.dispatchEvent(new Event('visibilitychange'));
+      TestBed.tick();
+      http.expectOne('/api/invites/pending').flush([]);
+      await fixture.whenStable();
+
+      fixture.destroy();
+      vi.advanceTimersByTime(15_000);
+      document.dispatchEvent(new Event('visibilitychange'));
+      TestBed.tick();
+      http.expectNone('/api/invites/pending');
+      http.verify();
+    } finally {
+      visibility.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
   for (const decision of ['ACCEPTED', 'DECLINED'] as const) {
     it(`salva ${decision} prima di aggiornare gli inviti o navigare`, async () => {
       TestBed.configureTestingModule({

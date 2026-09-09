@@ -1,8 +1,9 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, DOCUMENT, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, fromEvent, interval, merge } from 'rxjs';
 
 import {
   InviteResponse,
@@ -18,11 +19,25 @@ import {
 export class PendingInvites {
   private readonly pendingInvitesService = inject(PendingInvitesService);
   private readonly router = inject(Router);
+  private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly invites = this.pendingInvitesService.pendingInvites;
   protected readonly processingInviteIds = signal<ReadonlySet<number>>(new Set());
   protected readonly statusMessage = signal<string | null>(null);
   protected readonly actionError = signal<string | null>(null);
+
+  ngOnInit(): void {
+    this.invites.reload();
+    merge(interval(15_000), fromEvent(this.document, 'visibilitychange'))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (this.document.visibilityState === 'visible'
+          && !this.invites.isLoading() && this.processingInviteIds().size === 0) {
+          this.invites.reload();
+        }
+      });
+  }
 
   protected isProcessing(inviteId: number): boolean {
     return this.processingInviteIds().has(inviteId);
