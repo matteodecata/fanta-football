@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { PlayerResponse } from '../players/players-response';
 import { Auction } from './auction';
+import { AvailablePlayersPageResponse } from './auction.service';
 
 describe('Auction player search', () => {
   let fixture: ComponentFixture<Auction>;
@@ -51,9 +52,20 @@ describe('Auction player search', () => {
     fixture.detectChanges();
   }
 
+  function playersPage(content: PlayerResponse[]): AvailablePlayersPageResponse {
+    return {
+      content,
+      page: 0,
+      size: 20,
+      totalElements: content.length,
+      totalPages: content.length > 0 ? 1 : 0,
+      hasNext: false,
+    };
+  }
+
   async function load(catalog = players) {
     http.expectOne(teamsUrl).flush(teams);
-    http.expectOne(playersUrl).flush(catalog);
+    http.expectOne(playersUrl).flush(playersPage(catalog));
     await settle();
   }
 
@@ -73,7 +85,7 @@ describe('Auction player search', () => {
     input('#auction-price', '20');
   }
 
-  it('cerca in tutto il catalogo per cognome e limita i risultati dopo il filtro', async () => {
+  it('legge content dalla risposta paginata e cerca per cognome nei giocatori ricevuti', async () => {
     await load();
     input('#auction-player', ' BIANCHI ');
     expect(element('.auction-suggestion').textContent).toContain('Alessandro Bianchi');
@@ -141,7 +153,7 @@ describe('Auction player search', () => {
     await Promise.resolve();
     fixture.detectChanges();
     http.expectOne(teamsUrl).flush([{ ...teams[0], budget: 80 }]);
-    http.expectOne(playersUrl).flush(players.filter(player => player.id !== 8));
+    http.expectOne(playersUrl).flush(playersPage(players.filter(player => player.id !== 8)));
     await settle();
     expect(element<HTMLInputElement>('#auction-player').value).toBe('');
     expect(element<HTMLInputElement>('#auction-price').value).toBe('');

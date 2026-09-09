@@ -1,5 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { PlayerResponse } from '../players/players-response';
+
+export interface AvailablePlayersPageResponse {
+  content: PlayerResponse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+}
 
 export interface AuctionPurchaseRequest {
   purchasePrice: number;

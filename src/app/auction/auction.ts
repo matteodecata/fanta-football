@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { extractApiError } from '../core/http/api-error';
 import { PlayerResponse } from '../players/players-response';
-import { AuctionService } from './auction.service';
+import { AuctionService, AvailablePlayersPageResponse } from './auction.service';
 
 interface AuctionTeam {
   teamId: number;
@@ -48,7 +48,7 @@ export class Auction {
     defaultValue: [],
   });
 
-  protected readonly playersResource = httpResource<PlayerResponse[]>(() => {
+  protected readonly playersResource = httpResource<AvailablePlayersPageResponse>(() => {
       if (!this.leagueId || Number.isNaN(this.leagueId)) {
       return undefined;
     }
@@ -57,8 +57,19 @@ export class Auction {
       method: 'GET',
     };
   }, {
-    defaultValue: [],
+    defaultValue: {
+      content: [],
+      page: 0,
+      size: 20,
+      totalElements: 0,
+      totalPages: 0,
+      hasNext: false,
+    },
   });
+
+  protected readonly availablePlayers = computed(() =>
+    this.playersResource.hasValue() ? this.playersResource.value().content : [],
+  );
 
   protected readonly isLoading = computed(
     () => this.teamsResource.isLoading() || this.playersResource.isLoading(),
@@ -82,7 +93,7 @@ export class Auction {
   protected readonly selectedPlayer = computed(() => {
     if (!this.playersResource.hasValue()) return undefined;
     const playerId = this.selectedPlayerId();
-    return this.playersResource.value().find((player) => player.id === playerId);
+    return this.availablePlayers().find((player) => player.id === playerId);
   });
 
   protected readonly remainingBudget = computed(() => {
@@ -99,7 +110,7 @@ export class Auction {
     if (searchText.length < 2 || !this.playersResource.hasValue()) {
       return [];
     }
-    return this.playersResource.value().filter((player) => {
+    return this.availablePlayers().filter((player) => {
       const fullname = `${player.name} ${player.surname}`.toLowerCase();
       return fullname.includes(searchText);
     }).slice(0, 5);
@@ -107,7 +118,7 @@ export class Auction {
 
   protected readonly hasNoSearchResults = computed(
     () => !this.isLoading() && !this.hasError() &&
-      this.playersResource.hasValue() && this.playersResource.value().length > 0 &&
+      this.playersResource.hasValue() && this.availablePlayers().length > 0 &&
       this.selectedPlayerId() === null && this.searchText().trim().length >= 2 &&
       this.suggestedPlayers().length === 0,
   );

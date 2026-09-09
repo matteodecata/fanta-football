@@ -2,6 +2,7 @@
 export type PlayerRole = 'P'|'D'|'C'|'A';
 
 export interface PlayerResponse {
+    
     id: number;
     externalId: number;
     name: string;
@@ -12,5 +13,12 @@ export interface PlayerResponse {
     price: number;
     injured: boolean;
 
+}
+
+export interface PageResponse {
+    content: PlayerResponse[];
+    totalPages: number;
+    totalElements: number;
+    number: number;
 }
 

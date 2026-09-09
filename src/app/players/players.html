@@ -184,4 +184,16 @@
       </table>
     </section>
   }
+  @if(totalPages() > 0) {
+    <nav aria-label="Paginazione calciatori">
+    <button type="button" class="btn"  (click) = "previousPage()" [disabled]= "isPreviousDisabled()" >Precedente</button>
+    <span class="container" >Pagina {{currentPage()+1}} di {{totalPages()}} </span>
+    <button type="button" class="btn" (click) = "nextPage()" [disabled]= "isNextDisabled()" >Successiva</button>
+  </nav>
+  }
+  <!-- TODO PAG 5: aggiungi qui una nav con aria-label="Paginazione calciatori".
+    Dentro metti due button type="button": Precedente e Successiva, collegati con (click) ai metodi di PAG 4.
+    Fra i due mostra "Pagina X di Y": Y viene da totalPages; se il backend parte da 0, mostra number + 1 come X.
+    Usa [disabled] alla prima/ultima pagina e durante caricamento/errori. Non leggere value() se !hasValue().
+    Con zero pagine nascondi la nav. Prova avanti e indietro: numero mostrato e righe devono aggiornarsi. -->
 </main>

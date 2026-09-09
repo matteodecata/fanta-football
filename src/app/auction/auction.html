@@ -102,7 +102,7 @@
           }
 
           <div role="status" aria-live="polite">
-            @if (playersResource.value().length === 0) {
+            @if (playersResource.value().totalElements === 0) {
               <p class="auction-search-status">Non ci sono calciatori disponibili in questa lega.</p>
             } @else if (hasNoSearchResults()) {
               <p class="auction-search-status">Nessun calciatore corrisponde alla ricerca.</p>
