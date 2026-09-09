@@ -24,7 +24,14 @@
   } @else if (status() === 'ready') {
     <div class="calendar__results" aria-live="polite">
       <p class="calendar__result-count">Calendario generato · {{ matches().length }} partite</p>
-      @for (group of groupedMatches(); track group.roundNumber) {
+      @if (groupedMatches().length > 0) {
+        <nav class="round-navigation" aria-label="Navigazione giornate">
+          <button class="btn" type="button" (click)="changeRound(-1)" [disabled]="selectedRoundIndex() === 0">← Precedente</button>
+          <span>{{ selectedRoundIndex() + 1 }} di {{ groupedMatches().length }} giornate</span>
+          <button class="btn" type="button" (click)="changeRound(1)" [disabled]="selectedRoundIndex() >= groupedMatches().length - 1">Successiva →</button>
+        </nav>
+      }
+      @for (group of visibleGroups(); track group.roundNumber) {
         <section class="matchday" [attr.aria-labelledby]="'matchday-' + group.roundNumber">
           <div class="matchday__header">
             <h3 [id]="'matchday-' + group.roundNumber">Giornata {{ group.roundNumber }}</h3>

@@ -97,3 +97,5 @@
   .calendar .empty-state { padding: var(--sp-4); }
   .calendar .alert { flex-direction: column; align-items: start; }
 }
+.round-navigation { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.round-navigation span { color: var(--c-text-muted); font-size: var(--fs-sm); }

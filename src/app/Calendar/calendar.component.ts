@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { afterNextRender, Component, computed, inject, input, signal } from '@angular/core';
+import { afterNextRender, Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { CalendarApiService, CalendarMatch, CalendarScore } from './calendar-api.service';
 
 type CalendarStatus = 'idle' | 'loading' | 'ready' | 'not-generated' | 'already-generated' | 'no-open-matchday' | 'error';
@@ -38,6 +38,19 @@ export class CalendarComponent {
   });
 
   readonly canGenerate = computed(() => this.isAdmin() && this.status() === 'not-generated');
+  readonly selectedRoundIndex = linkedSignal(() => {
+    this.groupedMatches();
+    return 0;
+  });
+  readonly visibleGroups = computed(() => {
+    const group = this.groupedMatches()[this.selectedRoundIndex()];
+    return group ? [group] : [];
+  });
+
+  changeRound(direction: number): void {
+    const next = this.selectedRoundIndex() + direction;
+    if (next >= 0 && next < this.groupedMatches().length) this.selectedRoundIndex.set(next);
+  }
 
   private loadCalendar(leagueId: number): void {
     // A new GET must always replace the previous backend snapshot completely.

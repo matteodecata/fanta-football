@@ -28,3 +28,9 @@ h1 { overflow-wrap: anywhere; font-size: clamp(1.5rem, 3vw, 2rem); }
   .league-actions .btn { flex: 1; }
   .league-mark { display: none; }
 }
+.league-tabs { display: flex; gap: var(--sp-4); border-bottom: 1px solid var(--c-border-strong); }
+.league-tabs button { min-height: var(--h-control); padding: var(--sp-3); color: var(--c-text-muted); border-bottom: 3px solid transparent; cursor: pointer; font-weight: 600; }
+.league-tabs button[aria-selected='true'] { color: var(--c-accent); border-bottom-color: var(--c-accent); }
+.league-content { min-width: 0; }
+.league-content > [hidden] { display: none; }
+@media (max-width: 36rem) { .league-tabs { gap: 0; } .league-tabs button { flex: 1; padding-inline: var(--sp-2); font-size: var(--fs-sm); } }
