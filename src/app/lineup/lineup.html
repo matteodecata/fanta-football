@@ -9,10 +9,15 @@
       </p>
     }
 
-    @if (lineupTypesStatus() === 'loading' || lineupStatus() === 'loading') {
+    @if (lineupTypesStatus() === 'loading' || lineupStatus() === 'loading' || rosterResource.isLoading()) {
       <div class="lineup__state" role="status"><span class="spinner" aria-hidden="true"></span> Caricamento in corso…</div>
-    } @else if (lineupTypesStatus() === 'error' || lineupStatus() === 'error') {
+    } @else if (lineupTypesStatus() === 'error' || lineupStatus() === 'error' || rosterResource.error()) {
       <p class="alert alert--danger" role="alert">Non è stato possibile caricare i dati della formazione. Riprova più tardi.</p>
+    } @else if (!hasRoster()) {
+      <!-- Senza giocatori selezionabili in rosa nessun modulo è completabile: si blocca la scelta a monte, invece di far scoprire il problema dopo. -->
+      <p class="empty-state">
+        La tua squadra non ha ancora giocatori (esclusi portiere e svincolati): acquista qualche calciatore prima di poter schierare una formazione.
+      </p>
     } @else {
       <form class="form form--wide" novalidate (submit)="$event.preventDefault(); submit()">
         <fieldset class="fieldset" [disabled]="matchdayClosed()">
@@ -26,7 +31,7 @@
                   [checked]="selectedLineupTypeId() === type.id"
                   (change)="selectLineupType(type.id)"
                 />
-                {{ type.numDefenders }}-{{ type.numMidfielders }}-{{ type.numForwards }}
+                {{ type.defenderNum }}-{{ type.midfielderNum }}-{{ type.forwardNum }}
               </label>
             } @empty {
               <p class="empty-state">Nessun modulo disponibile.</p>
@@ -39,9 +44,9 @@
 
           @if (selectedLineupType(); as type) {
             <p class="field__hint" aria-live="polite">
-              Titolari selezionati — Difensori {{ starterCountByRole().D }}/{{ type.numDefenders }},
-              Centrocampisti {{ starterCountByRole().C }}/{{ type.numMidfielders }},
-              Attaccanti {{ starterCountByRole().A }}/{{ type.numForwards }}
+              Titolari selezionati — Difensori {{ starterCountByRole().D }}/{{ type.defenderNum }},
+              Centrocampisti {{ starterCountByRole().C }}/{{ type.midfielderNum }},
+              Attaccanti {{ starterCountByRole().A }}/{{ type.forwardNum }}
             </p>
           } @else {
             <p class="field__hint">Scegli prima un modulo per sapere quanti titolari servono per ruolo.</p>

@@ -2,9 +2,9 @@ import { PlayerRole } from '../players/players-response';
 
 export interface LineupTypeResponse {
   id: number;
-  numDefenders: number;
-  numMidfielders: number;
-  numForwards: number;
+  defenderNum: number;
+  midfielderNum: number;
+  forwardNum: number;
 }
 
 export interface LineupPlayerRequest {

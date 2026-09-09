@@ -28,7 +28,7 @@ export class Lineup {
   // pagina, non serve rifare una chiamata solo per leggere questo flag.
   protected readonly matchdayClosed = computed(() => this.query().get('closed') === 'true');
 
-  private readonly rosterResource = this.teamsApi.roster(this.teamId);
+  protected readonly rosterResource = this.teamsApi.roster(this.teamId);
   private readonly playersResource = this.teamsApi.players();
 
   // Il portiere è sempre 1, implicito: non va scelto (sezione 8 di
@@ -40,6 +40,11 @@ export class Lineup {
       .map((player) => ({ ...player, role: roles.get(player.playerId) }))
       .filter((player): player is typeof player & { role: Exclude<PlayerRole, 'P'> } => player.role !== undefined && player.role !== 'P');
   });
+
+  // La squadra deve avere almeno un giocatore selezionabile (esclusi portiere
+  // e svincolati) prima di poter anche solo scegliere un modulo: altrimenti
+  // nessun modulo sarebbe comunque completabile.
+  protected readonly hasRoster = computed(() => this.selectableRoster().length > 0);
 
   protected readonly lineupTypes = signal<LineupTypeResponse[]>([]);
   protected readonly lineupTypesStatus = signal<LoadStatus>('idle');
@@ -58,7 +63,7 @@ export class Lineup {
   );
 
   // Conteggio titolari selezionati per ruolo, da confrontare con
-  // numDefenders/numMidfielders/numForwards del modulo scelto prima di inviare.
+  // defenderNum/midfielderNum/forwardNum del modulo scelto prima di inviare.
   protected readonly starterCountByRole = computed(() => {
     const starters = this.starterTeamPlayerIds();
     const counts: Record<Exclude<PlayerRole, 'P'>, number> = { D: 0, C: 0, A: 0 };
@@ -76,7 +81,7 @@ export class Lineup {
     const type = this.selectedLineupType();
     if (!type) return false;
     const counts = this.starterCountByRole();
-    return counts.D === type.numDefenders && counts.C === type.numMidfielders && counts.A === type.numForwards;
+    return counts.D === type.defenderNum && counts.C === type.midfielderNum && counts.A === type.forwardNum;
   });
 
   constructor() {
