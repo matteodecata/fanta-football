@@ -23,6 +23,11 @@ describe('LeagueTrades', () => {
     http.expectOne('/api/leagues/9/trades').flush([
       trade(11, 2, 1), trade(12, 1, 2), trade(13, 2, 3), trade(14, 2, 1, 'ACCEPTED'),
     ]);
+    await vi.waitFor(() => {
+      TestBed.tick();
+      http.expectOne('/api/leagues/9/teams').flush([{ teamId: 1, teamName: 'Mia' }, { teamId: 2, teamName: 'Altra' }]);
+    });
+    http.expectOne('/api/teams/1/players').flush([{ playerId: 10, name: 'Mario', surname: 'Rossi' }]);
     await fixture.whenStable();
     fixture.detectChanges();
     return { fixture, http, element: fixture.nativeElement as HTMLElement };
@@ -36,6 +41,47 @@ describe('LeagueTrades', () => {
     expect(Array.from(cards[1].querySelectorAll('button'), button => button.textContent?.trim())).toEqual(['Annulla']);
     expect(cards[2].querySelectorAll('button').length).toBe(0);
     expect(cards[3].querySelectorAll('button').length).toBe(0);
+    http.verify();
+  });
+
+  it('propone uno scambio a un altra squadra della lega e aggiorna elenco', async () => {
+    const { fixture, element, http } = await setup();
+    const select = (id: string, value: string) => {
+      const field = element.querySelector<HTMLSelectElement>('#' + id)!;
+      field.value = value;
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+      fixture.detectChanges();
+    };
+    const receiving = element.querySelector<HTMLSelectElement>('#receiving-team')!;
+    expect(Array.from(receiving.options, option => option.value)).toEqual(['0', '2']);
+    expect(element.querySelector<HTMLButtonElement>('[type="submit"]')!.disabled).toBe(true);
+    select('receiving-team', '2');
+    await vi.waitFor(() => {
+      TestBed.tick();
+      http.expectOne('/api/teams/2/players').flush([{ playerId: 20, name: 'Luca', surname: 'Verdi' }]);
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+    select('offered-player', '10');
+    select('requested-player', '20');
+    const submit = element.querySelector<HTMLButtonElement>('[type="submit"]')!;
+    expect(submit.disabled).toBe(false);
+    submit.click();
+    fixture.detectChanges();
+    const request = http.expectOne('/api/trades');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ receivingTeamId: '2', offeredPlayerId: '10', requestedPlayerId: '20', amount: 0 });
+    expect(submit.disabled).toBe(true);
+    request.flush(trade(15, 1, 2));
+    await vi.waitFor(() => {
+      TestBed.tick();
+      http.expectOne('/api/leagues/9/trades').flush([trade(15, 1, 2)]);
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(receiving.value).toBe('0');
+    expect(element.textContent).toContain('Proposta inviata.');
+    expect(element.querySelectorAll('article').length).toBe(1);
     http.verify();
   });
 

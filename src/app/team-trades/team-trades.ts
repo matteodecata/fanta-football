@@ -1,15 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { form, FormField } from '@angular/forms/signals';
 import { TeamTradesService } from './team-trades.service';
 import { ActivatedRoute } from '@angular/router';
-import { TeamPlayerResponse } from '../team-detail/team-detail.models';
-import { CreateTradeDto, TeamStandingResponse, TradeDto } from './team-trades.models';
+import { TeamStandingResponse, TradeDto } from './team-trades.models';
 
 
 type TradeTab = 'received' | 'sent' | 'history';
 
 @Component({
-  imports: [FormField],
   templateUrl: './team-trades.html',
   styleUrl: './team-trades.css',
 })
@@ -30,25 +27,12 @@ export class TeamTrades {
   private readonly _proposals = signal<TradeDto[]>([]);
   readonly proposals = this._proposals.asReadonly();
 
-  readonly newProposal = signal<CreateTradeDto>({
-    receivingTeamId: '0',
-    requestedPlayerId: '0',
-    offeredPlayerId: '0',
-    amount: 0,
-  });
-
-  readonly proposalForm = form(this.newProposal);
-
   readonly leagueTeams = signal<TeamStandingResponse[]>([]);
   private readonly userTeamIds = signal<number[]>([]);
 
   readonly currentTeamName = computed(() =>
     this.leagueTeams().find(team => team.teamId === this.teamId)?.teamName ?? null,
   );
-
-  readonly offeredPlayers = signal<TeamPlayerResponse[]>([]);
-  readonly availablePlayers = signal<TeamPlayerResponse[]>([]);
-  readonly hasReceivingTeam = computed(() => this.newProposal().receivingTeamId !== '0');
 
   readonly activeTab = signal<TradeTab>('received');
   readonly loadError = signal<string | null>(null);
@@ -153,9 +137,6 @@ export class TeamTrades {
             },
       });
 
-      if (this.teamId !== null) {
-        this.loadTeamPlayers(this.teamId, this.offeredPlayers);
-      }
     }
 
     
@@ -188,55 +169,4 @@ export class TeamTrades {
     }).format(date);
   }
 
-  onReceivingTeamChange(event: Event): void {
-    const receivingTeamId = Number((event.target as HTMLSelectElement).value);
-
-    this.newProposal.update(proposal => ({
-      ...proposal,
-      requestedPlayerId: '0',
-    }));
-    this.availablePlayers.set([]);
-
-    if (!Number.isSafeInteger(receivingTeamId) || receivingTeamId <= 0) {
-      return;
-    }
-
-    this.loadTeamPlayers(receivingTeamId, this.availablePlayers);
-  }
-
-  onPlayerChange(
-    field: 'offeredPlayerId' | 'requestedPlayerId',
-    event: Event,
-  ): void {
-    const playerId = (event.target as HTMLSelectElement).value;
-
-    this.newProposal.update(proposal => ({
-      ...proposal,
-      [field]: playerId,
-    }));
-  }
-
-  private loadTeamPlayers(teamId: number, players: { set: (value: TeamPlayerResponse[]) => void }): void {
-    this.tradeService.getTeamPlayers(teamId).subscribe({
-      next: players.set.bind(players),
-      error: (error) => {
-        console.error('Errore nel caricamento dei giocatori:', error);
-        this.loadError.set('Impossibile caricare i giocatori della squadra.');
-      },
-    });
-  }
-
-  submitProposal(event: SubmitEvent): void {
-    event.preventDefault();
-
-    this.tradeService.createTrade(this.newProposal()).subscribe({
-      next: (trade) => {
-        this._proposals.update(proposals => [trade, ...proposals]);
-      },
-      error: (error) => {
-        console.error('Errore nell\'invio della proposta:', error);
-        this.loadError.set('Impossibile inviare la proposta.');
-      },
-    });
-  }
 }
