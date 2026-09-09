@@ -1,6 +1,12 @@
 :host { display: block; }
 
-.calendar { display: grid; gap: var(--sp-6); }
+.calendar {
+  display: grid;
+  gap: var(--sp-6);
+  background: var(--c-surface-2);
+  border-color: var(--c-border-strong);
+  box-shadow: var(--shadow-sm);
+}
 .calendar__header {
   display: flex;
   align-items: flex-start;
@@ -15,21 +21,39 @@
   min-height: 5rem;
   color: var(--c-text-muted);
 }
-.calendar__results { display: grid; gap: var(--sp-6); }
-.calendar__result-count { color: var(--c-text-muted); font-size: var(--fs-sm); }
-.matchday { display: grid; gap: var(--sp-3); }
-.matchday h3 {
-  padding-bottom: var(--sp-2);
-  border-bottom: 1px solid var(--c-border);
-  color: var(--c-text-subtle);
-  font-size: var(--fs-sm);
-  letter-spacing: .08em;
-  text-transform: uppercase;
+.calendar__results {
+  display: grid;
+  gap: var(--sp-5);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--c-border);
 }
+.calendar__result-count { color: var(--c-text-muted); font-size: var(--fs-sm); }
+.matchday {
+  display: grid;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-sm);
+}
+.matchday__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--c-border);
+}
+.matchday h3 {
+  color: var(--c-text);
+  font-size: var(--fs-md);
+}
+.matchday__count { color: var(--c-text-subtle); font-size: var(--fs-sm); }
 .matchday__matches { display: grid; gap: var(--sp-3); }
 .match {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, auto);
   align-items: center;
   gap: var(--sp-4);
   padding: var(--sp-4) var(--sp-5);
@@ -39,7 +63,10 @@
 }
 .match__teams { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--sp-3); font-weight: 600; }
 .match__teams span:last-child { text-align: right; }
+.match__teams span { min-width: 0; overflow-wrap: anywhere; }
 .match__teams strong { color: var(--c-accent); }
+.match__aside { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); }
+.match__score { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .match__date { color: var(--c-text-subtle); font-size: var(--fs-sm); white-space: nowrap; }
 .match__status { color: var(--c-text-muted); font-size: var(--fs-sm); }
 .match__status--error { color: var(--c-danger); }
@@ -50,10 +77,25 @@
   .calendar__header { flex-direction: column; }
   .calendar__header .btn { width: 100%; }
   .match { grid-template-columns: 1fr; gap: var(--sp-3); }
-  .match__date { order: 2; }
+  .match__aside { justify-content: flex-start; }
 }
 
 @media (max-width: 30rem) {
+  .calendar { padding: var(--sp-4); }
+  .matchday { padding: var(--sp-4); }
+  .matchday__header { align-items: flex-start; flex-direction: column; gap: var(--sp-1); }
   .match { padding-inline: var(--sp-4); }
   .match__teams { gap: var(--sp-2); font-size: var(--fs-sm); }
 }
+:host { container-type: inline-size; }
+@container (max-width: 24rem) {
+  .calendar.card { padding: var(--sp-5); }
+  .calendar .calendar__header { flex-direction: column; gap: var(--sp-4); }
+  .calendar h2 { font-size: var(--fs-lg); }
+  .calendar .match { grid-template-columns: minmax(0, 1fr); padding: var(--sp-3); }
+  .calendar .match__teams { font-size: var(--fs-sm); overflow-wrap: anywhere; }
+  .calendar .empty-state { padding: var(--sp-4); }
+  .calendar .alert { flex-direction: column; align-items: start; }
+}
+.round-navigation { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.round-navigation span { color: var(--c-text-muted); font-size: var(--fs-sm); }

@@ -1,0 +1,20 @@
+.page-shell {
+  display: grid;
+  gap: var(--sp-6);
+}
+
+.lineup__state {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 5rem;
+  color: var(--c-text-muted);
+}
+
+.lineup__players {
+  display: grid;
+  gap: var(--sp-2);
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+}
+
+.lineup__players .checkbox { justify-content: flex-start; }

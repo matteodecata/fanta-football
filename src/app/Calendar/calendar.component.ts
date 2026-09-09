@@ -1,18 +1,23 @@
 import { DatePipe } from '@angular/common';
-import { afterNextRender, Component, computed, inject, input, signal } from '@angular/core';
+import { afterNextRender, Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CalendarApiService, CalendarMatch, CalendarScore } from './calendar-api.service';
 
 type CalendarStatus = 'idle' | 'loading' | 'ready' | 'not-generated' | 'already-generated' | 'no-open-matchday' | 'error';
 
 @Component({
   selector: 'app-calendar',
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css',
 })
 export class CalendarComponent {
   readonly leagueId = input.required<number>();
   readonly isAdmin = input(false);
+  // Il proprio teamId in questa lega (risolto da league-detail.ts confrontando
+  // lo username connesso con la classifica): serve solo a capire su quali
+  // partite mostrare il pulsante "Formazione", null se non ancora disponibile.
+  readonly myTeamId = input<number | null>(null);
 
   private readonly calendarApi = inject(CalendarApiService);
   readonly status = signal<CalendarStatus>('idle');
@@ -32,12 +37,41 @@ export class CalendarComponent {
       const current = groups.get(match.roundNumber) ?? [];
       groups.set(match.roundNumber, [...current, match]);
     }
-    return [...groups.entries()].map(([roundNumber, matches]) => ({ roundNumber, matches }));
+    return [...groups.entries()]
+      .sort(([firstRound], [secondRound]) => firstRound - secondRound)
+      .map(([roundNumber, matches]) => ({ roundNumber, matches }));
   });
 
   readonly canGenerate = computed(() => this.isAdmin() && this.status() === 'not-generated');
+  readonly selectedRoundIndex = linkedSignal(() => {
+    this.groupedMatches();
+    return 0;
+  });
+  readonly visibleGroups = computed(() => {
+    const group = this.groupedMatches()[this.selectedRoundIndex()];
+    return group ? [group] : [];
+  });
+
+  changeRound(direction: number): void {
+    const next = this.selectedRoundIndex() + direction;
+    if (next >= 0 && next < this.groupedMatches().length) this.selectedRoundIndex.set(next);
+  }
+
+  // true se la nostra squadra gioca questa partita (come home o away): usato
+  // nel template per mostrare il pulsante "Formazione" solo sulle proprie partite.
+  isMyMatch(match: CalendarMatch): boolean {
+    const teamId = this.myTeamId();
+    return teamId !== null && (match.homeTeamId === teamId || match.awayTeamId === teamId);
+  }
 
   private loadCalendar(leagueId: number): void {
+    // A new GET must always replace the previous backend snapshot completely.
+    // Scores and statuses are never inferred locally.
+    this.matches.set([]);
+    this.scoreByLineupId.set({});
+    this.scoreStatus.set({});
+    this.loadingScoreFor.set(null);
+
     if (!Number.isInteger(leagueId) || leagueId <= 0) {
       this.status.set('error');
       this.errorMessage.set('Identificativo della lega non valido.');

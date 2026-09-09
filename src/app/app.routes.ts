@@ -98,11 +98,27 @@ export const routes: Routes = [
         path: 'teams',
         title: 'Squadre',
         loadComponent: () => import('./teams/teams').then(component => component.Teams),
-    },
-    {
-        path: 'teams/:teamId/trades',
+        },
+        /*
+        {
+            path: 'teams/:teamId/trades',
         title: 'Scambi squadra',
         loadComponent: () => import('./team-trades/team-trades')
+            .then((component) => component.TeamTrades),
+    },
+    */
+    {
+        path: 'trades',
+        title: 'I miei scambi',
+        loadComponent: () =>
+            import('./team-trades/team-trades')
+            .then((component) => component.TeamTrades),
+    },
+    {
+        path: 'leagues/:leagueId/:teamId/trades',
+        title: 'Scambi della lega',
+        loadComponent: () =>
+            import('./team-trades/team-trades')
             .then((component) => component.TeamTrades),
     },
     {
@@ -110,6 +126,18 @@ export const routes: Routes = [
         title: 'Squadra',
         loadComponent: () => import('./team-detail/team-detail')
             .then((component) => component.TeamDetail),
+    },
+    {
+        path: 'teams/:teamId/matches/:leagueMatchId/lineup',
+        title: 'Formazione',
+        loadComponent: () => import('./lineup/lineup')
+            .then((component) => component.Lineup),
+    },
+    {
+        path: 'teams/:teamId/matches/:leagueMatchId/lineup',
+        title: 'Lineup',
+        loadComponent: () => import('./lineup/lineup')
+            .then((component) => component.Lineup),
     },
         ],
     },

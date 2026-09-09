@@ -1,8 +1,8 @@
-<section class="calendar card" aria-labelledby="calendar-title">
+<section class="calendar card" aria-labelledby="calendar-component-title">
   <div class="calendar__header">
     <div>
       <p class="card__title">Calendario lega</p>
-      <h2 id="calendar-title">Partite tra fantallenatori</h2>
+      <h2 id="calendar-component-title">Partite tra fantallenatori</h2>
       <p class="calendar__intro">Genera una sola volta il calendario della lega e consulta qui le giornate.</p>
     </div>
     @if (canGenerate()) {
@@ -24,9 +24,19 @@
   } @else if (status() === 'ready') {
     <div class="calendar__results" aria-live="polite">
       <p class="calendar__result-count">Calendario generato · {{ matches().length }} partite</p>
-      @for (group of groupedMatches(); track group.roundNumber) {
+      @if (groupedMatches().length > 0) {
+        <nav class="round-navigation" aria-label="Navigazione giornate">
+          <button class="btn" type="button" (click)="changeRound(-1)" [disabled]="selectedRoundIndex() === 0">← Precedente</button>
+          <span>{{ selectedRoundIndex() + 1 }} di {{ groupedMatches().length }} giornate</span>
+          <button class="btn" type="button" (click)="changeRound(1)" [disabled]="selectedRoundIndex() >= groupedMatches().length - 1">Successiva →</button>
+        </nav>
+      }
+      @for (group of visibleGroups(); track group.roundNumber) {
         <section class="matchday" [attr.aria-labelledby]="'matchday-' + group.roundNumber">
-          <h3 [id]="'matchday-' + group.roundNumber">Giornata {{ group.roundNumber }}</h3>
+          <div class="matchday__header">
+            <h3 [id]="'matchday-' + group.roundNumber">Giornata {{ group.roundNumber }}</h3>
+            <span class="matchday__count">{{ group.matches.length }} {{ group.matches.length === 1 ? 'partita' : 'partite' }}</span>
+          </div>
           <div class="matchday__matches">
             @for (match of group.matches; track match.id) {
               <article class="match">
@@ -35,7 +45,30 @@
                   <strong aria-hidden="true">–</strong>
                   <span>{{ match.awayTeamName }}</span>
                 </div>
-                @if (match.matchDay) { <time class="match__date">{{ match.matchDay | date: 'd MMM yyyy' }}</time> }
+                <div class="match__aside">
+                @if (match.matchdayClosed) {
+                  <!--
+                    TODO(studio): questo è un risultato minimo (fantagol +
+                    fantapunti in aria-label). Valuta come evidenziare il
+                    vincitore in modo accessibile senza affidarti solo al
+                    colore (es. grassetto sul nome squadra vincente in
+                    match__teams, icona con testo alternativo, ecc. — vedi
+                    requisito "il colore non deve essere l'unico mezzo per
+                    comunicare uno stato" in AGENTS.md sezione 4).
+                  -->
+                  <strong
+                    class="match__score"
+                    [attr.aria-label]="'Risultato: ' + match.homeGoals + ' a ' + match.awayGoals + ', fantapunti ' + match.homeScore + ' a ' + match.awayScore"
+                  >
+                    {{ match.homeGoals }} – {{ match.awayGoals }}
+                  </strong>
+                } @else {
+                  <span class="match__status">Risultato disponibile alla chiusura della giornata</span>
+                }
+                @if (match.matchDay !== null && match.matchDay !== undefined) {
+                  <time class="match__date">{{ match.matchDay | date: 'd MMM yyyy' }}</time>
+                }
+                @if (match.status) { <span class="match__status">{{ match.status }}</span> }
                 @if (match.lineupId !== undefined) {
                   @if (scoreFor(match); as score) {
                     <span class="badge badge--accent">{{ score.score }} punti · {{ score.goals }} gol</span>
@@ -49,6 +82,22 @@
                     </button>
                   }
                 }
+                @if (isMyMatch(match)) {
+                  <!--
+                    Pulsante visibile solo sulle proprie partite (myTeamId).
+                    matchdayClosed passato come query param: la pagina Lineup
+                    lo usa per bloccare il form e mostrare la formazione in
+                    sola lettura a giornata chiusa (vedi lineup.ts).
+                  -->
+                  <a
+                    class="btn btn--sm"
+                    [routerLink]="['/teams', myTeamId(), 'matches', match.id, 'lineup']"
+                    [queryParams]="{ closed: match.matchdayClosed }"
+                  >
+                    {{ match.matchdayClosed ? 'Vedi formazione' : 'Schiera formazione' }}
+                  </a>
+                }
+                </div>
               </article>
             }
           </div>
