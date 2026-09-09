@@ -10,7 +10,7 @@ export interface InviteResponse {
   leagueId: number;
   // Richiedono l'estensione del DTO backend; compatibili con la risposta attuale.
   leagueName?: string;
-  invitedByUsername?: string;
+  username?: string;
   invitedByUserId: number;
   invitedUserId: number;
   status: InviteStatus;

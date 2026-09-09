@@ -41,8 +41,8 @@
                 }
               </h3>
               <p>
-                @if (invite.invitedByUsername) {
-                  Inviato dall'utente: <strong>{{ invite.invitedByUsername }}</strong>
+                @if (invite.username) {
+                  Inviato dall'utente: <strong>{{ invite.username }}</strong>
                 } @else {
                   Inviato dall'utente: <strong>nome non disponibile</strong>
                 }
