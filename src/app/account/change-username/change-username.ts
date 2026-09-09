@@ -34,6 +34,12 @@ export class ChangeUsername {
     currentPassword: '',
   });
 
+  protected readonly currentPasswordVisible = signal(false);
+
+  protected togglePasswordVisibility(): void {
+    this.currentPasswordVisible.update((visible) => !visible);
+  }
+
   protected readonly usernameForm = form(
     this.usernameModel,
     (fieldPath) => {

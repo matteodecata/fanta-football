@@ -2,17 +2,13 @@
   <section class="card" aria-labelledby="team-create-title">
     <h1 id="team-create-title" data-route-heading tabindex="-1">Crea la tua squadra</h1>
 
-    <form class="form" novalidate (submit)="onSubmit($event)">
+    <form class="form" novalidate (submit)="onSubmit($event)" [attr.aria-busy]="isSubmitting()">
       @if (submitError()) {
         <p class="alert alert--danger" role="alert" aria-live="assertive">{{ submitError() }}</p>
       }
 
-      @if (submitSuccess()) {
-        <p class="alert alert--success" role="status" aria-live="polite">{{ submitSuccess() }}</p>
-      }
-
       <div class="field">
-        <label class="field__label" for="team-name">Nome della squadra</label>
+        <label class="field__label" for="team-name">Inserisci il nome della tua nuova squadra</label>
         <input
           id="team-name"
           class="input"
