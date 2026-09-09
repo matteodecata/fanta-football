@@ -1,0 +1,65 @@
+<h2 class="section-title">Scambi della lega</h2>
+<p class="trade-intro">Tutte le proposte e lo storico degli scambi tra le squadre della lega.</p>
+<p role="status">{{ actionMessage() }}</p>
+@if (actionError(); as error) {
+  <p class="alert alert--danger" role="alert">{{ error }}</p>
+}
+@if (teamsResource.error()) {
+  <div role="alert">
+    <p>Non è stato possibile verificare le tue squadre. Le azioni sugli scambi non sono disponibili.</p>
+    <button class="btn" type="button" (click)="teamsResource.reload()">Riprova verifica squadre</button>
+  </div>
+}
+@if (tradesResource.isLoading()) {
+  <p role="status">Caricamento scambi…</p>
+} @else if (tradesResource.error()) {
+  <div class="alert alert--danger" role="alert">
+    <p>Non è stato possibile caricare gli scambi della lega.</p>
+    <button class="btn" type="button" (click)="tradesResource.reload()">Riprova</button>
+  </div>
+} @else {
+  <div class="received-trades">
+    @for (trade of trades(); track trade.id) {
+      <article class="trade-card" [attr.aria-label]="'Scambio tra ' + trade.proposingTeamName + ' e ' + trade.receivingTeamName">
+        <div class="trade-card__meta">
+          <span>{{ trade.proposingTeamName }} → {{ trade.receivingTeamName }} · {{ trade.proposalDate | date:'dd/MM/yyyy' }}</span>
+          <span class="status-badge">{{ statusLabels[trade.status] }}</span>
+        </div>
+        <div class="trade-exchange">
+          <div class="player-offer">
+            <span class="player-offer__label">Offerto da {{ trade.proposingTeamName }}</span>
+            <div class="player-info">
+              <span class="player-avatar" aria-hidden="true"></span>
+              <span><strong>{{ trade.offeredPlayerName }}</strong><small>{{ trade.proposingTeamName }}</small></span>
+            </div>
+          </div>
+          <span class="exchange-icon" aria-hidden="true">⇄</span>
+          <div class="player-offer">
+            <span class="player-offer__label">Richiesto a {{ trade.receivingTeamName }}</span>
+            <div class="player-info">
+              <span class="player-avatar" aria-hidden="true"></span>
+              <span><strong>{{ trade.requestedPlayerName }}</strong><small>{{ trade.receivingTeamName }}</small></span>
+            </div>
+          </div>
+        </div>
+        <div class="trade-card__footer">
+          <p>
+            @if (trade.amount > 0) {
+              Conguaglio: {{ trade.proposingTeamName }} paga {{ trade.amount }} crediti a {{ trade.receivingTeamName }}.
+            } @else if (trade.amount < 0) {
+              Conguaglio: {{ trade.receivingTeamName }} paga {{ -trade.amount }} crediti a {{ trade.proposingTeamName }}.
+            } @else { Nessun conguaglio. }
+          </p>
+          @if (canReject(trade)) {
+            <div class="trade-actions">
+              @if (canAccept(trade)) {
+                <button class="btn btn--primary btn--sm" type="button" [disabled]="pendingId() !== null" (click)="respond(trade, 'ACCEPTED')">Accetta</button>
+              }
+              <button class="btn btn--sm" type="button" [disabled]="pendingId() !== null" (click)="respond(trade, 'REJECTED')">{{ canAccept(trade) ? 'Rifiuta' : 'Annulla' }}</button>
+            </div>
+          }
+        </div>
+      </article>
+    } @empty { <p>Nessuno scambio presente nella lega.</p> }
+  </div>
+}

@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CalendarComponent } from '../Calendar/calendar.component';
+import { LeagueTrades } from './league-trades/league-trades';
 import { Session } from '../core/auth/session';
 import { InviteLeague } from './invite-league/invite-league';
 import { Standings } from './standings/standings';
@@ -9,7 +10,7 @@ import { LeagueDetailResponse, LeagueStandingResponse } from './league-detail.mo
 
 @Component({
   selector: 'app-league-detail',
-  imports: [RouterLink, Standings, InviteLeague, CalendarComponent],
+  imports: [RouterLink, Standings, InviteLeague, CalendarComponent, LeagueTrades],
   templateUrl: './league-detail.html',
   styleUrl: './league-detail.css',
 })
@@ -18,6 +19,7 @@ export class LeagueDetail {
     { id: 'standings', label: 'Classifica' },
     { id: 'calendar', label: 'Calendario' },
     { id: 'members', label: 'Partecipanti' },
+    { id: 'trades', label: 'Scambi' },
   ] as const;
   protected readonly activeSection = signal<string>('standings');
 

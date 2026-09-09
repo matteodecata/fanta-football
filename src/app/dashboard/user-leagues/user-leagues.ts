@@ -14,6 +14,10 @@ export class UserLeagues {
 
   protected readonly leagues = this.userLeaguesService.userLeagues;
 
+  ngOnInit(): void {
+    this.reloadLeagues();
+  }
+
   protected reloadLeagues(): void {
     this.leagues.reload();
   }

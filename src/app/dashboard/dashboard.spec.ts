@@ -49,6 +49,29 @@ describe('Dashboard', () => {
     expect(page.querySelector('.empty-invites')?.textContent).toContain('Nessun invito in sospeso');
   });
 
+  it('ricarica le leghe quando si torna alla dashboard', async () => {
+    httpTesting.expectOne('/api/account/me/leagues').flush([]);
+    httpTesting.expectOne('/api/invites/pending').flush([]);
+    await fixture.whenStable();
+    fixture.destroy();
+
+    fixture = TestBed.createComponent(Dashboard);
+    fixture.detectChanges();
+
+    httpTesting.expectOne('/api/account/me/leagues').flush([
+      { league: { id: 8, name: 'Nuova lega' }, team: null, admin: true },
+    ]);
+    for (const request of httpTesting.match('/api/invites/pending')) {
+      request.flush([]);
+    }
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.querySelector('.league-card')?.textContent).toContain('Nuova lega');
+    expect(page.querySelector('.empty-leagues')).toBeNull();
+  });
+
   it('mostra gli errori quando il caricamento delle API fallisce', async () => {
     httpTesting
       .expectOne('/api/account/me/leagues')
@@ -100,8 +123,8 @@ describe('Dashboard', () => {
     const page = fixture.nativeElement as HTMLElement;
     expect(page.querySelector('.league-card')?.textContent).toContain('Lega del lunedì');
     expect(page.querySelector('.league-card')?.textContent).toContain('Gli Imbattibili');
-    expect(page.querySelector('.invite-item')?.textContent).toContain('Invito a Lega amici');
-    expect(page.querySelector('.invite-item')?.textContent).toContain('mario');
+    expect(page.querySelector('.invite-item')?.textContent).toContain('Invito alla lega: Lega amici');
+    expect(page.querySelector('.invite-item')?.textContent).toContain("Inviato dall'utente: mario");
     expect(page.querySelector('.empty-leagues')).toBeNull();
     expect(page.querySelector('.empty-invites')).toBeNull();
   });

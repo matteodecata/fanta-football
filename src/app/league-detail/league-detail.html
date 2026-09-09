@@ -81,6 +81,11 @@
             </ul>
           }
         </section>
+      <section id="panel-trades" role="tabpanel" tabindex="0" aria-labelledby="tab-trades" [hidden]="activeSection() !== 'trades'">
+        @if (activeSection() === 'trades') {
+          <app-league-trades [leagueId]="leagueId" />
+        }
+      </section>
     </div>
   } @else { <p role="status">Lega non trovata.</p> }
 </div>
