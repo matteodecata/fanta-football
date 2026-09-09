@@ -10,11 +10,22 @@ export interface CalendarMatch {
   readonly homeTeamName: string;
   readonly awayTeamId: number;
   readonly awayTeamName: string;
+  // Confermati su Swagger il 9 settembre 2026: homeScore/awayScore sono i
+  // fantapunti delle due squadre; homeGoals/awayGoals sono i "fantagol"
+  // derivati dallo score (regola di conversione lato backend) e determinano
+  // il vincitore. matchdayClosed indica se la giornata è chiusa: prima di
+  // questa chiusura questi valori non sono ancora significativi.
+  readonly homeScore: number;
+  readonly awayScore: number;
+  readonly homeGoals: number;
+  readonly awayGoals: number;
+  readonly matchdayClosed: boolean;
+  // Non ancora esposti dal backend (sezione 14 di PROJECT_CONTEXT.md):
+  // servirebbero per chiamare getScore() per singola lineup. Restano
+  // opzionali finché il DTO non li include davvero.
   readonly lineupId?: number;
   readonly homeLineupId?: number;
   readonly awayLineupId?: number;
-  readonly homeScore?: number | null;
-  readonly awayScore?: number | null;
   readonly status?: string | null;
 }
 
