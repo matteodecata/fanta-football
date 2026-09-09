@@ -1,0 +1,85 @@
+<main class="page-shell">
+  <section class="card" aria-labelledby="lineup-title">
+    <p class="card__title">Formazione</p>
+    <h1 id="lineup-title" data-route-heading tabindex="-1">Schiera la formazione</h1>
+
+    @if (matchdayClosed()) {
+      <p class="alert alert--warning" role="status">
+        La giornata è chiusa: la formazione non è più modificabile, qui sotto vedi l'ultima configurazione salvata.
+      </p>
+    }
+
+    @if (lineupTypesStatus() === 'loading' || lineupStatus() === 'loading') {
+      <div class="lineup__state" role="status"><span class="spinner" aria-hidden="true"></span> Caricamento in corso…</div>
+    } @else if (lineupTypesStatus() === 'error' || lineupStatus() === 'error') {
+      <p class="alert alert--danger" role="alert">Non è stato possibile caricare i dati della formazione. Riprova più tardi.</p>
+    } @else {
+      <form class="form form--wide" novalidate (submit)="$event.preventDefault(); submit()">
+        <fieldset class="fieldset" [disabled]="matchdayClosed()">
+          <legend>Modulo</legend>
+          <div class="form-row">
+            @for (type of lineupTypes(); track type.id) {
+              <label class="radio">
+                <input
+                  type="radio"
+                  name="lineup-type"
+                  [checked]="selectedLineupTypeId() === type.id"
+                  (change)="selectLineupType(type.id)"
+                />
+                {{ type.numDefenders }}-{{ type.numMidfielders }}-{{ type.numForwards }}
+              </label>
+            } @empty {
+              <p class="empty-state">Nessun modulo disponibile.</p>
+            }
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset" [disabled]="matchdayClosed()">
+          <legend>Titolari e panchina</legend>
+
+          @if (selectedLineupType(); as type) {
+            <p class="field__hint" aria-live="polite">
+              Titolari selezionati — Difensori {{ starterCountByRole().D }}/{{ type.numDefenders }},
+              Centrocampisti {{ starterCountByRole().C }}/{{ type.numMidfielders }},
+              Attaccanti {{ starterCountByRole().A }}/{{ type.numForwards }}
+            </p>
+          } @else {
+            <p class="field__hint">Scegli prima un modulo per sapere quanti titolari servono per ruolo.</p>
+          }
+
+          <div class="lineup__players">
+            @for (player of selectableRoster(); track player.id) {
+              <label class="checkbox">
+                <input type="checkbox" [checked]="starterTeamPlayerIds().has(player.id)" (change)="toggleStarter(player.id)" />
+                <span>{{ player.name }} {{ player.surname }}</span>
+                <span class="badge">{{ player.role }}</span>
+              </label>
+            } @empty {
+              <p class="empty-state">Nessun giocatore disponibile in rosa.</p>
+            }
+          </div>
+        </fieldset>
+
+        @if (defensive()) {
+          <p><span class="badge badge--accent">Formazione difensiva · 5 difensori titolari</span></p>
+        }
+
+        @if (errorMessage()) {
+          <p class="alert alert--danger" role="alert" aria-live="assertive">{{ errorMessage() }}</p>
+        }
+        @if (saveStatus() === 'saved') {
+          <p class="alert alert--success" role="status" aria-live="polite">Formazione salvata.</p>
+        }
+
+        @if (!matchdayClosed()) {
+          <button class="btn btn--primary btn--block" type="submit" [disabled]="saveStatus() === 'saving' || !isStarterCountValid()">
+            {{ saveStatus() === 'saving' ? 'Salvataggio…' : (existingLineup() ? 'Aggiorna formazione' : 'Crea formazione') }}
+          </button>
+          @if (selectedLineupType() && !isStarterCountValid()) {
+            <p class="field__hint">Il numero di titolari per ruolo deve corrispondere esattamente al modulo scelto.</p>
+          }
+        }
+      </form>
+    }
+  </section>
+</main>

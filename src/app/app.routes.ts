@@ -127,6 +127,18 @@ export const routes: Routes = [
         loadComponent: () => import('./team-detail/team-detail')
             .then((component) => component.TeamDetail),
     },
+    {
+        path: 'teams/:teamId/matches/:leagueMatchId/lineup',
+        title: 'Formazione',
+        loadComponent: () => import('./lineup/lineup')
+            .then((component) => component.Lineup),
+    },
+    {
+        path: 'teams/:teamId/matches/:leagueMatchId/lineup',
+        title: 'Lineup',
+        loadComponent: () => import('./lineup/lineup')
+            .then((component) => component.Lineup),
+    },
         ],
     },
     

@@ -1,18 +1,23 @@
 import { DatePipe } from '@angular/common';
 import { afterNextRender, Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CalendarApiService, CalendarMatch, CalendarScore } from './calendar-api.service';
 
 type CalendarStatus = 'idle' | 'loading' | 'ready' | 'not-generated' | 'already-generated' | 'no-open-matchday' | 'error';
 
 @Component({
   selector: 'app-calendar',
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css',
 })
 export class CalendarComponent {
   readonly leagueId = input.required<number>();
   readonly isAdmin = input(false);
+  // Il proprio teamId in questa lega (risolto da league-detail.ts confrontando
+  // lo username connesso con la classifica): serve solo a capire su quali
+  // partite mostrare il pulsante "Formazione", null se non ancora disponibile.
+  readonly myTeamId = input<number | null>(null);
 
   private readonly calendarApi = inject(CalendarApiService);
   readonly status = signal<CalendarStatus>('idle');
@@ -50,6 +55,13 @@ export class CalendarComponent {
   changeRound(direction: number): void {
     const next = this.selectedRoundIndex() + direction;
     if (next >= 0 && next < this.groupedMatches().length) this.selectedRoundIndex.set(next);
+  }
+
+  // true se la nostra squadra gioca questa partita (come home o away): usato
+  // nel template per mostrare il pulsante "Formazione" solo sulle proprie partite.
+  isMyMatch(match: CalendarMatch): boolean {
+    const teamId = this.myTeamId();
+    return teamId !== null && (match.homeTeamId === teamId || match.awayTeamId === teamId);
   }
 
   private loadCalendar(leagueId: number): void {

@@ -107,6 +107,17 @@ export class LeagueDetail {
     return league !== null && userId !== null && league.adminUserId === userId;
   });
 
+  // La propria squadra nella lega si individua confrontando lo username
+  // connesso con quello di ogni squadra in classifica: LeagueStandingResponse
+  // non espone lo userId, solo lo username (sezione 9 di PROJECT_CONTEXT.md).
+  // Serve al Calendario per sapere su quali partite mostrare il pulsante
+  // "Formazione" (solo sulle proprie, non su quelle altrui).
+  protected readonly myTeamId = computed(() => {
+    const username = this.connectedUsername();
+    if (!username) return null;
+    return this.teams().find((team) => team.username === username)?.teamId ?? null;
+  });
+
   // protected readonly standings = computed(() => this.standingsResource.value() ?? []);
   // protected readonly standings = computed(() => this.standingsResource.value() ?? []);
 }

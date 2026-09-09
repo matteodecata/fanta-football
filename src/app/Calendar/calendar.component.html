@@ -82,6 +82,21 @@
                     </button>
                   }
                 }
+                @if (isMyMatch(match)) {
+                  <!--
+                    Pulsante visibile solo sulle proprie partite (myTeamId).
+                    matchdayClosed passato come query param: la pagina Lineup
+                    lo usa per bloccare il form e mostrare la formazione in
+                    sola lettura a giornata chiusa (vedi lineup.ts).
+                  -->
+                  <a
+                    class="btn btn--sm"
+                    [routerLink]="['/teams', myTeamId(), 'matches', match.id, 'lineup']"
+                    [queryParams]="{ closed: match.matchdayClosed }"
+                  >
+                    {{ match.matchdayClosed ? 'Vedi formazione' : 'Schiera formazione' }}
+                  </a>
+                }
                 </div>
               </article>
             }
