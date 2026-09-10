@@ -290,6 +290,7 @@ export interface TeamPlayerResponse {
   playerId: number;
   name: string;
   surname: string;
+  role: PlayerRole; // aggiunto dal backend il 10 settembre 2026
   realTeamName: string;
   realTeamShirtNum: number;
   injured: boolean;
@@ -426,6 +427,16 @@ alla creazione della squadra con `POST /api/teams`.
 Filtri disponibili per il catalogo: `role`, `realTeamName`, `minPrice`,
 `maxPrice`, `injured`. Un rating assente produce 404
 `player_result_not_found`, situazione normale se il calciatore non ha giocato.
+
+**Aggiornamento del 10 settembre 2026**: `GET /api/players` ora risponde con
+paginazione invece del semplice array (`{ content, page, size, totalPages,
+totalElements, hasNext }`; il campo pagina si chiama `page`, non `number`),
+default `size=20` a fronte di ~500 calciatori totali. `TeamsApiService.players()`
+(`src/app/teams/teams-api.service.ts`) scarica tutte le pagine con
+`expand`/`reduce` (RxJS) e le concatena, così i consumatori che si aspettano
+il catalogo completo (`players.ts`, `auction.ts`) non hanno dovuto cambiare.
+Nota anche `TeamPlayerResponse` (sezione 9) include ora `role` direttamente:
+`team-roster.ts` e `lineup.ts` non incrociano più il catalogo solo per quello.
 
 ### Scambi
 

@@ -17,19 +17,17 @@ export class TeamRoster {
   readonly canManage = input(false);
   private readonly api = inject(TeamsApiService);
   protected readonly rosterResource = this.api.roster(this.teamId);
-  protected readonly playersResource = this.api.players();
   protected readonly forbidden = computed(() => {
     const error = this.rosterResource.error();
     return error instanceof HttpErrorResponse && error.status === 403;
   });
+  // Dal 10 settembre 2026 TeamPlayerResponse include già `role`: non serve
+  // più incrociarlo con l'intero catalogo `/api/players` (che nel frattempo
+  // è anche diventato paginato, rendendo quell'incrocio pure inaffidabile).
   protected readonly roster = computed(() => {
-    const players = new Map((this.playersResource.hasValue() ? this.playersResource.value() : []).map(player => [player.id, player]));
     return (this.rosterResource.hasValue() ? this.rosterResource.value() : [])
       .filter(player => player.transferDate === null)
-      .map(player => {
-        const role = players.get(player.playerId)?.role;
-        return { ...player, roleLabel: role ? ROLE_LABELS[role] : 'Non disponibile' };
-      });
+      .map(player => ({ ...player, roleLabel: ROLE_LABELS[player.playerRole] ?? 'Non disponibile' }));
   });
 
   protected refreshRoster(): void { this.rosterResource.reload(); }

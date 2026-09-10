@@ -10,7 +10,7 @@ import { LineupService } from './lineup.service';
 import { LineupPlayerRequest, LineupRequest, LineupResponse, LineupTypeResponse } from './lineup.models';
 
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
-type LineupCandidate = TeamPlayerResponse & { role: PlayerRole };
+const VALID_ROLES = new Set<PlayerRole>(['P', 'D', 'C', 'A']);
 
 @Component({
   imports: [],
@@ -33,26 +33,33 @@ export class Lineup {
   protected readonly matchdayClosed = computed(() => this.query().get('closed') === 'true');
 
   protected readonly rosterResource = this.teamsApi.roster(this.teamId);
-  private readonly playersResource = this.teamsApi.players();
 
-  // Confermato col backend (LineupService.validateFormation): il portiere ha
-  // sempre conteggio 1 e non dipende dal modulo (LineupType codifica solo
-  // D/C/A), ma la sua identità va comunque inclusa esplicitamente in
-  // `players` con starter=true — quindi qui la rosa selezionabile include
-  // anche i portieri, non li esclude più.
-  protected readonly selectableRoster = computed((): LineupCandidate[] => {
-    const roles = new Map((this.playersResource.hasValue() ? this.playersResource.value() : []).map((player) => [player.id, player.role]));
-    return (this.rosterResource.hasValue() ? this.rosterResource.value() : [])
-      .filter((player) => player.transferDate === null)
-      .map((player) => ({ ...player, role: roles.get(player.playerId) }))
-      .filter((player): player is LineupCandidate => player.role !== undefined);
-  });
+  // Il portiere ha sempre conteggio 1 e non dipende dal modulo (LineupType
+  // codifica solo D/C/A), ma la sua identità va comunque inclusa
+  // esplicitamente in `players` con starter=true (confermato col backend,
+  // LineupService.validateFormation) — quindi qui la rosa selezionabile
+  // include anche i portieri, non li esclude più. Dal 10 settembre 2026
+  // `TeamPlayerResponse` include già `playerRole`: non serve più incrociare
+  // l'intero catalogo `/api/players` solo per saperlo.
+  //
+  // Il filtro su VALID_ROLES è difensivo: se il backend non valorizza ancora
+  // `playerRole` per qualche giocatore (campo mancante/null nella risposta
+  // reale), lo si esclude qui invece di far esplodere `playersByRole` più
+  // sotto (stesso tipo di crash già visto con la paginazione di /api/players,
+  // ma ora sulla singola proprietà). Un giocatore così non compare in lista
+  // finché il backend non popola davvero il campo: è un sintomo da correggere
+  // lì, non qualcosa da mascherare oltre il non far crashare la pagina.
+  protected readonly selectableRoster = computed((): TeamPlayerResponse[] =>
+    (this.rosterResource.hasValue() ? this.rosterResource.value() : []).filter(
+      (player) => player.transferDate === null && VALID_ROLES.has(player.playerRole),
+    ),
+  );
 
   // Raggruppamento per ruolo: serve sia per la UI (sezioni distinte, portiere
   // a selezione singola) sia per calcolare i conteggi richiesti dal backend.
   protected readonly playersByRole = computed(() => {
-    const groups: Record<PlayerRole, LineupCandidate[]> = { P: [], D: [], C: [], A: [] };
-    for (const player of this.selectableRoster()) groups[player.role].push(player);
+    const groups: Record<PlayerRole, TeamPlayerResponse[]> = { P: [], D: [], C: [], A: [] };
+    for (const player of this.selectableRoster()) groups[player.playerRole].push(player);
     return groups;
   });
 
@@ -88,7 +95,7 @@ export class Lineup {
     const starters = this.starterTeamPlayerIds();
     const counts: Record<PlayerRole, number> = { P: 0, D: 0, C: 0, A: 0 };
     for (const player of this.selectableRoster()) {
-      if (starters.has(player.id)) counts[player.role]++;
+      if (starters.has(player.id)) counts[player.playerRole]++;
     }
     return counts;
   });
@@ -153,14 +160,14 @@ export class Lineup {
   // comporta diversamente: al massimo un titolare alla volta (come una
   // radio), mentre D/C/A restano una selezione libera fino al limite del
   // modulo scelto.
-  protected toggleStarter(player: LineupCandidate): void {
+  protected toggleStarter(player: TeamPlayerResponse): void {
     if (this.matchdayClosed()) return;
     this.starterTeamPlayerIds.update((current) => {
       const next = new Set(current);
       if (next.has(player.id)) {
         next.delete(player.id);
       } else {
-        if (player.role === 'P') {
+        if (player.playerRole === 'P') {
           for (const goalkeeper of this.playersByRole().P) next.delete(goalkeeper.id);
         }
         next.add(player.id);

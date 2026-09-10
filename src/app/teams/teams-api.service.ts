@@ -32,7 +32,7 @@ export class TeamsApiService {
   players() {
     return rxResource({
       stream: () => this.playerPage(0).pipe(
-        expand(page => page.number + 1 < page.totalPages ? this.playerPage(page.number + 1) : EMPTY),
+        expand(page => page.page + 1 < page.totalPages ? this.playerPage(page.page + 1) : EMPTY),
         reduce((players, page) => [...players, ...page.content], [] as PlayerResponse[]),
       ),
       defaultValue: [],

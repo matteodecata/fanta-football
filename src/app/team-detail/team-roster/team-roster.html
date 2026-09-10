@@ -11,10 +11,6 @@
   <p class="empty-state">Non ci sono calciatori attivi in questa rosa.</p>
 } @else {
   <p id="fantamedia-help">La fantamedia non è al momento disponibile.</p>
-  @if (playersResource.error()) {
-    <p role="status">Non è stato possibile caricare i ruoli dei calciatori.</p>
-    <button class="btn" type="button" (click)="playersResource.reload()">Riprova a caricare i ruoli</button>
-  }
   <div class="table-wrap" tabindex="0" role="region" aria-label="Rosa della squadra">
     <table class="table" aria-describedby="fantamedia-help">
       <caption>Calciatori attualmente in rosa</caption>
