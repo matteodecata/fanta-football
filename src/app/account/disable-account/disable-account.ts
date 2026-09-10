@@ -39,6 +39,12 @@ export class DisableAccount {
     confirmation: '',
   });
 
+  protected readonly currentPasswordVisible = signal(false);
+
+  protected togglePasswordVisibility(): void {
+    this.currentPasswordVisible.update((visible) => !visible);
+  }
+
   protected readonly disableAccountForm = form(
     this.disableAccountModel,
     (fieldPath) => {

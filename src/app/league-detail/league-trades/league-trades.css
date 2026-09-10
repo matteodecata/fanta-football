@@ -6,3 +6,9 @@
 .status-badge { color: var(--c-text); background: var(--c-surface-2); }
 .player-info strong, .player-info small { white-space: normal; overflow-wrap: anywhere; }
 button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 3px; }
+
+.trades-layout { grid-template-columns: minmax(0, 1fr) 18rem; padding-top: 0; }
+.trades-layout > section { min-width: 0; }
+.trades-sidebar { grid-template-columns: 1fr; }
+.trade-field select:focus-visible, .trade-field input:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 3px; }
+@media (max-width: 60rem) { .trades-layout { grid-template-columns: minmax(0, 1fr); } }

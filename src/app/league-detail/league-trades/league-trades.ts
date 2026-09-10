@@ -1,4 +1,8 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
+import { TeamPlayerResponse } from '../../team-detail/team-detail.models';
+import { TeamTradesService } from '../../team-trades/team-trades.service';
+import { CreateTradeDto, TeamStandingResponse } from '../../team-trades/team-trades.models';
 import { DatePipe } from '@angular/common';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -7,7 +11,7 @@ import { TradeDto, TradeStatus } from '../../team-trades/team-trades.models';
 
 @Component({
   selector: 'app-league-trades',
-  imports: [DatePipe],
+  imports: [DatePipe, FormField],
   templateUrl: './league-trades.html',
   styleUrls: ['../../team-trades/team-trades.css', './league-trades.css'],
 })
@@ -33,6 +37,74 @@ export class LeagueTrades {
   protected readonly statusLabels: Record<TradeStatus, string> = {
     PENDING: 'In attesa', ACCEPTED: 'Accettato', REJECTED: 'Rifiutato', CANCELLED: 'Annullato',
   };
+
+  private readonly tradeService = inject(TeamTradesService);
+  protected readonly currentTeamId = computed(() => [...this.ownedTeamIds()][0] ?? null);
+  protected readonly leagueTeamsResource = httpResource<TeamStandingResponse[]>(
+    () => this.currentTeamId() ? '/api/leagues/' + this.leagueId() + '/teams' : undefined,
+    { defaultValue: [] },
+  );
+  protected readonly receivingTeams = computed(() => this.leagueTeamsResource.hasValue()
+    ? this.leagueTeamsResource.value().filter(team => !this.ownedTeamIds().has(team.teamId)) : []);
+  protected readonly newProposal = signal<CreateTradeDto>({
+    receivingTeamId: '0', requestedPlayerId: '0', offeredPlayerId: '0', amount: 0,
+  });
+  protected readonly proposalForm = form(this.newProposal);
+  protected readonly hasReceivingTeam = computed(() => this.receivingTeams()
+    .some(team => team.teamId === Number(this.newProposal().receivingTeamId)));
+  protected readonly offeredPlayersResource = httpResource<TeamPlayerResponse[]>(
+    () => this.currentTeamId() ? '/api/teams/' + this.currentTeamId() + '/players' : undefined,
+    { defaultValue: [] },
+  );
+  private readonly receivingTeamId = computed(() => this.newProposal().receivingTeamId);
+  protected readonly availablePlayersResource = httpResource<TeamPlayerResponse[]>(
+    () => this.hasReceivingTeam() ? '/api/teams/' + this.receivingTeamId() + '/players' : undefined,
+    { defaultValue: [] },
+  );
+  protected readonly offeredPlayers = computed(() => this.offeredPlayersResource.hasValue()
+    ? this.offeredPlayersResource.value() : []);
+  protected readonly availablePlayers = computed(() => this.availablePlayersResource.hasValue()
+    ? this.availablePlayersResource.value() : []);
+  protected readonly submitting = signal(false);
+  protected readonly proposalError = signal<string | null>(null);
+  protected readonly proposalMessage = signal('');
+  protected readonly canSubmit = computed(() => {
+    const proposal = this.newProposal();
+    return !this.submitting() && this.hasReceivingTeam()
+      && !this.offeredPlayersResource.isLoading() && !this.availablePlayersResource.isLoading()
+      && this.offeredPlayers().some(player => player.playerId === Number(proposal.offeredPlayerId))
+      && this.availablePlayers().some(player => player.playerId === Number(proposal.requestedPlayerId))
+      && Number.isFinite(proposal.amount);
+  });
+
+  protected onReceivingTeamChange(event: Event): void {
+    const receivingTeamId = (event.target as HTMLSelectElement).value;
+    this.newProposal.update(proposal => ({ ...proposal, receivingTeamId, requestedPlayerId: '0' }));
+    this.proposalMessage.set('');
+  }
+
+  protected onPlayerChange(field: 'offeredPlayerId' | 'requestedPlayerId', event: Event): void {
+    const playerId = (event.target as HTMLSelectElement).value;
+    this.newProposal.update(proposal => ({ ...proposal, [field]: playerId }));
+  }
+
+  protected async submitProposal(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    if (!this.canSubmit()) return;
+    this.submitting.set(true);
+    this.proposalError.set(null);
+    this.proposalMessage.set('');
+    try {
+      await firstValueFrom(this.tradeService.createTrade(this.newProposal()));
+      this.newProposal.set({ receivingTeamId: '0', requestedPlayerId: '0', offeredPlayerId: '0', amount: 0 });
+      this.proposalMessage.set('Proposta inviata.');
+      this.tradesResource.reload();
+    } catch {
+      this.proposalError.set('Impossibile inviare la proposta. Riprova.');
+    } finally {
+      this.submitting.set(false);
+    }
+  }
 
   protected canAccept(trade: TradeDto): boolean {
     return trade.status === 'PENDING' && this.ownedTeamIds().has(trade.receivingTeamId);

@@ -42,10 +42,6 @@
               <article class="match">
                 <div class="match__teams">
                   <span>{{ match.homeTeamName }}</span>
-                  <strong aria-hidden="true">–</strong>
-                  <span>{{ match.awayTeamName }}</span>
-                </div>
-                <div class="match__aside">
                 @if (match.matchdayClosed) {
                   <!--
                     TODO(studio): questo è un risultato minimo (fantagol +
@@ -63,6 +59,12 @@
                     {{ match.homeGoals }} – {{ match.awayGoals }}
                   </strong>
                 } @else {
+                  <strong aria-hidden="true">–</strong>
+                }
+                  <span>{{ match.awayTeamName }}</span>
+                </div>
+                <div class="match__aside">
+                @if (!match.matchdayClosed) {
                   <span class="match__status">Risultato disponibile alla chiusura della giornata</span>
                 }
                 @if (match.matchDay !== null && match.matchDay !== undefined) {

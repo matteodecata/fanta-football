@@ -41,6 +41,24 @@ export class ChangePassword {
     confirmPassword: '',
   });
 
+  protected readonly currentPasswordVisible = signal(false);
+  protected readonly newPasswordVisible = signal(false);
+  protected readonly confirmPasswordVisible = signal(false);
+
+  protected togglePasswordVisibility(field: keyof ChangePasswordModel): void {
+    switch (field) {
+      case 'currentPassword':
+        this.currentPasswordVisible.update((visible) => !visible);
+        break;
+      case 'newPassword':
+        this.newPasswordVisible.update((visible) => !visible);
+        break;
+      case 'confirmPassword':
+        this.confirmPasswordVisible.update((visible) => !visible);
+        break;
+    }
+  }
+
   protected readonly passwordForm = form(
     this.passwordModel,
     (fieldPath) => {

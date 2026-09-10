@@ -7,15 +7,15 @@
 
   <div class="account-layout">
     <nav class="account-nav card" aria-label="Sezioni dell'account">
-      <a routerLink="/account" fragment="username">Nome utente</a>
-      <a routerLink="/account" fragment="password">Cambia password</a>
+      <a routerLink="/account" fragment="username">Modifica nome utente</a>
+      <a routerLink="/account" fragment="password">Modifica password</a>
       <a routerLink="/account" fragment="disable-account">Disattiva account</a>
     </nav>
 
     <div class="account-content">
       <section id="username" class="account-section card" aria-labelledby="username-title">
         <div class="section-heading">
-          <h2 id="username-title">Nome utente</h2>
+          <h2 id="username-title">Modifica nome utente</h2>
           <p>Aggiorna il nome con cui ti riconoscono gli altri partecipanti.</p>
         </div>
         <app-change-username />
@@ -23,7 +23,7 @@
 
       <section id="password" class="account-section card" aria-labelledby="password-title">
         <div class="section-heading">
-          <h2 id="password-title">Cambia password</h2>
+          <h2 id="password-title">Modifica password</h2>
           <p>Scegli una password sicura per proteggere il tuo profilo.</p>
         </div>
         <app-change-password />
