@@ -463,11 +463,13 @@ lineup o allo stato "chiusa" della matchday — vedi il dettaglio nel blocco
 ### Formazioni (Lineup)
 
 Confermato su Swagger l'8 settembre 2026 (request/response reali, tipi in
-sezione 9).
+sezione 9). **Correzione del 10 settembre 2026**: l'endpoint del catalogo
+moduli è al plurale, `/api/lineup-types` (non `/api/lineup-type` come
+scritto inizialmente qui) — confermato dal team dopo un test reale.
 
 | Metodo | Endpoint | Request | Response / permesso |
 | --- | --- | --- | --- |
-| GET | `/api/lineup-type` | — | `LineupTypeResponse[]`, catalogo moduli |
+| GET | `/api/lineup-types` | — | `LineupTypeResponse[]`, catalogo moduli |
 | GET | `/api/teams/{teamId}/matches/{leagueMatchId}/lineup` | — | `LineupResponse` della squadra per quella partita |
 | POST | `/api/teams/{teamId}/matches/{leagueMatchId}/lineup` | `LineupRequest` | crea la formazione, `LineupResponse` |
 | PUT | `/api/teams/{teamId}/matches/{leagueMatchId}/lineup` | `LineupRequest` | aggiorna la formazione, `LineupResponse` |
@@ -814,7 +816,7 @@ reale del codice prima di considerarli aperti o chiusi.
 
 ### Formazioni (Lineup): verifica Swagger dell'8 settembre 2026
 
-- Il backend ora espone `GET /api/lineup-type` e
+- Il backend ora espone `GET /api/lineup-types` e
   `GET/POST/PUT /api/teams/{teamId}/matches/{leagueMatchId}/lineup`, con
   request/response confermate (tipi in sezione 9, tabella in sezione 10).
   Il blocco storico "Creazione/modifica lineup" qui sotto è quindi
