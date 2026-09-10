@@ -372,6 +372,16 @@ export interface LineupResponse {
   defensive: boolean;
   players: LineupPlayerResponse[];
 }
+
+// Aggiunto il 10 settembre 2026, vedi sezione 10 "Formazioni (Lineup)".
+export interface PlayerRatingResponse {
+  teamPlayerId: number;
+  playerId: number;
+  name: string;
+  surname: string;
+  role: PlayerRole;
+  fantaRating: number | null;
+}
 ```
 
 I campi numerici e temporali devono essere confermati su `/v3/api-docs` prima
@@ -484,12 +494,26 @@ scritto inizialmente qui) — confermato dal team dopo un test reale.
 | GET | `/api/teams/{teamId}/matches/{leagueMatchId}/lineup` | — | `LineupResponse` della squadra per quella partita |
 | POST | `/api/teams/{teamId}/matches/{leagueMatchId}/lineup` | `LineupRequest` | crea la formazione, `LineupResponse` |
 | PUT | `/api/teams/{teamId}/matches/{leagueMatchId}/lineup` | `LineupRequest` | aggiorna la formazione, `LineupResponse` |
+| GET | `/api/teams/{teamId}/matches/{leagueMatchId}/players/ratings` | — | `PlayerRatingResponse[]`, voti di tutta la rosa attiva per quella giornata |
 
 Vincolo di dominio (sezione 8): una sola Lineup per coppia `(teamId,
 leagueMatchId)`, modificabile solo finché la Matchday collegata non è
 `closed`. Nessuno dei payload sopra espone questo stato, e non è ancora
 stato verificato se POST/PUT restituiscono un errore esplicito quando si
 tenta di modificare una formazione a giornata chiusa — vedi sezione 14.
+
+**Voti fantacalcio per giocatore** (aggiunto il 10 settembre 2026): a
+differenza di `LineupResponse.players` (solo chi era in formazione),
+`players/ratings` restituisce **tutta** la rosa attiva della squadra per
+quella partita, incluso chi non era stato schierato — serve a confrontare
+chi ha giocato con chi era in panchina/fuori formazione. `fantaRating` è
+`number | null`: `null` non è un errore, significa "nessun voto disponibile"
+(giornata non ancora chiusa, o il calciatore reale non ha giocato). Il
+frontend (`lineup.ts`) carica questi voti solo a `matchdayClosed === true` e
+li mostra affiancati ai nomi già presenti nel form della formazione,
+insieme a un'etichetta Titolare/Panchina. Errori documentati: 404
+(team/match inesistenti), 403 (utente non proprietario né admin lega), 409
+`lineup_team_mismatch` (quella squadra non gioca quella `LeagueMatch`).
 
 ## 11. Architettura frontend proposta
 

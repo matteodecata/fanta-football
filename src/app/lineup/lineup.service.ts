@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { Observable, catchError, of, throwError } from 'rxjs';
-import { LineupRequest, LineupResponse, LineupTypeResponse } from './lineup.models';
+import { LineupRequest, LineupResponse, LineupTypeResponse, PlayerRatingResponse } from './lineup.models';
 
 @Service()
 export class LineupService {
@@ -9,6 +9,10 @@ export class LineupService {
 
   private readonly lineupUrl = (teamId: number, leagueMatchId: number) =>
     `/api/teams/${teamId}/matches/${leagueMatchId}/lineup`;
+
+  getPlayerRatings(teamId: number, leagueMatchId: number): Observable<PlayerRatingResponse[]> {
+    return this.http.get<PlayerRatingResponse[]>(`/api/teams/${teamId}/matches/${leagueMatchId}/players/ratings`);
+  }
 
   getLineupTypes(): Observable<LineupTypeResponse[]> {
     return this.http.get<LineupTypeResponse[]>('/api/lineup-types');
