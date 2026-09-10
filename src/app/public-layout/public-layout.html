@@ -11,6 +11,6 @@
     </nav>
   </div>
 </header>
-<main>
+<main class="public-main" [class.app-page-background]="!isLandingPage()">
   <router-outlet (activate)="focusRouteHeading()"/>
 </main>
