@@ -3,7 +3,6 @@
 .trade-intro { color: var(--c-text-muted); font-size: var(--fs-sm); }
 .trade-card__meta { flex-wrap: wrap; }
 .trade-card__meta > span:first-child, .player-offer__label { overflow-wrap: anywhere; }
-.status-badge { color: var(--c-text); background: var(--c-surface-2); }
 .player-info strong, .player-info small { white-space: normal; overflow-wrap: anywhere; }
 button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 3px; }
 
@@ -12,3 +11,8 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 3px; 
 .trades-sidebar { grid-template-columns: 1fr; }
 .trade-field select:focus-visible, .trade-field input:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 3px; }
 @media (max-width: 60rem) { .trades-layout { grid-template-columns: minmax(0, 1fr); } }
+
+.proposal-panel { border-top: 3px solid var(--c-accent); }
+.trade-field:has(#offered-player), .trade-field:has(#requested-player) { padding: var(--sp-3); background: var(--c-surface-2); border-radius: var(--r-md); gap: var(--sp-2); }
+.reminder-panel { border-color: var(--c-border); background: var(--c-surface); }
+.reminder-panel h2 { color: var(--c-text); }

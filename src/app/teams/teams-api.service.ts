@@ -4,7 +4,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { EMPTY, expand, reduce } from 'rxjs';
 import { UserLeagueTeamResponse } from '../dashboard/user-leagues/user-leagues.service';
 import { LeagueStandingResponse } from '../league-detail/league-detail.models';
-import { PageResponse, PlayerResponse } from '../players/players-response';
+import { PageResponse, PlayerResponse } from '../players/players.model';
 import { TeamPlayerResponse } from '../team-detail/team-detail.models';
 
 @Service()

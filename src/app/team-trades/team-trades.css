@@ -88,11 +88,11 @@
 }
 
 .status-badge {
-	padding: 0.2rem 0.45rem;
-	border-radius: var(--r-sm);
-	background: var(--c-warning-soft);
-	color: var(--c-warning);
-	font-size: 0.625rem;
+	padding: 0.3rem 0.65rem;
+	border-radius: var(--r-full);
+	background: var(--c-surface-2);
+	color: var(--c-text-muted);
+	font-size: var(--fs-xs);
 	font-weight: 700;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
@@ -104,13 +104,14 @@
 	grid-template-columns: minmax(0, 1fr) 1.75rem minmax(0, 1fr);
 	gap: var(--sp-2);
 	align-items: center;
-	margin-block: var(--sp-3);
+	margin-block: var(--sp-4);
 }
 
 .player-offer {
 	min-width: 0;
 	padding: var(--sp-3);
-	border: 1px solid var(--c-border);
+	border: 1px solid transparent;
+	background: var(--c-surface-2);
 	border-radius: var(--r-md);
 }
 
@@ -118,7 +119,7 @@
 	display: block;
 	margin-bottom: var(--sp-2);
 	color: var(--c-text-subtle);
-	font-size: 0.625rem;
+	font-size: var(--fs-xs);
 	font-weight: 700;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
@@ -140,11 +141,12 @@
 .player-info small {
 	overflow: hidden;
 	text-overflow: ellipsis;
-	white-space: nowrap;
+	white-space: normal;
+	overflow-wrap: anywhere;
 }
 
 .player-info strong {
-	font-size: var(--fs-sm);
+	font-size: var(--fs-base);
 }
 
 .player-info small {
@@ -153,11 +155,15 @@
 }
 
 .player-avatar {
-	width: 1.75rem;
-	height: 1.75rem;
+	display: grid;
+	place-items: center;
+	width: 2.25rem;
+	height: 2.25rem;
 	flex: none;
 	border-radius: var(--r-full);
-	background: repeating-linear-gradient(135deg, var(--c-border) 0 4px, var(--c-surface-2) 4px 8px);
+	background: var(--c-surface);
+	color: var(--c-text);
+	font-weight: 700;
 }
 
 .exchange-icon {
@@ -302,3 +308,16 @@
 		grid-template-columns: 1fr;
 	}
 }
+
+.status-badge[data-status="PENDING"] { background: var(--c-warning-soft); color: var(--c-warning); }
+.status-badge[data-status="ACCEPTED"] { background: var(--c-success-soft); color: var(--c-success); }
+.status-badge[data-status="REJECTED"] { background: var(--c-danger-soft); color: var(--c-danger); }
+.status-badge[data-status="CANCELLED"] { background: var(--c-info-soft); color: var(--c-info); }
+.trade-card__meta { flex-wrap: wrap; }
+.trade-card__meta > span:first-child { overflow-wrap: anywhere; }
+.trade-card__footer p { line-height: 1.6; }
+.trade-card__footer p strong { color: var(--c-text); font-weight: 600; }
+.trade-tab:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 3px; }
+.trades-empty { padding: var(--sp-8) var(--sp-4); text-align: center; border: 1px dashed var(--c-border); border-radius: var(--r-lg); }
+.trades-empty h3 { font-size: var(--fs-base); }
+.trades-empty p { margin-top: var(--sp-2); color: var(--c-text-muted); font-size: var(--fs-sm); }

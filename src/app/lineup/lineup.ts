@@ -5,7 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { extractApiError } from '../core/http/api-error';
 import { TeamsApiService } from '../teams/teams-api.service';
 import { TeamPlayerResponse } from '../team-detail/team-detail.models';
-import { PlayerRole } from '../players/players-response';
+import { PlayerRole } from '../players/players.model';
 import { LineupService } from './lineup.service';
 import { LineupPlayerRequest, LineupRequest, LineupResponse, LineupTypeResponse } from './lineup.models';
 

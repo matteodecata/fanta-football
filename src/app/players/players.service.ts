@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { httpResource, HttpParams, HttpResourceRef } from "@angular/common/http";
-import { PageResponse, PlayerFilters, RealTeamsResponse, PriceRangeResponse} from "./players-response";
+import { PageResponse, PlayerFilters, RealTeamsResponse, PriceRangeResponse} from "./players.model";
 
 
 @Injectable ({

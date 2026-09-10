@@ -47,27 +47,27 @@
                 <div class="trade-card" >
                     <div class="trade-card__meta">
                         <span>{{ proposal.proposingTeamName }} → {{ proposal.receivingTeamName }} · {{ formatTradeDate(proposal.proposalDate) }}</span>
-                        <span class="status-badge">{{ getTradeStatusLabel(proposal.status) }}</span>
+                        <span class="status-badge" [attr.data-status]="proposal.status">{{ getTradeStatusLabel(proposal.status) }}</span>
                     </div>
                     <div class="trade-exchange">
                         <div class="player-offer">
-                            <span class="player-offer__label">Ti offre</span>
+                            <span class="player-offer__label">{{ activeTab() === 'received' ? 'Ti offre' : activeTab() === 'sent' ? 'Offri' : 'Calciatore offerto' }}</span>
                             <div class="player-info">
-                                <span class="player-avatar" aria-hidden="true"></span>
-                                <span><strong>{{ proposal.offeredPlayerName }}</strong><small>{{ proposal.proposingTeamName }}</small></span>
+                                <span class="player-avatar" aria-hidden="true">{{ proposal.offeredPlayerName.slice(0, 1).toUpperCase() }}</span>
+                                <span><strong>{{ proposal.offeredPlayerName}}</strong><small>{{ proposal.proposingTeamName }}</small></span>
                             </div>
                         </div>
                         <span class="exchange-icon" aria-hidden="true">⇄</span>
                         <div class="player-offer">
-                            <span class="player-offer__label">Ti chiede</span>
+                            <span class="player-offer__label">{{ activeTab() === 'received' ? 'Ti chiede' : activeTab() === 'sent' ? 'Richiedi' : 'Calciatore richiesto' }}</span>
                             <div class="player-info">
-                                <span class="player-avatar" aria-hidden="true"></span>
+                                <span class="player-avatar" aria-hidden="true">{{ proposal.requestedPlayerName.slice(0, 1).toUpperCase() }}</span>
                                 <span><strong>{{ proposal.requestedPlayerName }}</strong><small>{{ proposal.receivingTeamName }}</small></span>
                             </div>
                         </div>
                     </div>
                     <div class="trade-card__footer">
-                        <p>Conguaglio: {{ proposal.amount }} crediti.</p>
+                        <p>@if (proposal.amount > 0) { {{ proposal.proposingTeamName }} paga <strong>{{ proposal.amount }} crediti</strong> a {{ proposal.receivingTeamName }}. } @else if (proposal.amount < 0) { {{ proposal.receivingTeamName }} paga <strong>{{ -proposal.amount }} crediti</strong> a {{ proposal.proposingTeamName }}. } @else { <strong>Scambio alla pari</strong> }</p>
                         @if (activeTab() === 'received' && proposal.status === 'PENDING') {
                             <div class="trade-actions">
                                 <button class="btn btn--primary btn--sm" type="button">Accetta</button>
@@ -76,7 +76,7 @@
                         }
                     </div>
                 </div>
-            }
+            } @empty { <div class="trades-empty"><h3>{{ activeTab() === 'received' ? 'Nessuna proposta ricevuta' : activeTab() === 'sent' ? 'Nessuna proposta inviata' : 'Nessuno scambio concluso' }}</h3><p>Gli scambi compariranno in questa sezione.</p></div> }
             </section>
         }
 

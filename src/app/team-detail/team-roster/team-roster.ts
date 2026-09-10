@@ -2,7 +2,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TeamsApiService } from '../../teams/teams-api.service';
 import { PlayerRelease } from '../player-release/player-release';
-import { PlayerRole } from '../../players/players-response';
+import { PlayerRole } from '../../players/players.model';
 
 const ROLE_LABELS: Record<PlayerRole, string> = { P: 'Portiere', D: 'Difensore', C: 'Centrocampista', A: 'Attaccante' };
 

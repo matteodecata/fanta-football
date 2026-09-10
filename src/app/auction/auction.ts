@@ -3,8 +3,9 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { extractApiError } from '../core/http/api-error';
-import { PlayerResponse } from '../players/players-response';
-import { AuctionService, AvailablePlayersPageResponse } from './auction.service';
+import { PlayerResponse } from '../players/players.model';
+import { AuctionService } from './auction.service';
+import { AvailablePlayersPageResponse } from './auction.model';
 
 interface AuctionTeam {
   teamId: number;
