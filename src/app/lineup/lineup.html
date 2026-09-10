@@ -14,9 +14,9 @@
     } @else if (lineupTypesStatus() === 'error' || lineupStatus() === 'error' || rosterResource.error()) {
       <p class="alert alert--danger" role="alert">Non è stato possibile caricare i dati della formazione. Riprova più tardi.</p>
     } @else if (!hasRoster()) {
-      <!-- Senza giocatori selezionabili in rosa nessun modulo è completabile: si blocca la scelta a monte, invece di far scoprire il problema dopo. -->
+      <!-- Serve almeno un portiere e un giocatore di movimento (validateFormation lato backend richiede sempre 1 portiere titolare): si blocca la scelta a monte, invece di far scoprire il problema dopo. -->
       <p class="empty-state">
-        La tua squadra non ha ancora giocatori (esclusi portiere e svincolati): acquista qualche calciatore prima di poter schierare una formazione.
+        La tua squadra non ha ancora abbastanza giocatori (serve almeno un portiere e qualche giocatore di movimento, esclusi gli svincolati): acquista qualche calciatore prima di poter schierare una formazione.
       </p>
     } @else {
       <form class="form form--wide" novalidate (submit)="$event.preventDefault(); submit()">
@@ -44,7 +44,8 @@
 
           @if (selectedLineupType(); as type) {
             <p class="field__hint" aria-live="polite">
-              Titolari selezionati — Difensori {{ starterCountByRole().D }}/{{ type.defenderNum }},
+              Titolari selezionati — Portiere {{ starterCountByRole().P }}/1,
+              Difensori {{ starterCountByRole().D }}/{{ type.defenderNum }},
               Centrocampisti {{ starterCountByRole().C }}/{{ type.midfielderNum }},
               Attaccanti {{ starterCountByRole().A }}/{{ type.forwardNum }}
             </p>
@@ -52,17 +53,40 @@
             <p class="field__hint">Scegli prima un modulo per sapere quanti titolari servono per ruolo.</p>
           }
 
-          <div class="lineup__players">
-            @for (player of selectableRoster(); track player.id) {
-              <label class="checkbox">
-                <input type="checkbox" [checked]="starterTeamPlayerIds().has(player.id)" (change)="toggleStarter(player.id)" />
-                <span>{{ player.name }} {{ player.surname }}</span>
-                <span class="badge">{{ player.role }}</span>
-              </label>
-            } @empty {
-              <p class="empty-state">Nessun giocatore disponibile in rosa.</p>
-            }
-          </div>
+          <!-- Il portiere è a selezione singola (radio, massimo 1 titolare); D/C/A restano checkbox libere fino al limite del modulo -->
+          <fieldset class="fieldset">
+            <legend>Portiere</legend>
+            <div class="lineup__players">
+              @for (player of playersByRole().P; track player.id) {
+                <label class="radio">
+                  <input type="radio" name="lineup-goalkeeper" [checked]="starterTeamPlayerIds().has(player.id)" (change)="toggleStarter(player)" />
+                  <span>{{ player.name }} {{ player.surname }}</span>
+                </label>
+              } @empty {
+                <p class="empty-state">Nessun portiere disponibile in rosa.</p>
+              }
+            </div>
+          </fieldset>
+
+          @for (group of [
+            { label: 'Difensori', players: playersByRole().D },
+            { label: 'Centrocampisti', players: playersByRole().C },
+            { label: 'Attaccanti', players: playersByRole().A }
+          ]; track group.label) {
+            <fieldset class="fieldset">
+              <legend>{{ group.label }}</legend>
+              <div class="lineup__players">
+                @for (player of group.players; track player.id) {
+                  <label class="checkbox">
+                    <input type="checkbox" [checked]="starterTeamPlayerIds().has(player.id)" (change)="toggleStarter(player)" />
+                    <span>{{ player.name }} {{ player.surname }}</span>
+                  </label>
+                } @empty {
+                  <p class="empty-state">Nessun giocatore disponibile per questo ruolo.</p>
+                }
+              </div>
+            </fieldset>
+          }
         </fieldset>
 
         @if (defensive()) {
@@ -81,7 +105,7 @@
             {{ saveStatus() === 'saving' ? 'Salvataggio…' : (existingLineup() ? 'Aggiorna formazione' : 'Crea formazione') }}
           </button>
           @if (selectedLineupType() && !isStarterCountValid()) {
-            <p class="field__hint">Il numero di titolari per ruolo deve corrispondere esattamente al modulo scelto.</p>
+            <p class="field__hint">Serve esattamente 1 portiere titolare e il numero di titolari per ruolo previsto dal modulo scelto (11 giocatori in totale).</p>
           }
         }
       </form>
