@@ -6,13 +6,26 @@
         <p>Consulta il catalogo dei calciatori disponibili.</p>
       </div>
 
-      <button class="btn btn--primary" type="button" (click)="playersResource.reload()" [disabled]="playersResource.isLoading()">
-        @if (playersResource.isLoading()) {
+ 
+
+      <button 
+      class="btn btn--primary"
+      type="button"
+      (click)="refreshCatalog()" 
+      [disabled]="anyResourceIsLoading()">
+        @if (anyResourceIsLoading()) {
           Caricamento...
-        } @else {
+        }@else {
           Aggiorna catalogo
         }
       </button>
+        @if (realTeamsResource.error()) {
+          <p role="alert">Impossibile caricare le squadre. Premi Aggiorna catalogo per riprovare.</p>
+        }@if (playersResource.error()) {
+          <p role="alert">Impossibile caricare i giocatori. Premi Aggiorna catalogo per riprovare.</p>
+        }@if (priceRangeResource.error()) {
+          <p role="alert">Impossibile caricare il range di prezzo. Premi Aggiorna catalogo per riprovare.</p>
+        }
     </div>
   </header>
 
@@ -24,11 +37,12 @@
         <div class="field players-search">
           <label class="field__label" for="players-search">Cerca calciatore</label>
           <input
+            #searchInput
             id="players-search"
             class="input"
             type="search"
             [value]="searchTerm()"
-            (input)="updateSearchTerm($any($event.target).value)"
+            (input)="updateSearchTerm(searchInput.value)"
             placeholder="Nome o cognome"
             autocomplete="off"
           />
@@ -88,33 +102,48 @@
     </div>
 
     <section class="players-price-filter" aria-label="Filtro prezzo">
-      <p class="players-price-filter__summary">
-        Prezzo: da {{ minPriceFilter() ?? minCatalogPrice() }} a {{ maxPriceFilter() ?? maxCatalogPrice() }}
+      <p class="players-price-filter__summary" role="status">
+        @if (hasPriceRange()) {
+          @if (minCatalogPrice() === maxCatalogPrice()) {
+            Prezzo: {{ minCatalogPrice() }}
+          } @else {
+            Prezzo: da {{ sliderPrices().min }} a {{ sliderPrices().max }}
+          }
+        } @else if (priceRangeResource.isLoading()) {
+          Caricamento prezzi...
+        } @else {
+          Intervallo prezzi non disponibile.
+        }
       </p>
-
       <div class="field">
         <label class="field__label" for="players-min-price-filter">Prezzo minimo</label>
         <input
+          #minPriceInput
           id="players-min-price-filter"
           class="input"
           type="range"
-          [value]="minPriceFilter() ?? minCatalogPrice()"
-          [min]="minCatalogPrice()"
-          [max]="maxPriceFilter() ?? maxCatalogPrice()"
-          (input)="updateMinPriceFilter($any($event.target).value)"
+          [min]="sliderPrices().lower"
+          [max]="sliderPrices().upper"
+          [value]="sliderPrices().min"
+          (input)="previewMinPrice(minPriceInput.value)"
+          (change)="commitPriceFilters()"
+          [disabled] = "disableSlider()"
         />
       </div>
 
       <div class="field">
         <label class="field__label" for="players-max-price-filter">Prezzo massimo</label>
         <input
+          #maxPriceInput
           id="players-max-price-filter"
           class="input"
           type="range"
-          [value]="maxPriceFilter() ?? maxCatalogPrice()"
-          [min]="minPriceFilter() ?? minCatalogPrice()"
-          [max]="maxCatalogPrice()"
-          (input)="updateMaxPriceFilter($any($event.target).value)"
+          [min]="sliderPrices().lower"
+          [max]="sliderPrices().upper"
+          [value]="sliderPrices().max"
+          (input)="previewMaxPrice(maxPriceInput.value)"
+          (change)="commitPriceFilters()"
+          [disabled] = "disableSlider()"
         />
       </div>
     </section>
@@ -122,12 +151,14 @@
     <button class="btn players-reset-button" type="button" (click)="resetFilters()" [disabled]="!hasFilterActive()">Reset filtri</button>
   </section>
   
+  <div class="players-loading-status">
   @if (playersResource.isLoading()) {
     <div class="alert alert--info" role="status" aria-live="polite">
       <span class="spinner" aria-hidden="true"></span>
       <p>Sto caricando i calciatori.</p>
     </div>
   }
+  </div>
 
   @if (playersResource.error()) {
     <div class="alert alert--danger" role="alert">
@@ -135,19 +166,19 @@
         Domanda guida: l'utente deve capire se il backend e spento, se non e autenticato,
         o se il filtro inviato non e valido?
         Hint: sposta la decisione del messaggio nel TS, non mettere troppa logica qui. -->
-      <p>La richiesta non e andata a buon fine.</p>
+      <p>La richiesta non e' andata a buon fine.</p>
     </div>
   }
 
-  @if (!playersResource.isLoading() && !playersResource.error() && visiblePlayers().length === 0) {
+  @if (!playersResource.isLoading() && !playersResource.error() && pagePlayers().length === 0) {
     <section class="empty-state" aria-live="polite">
       <h2>Nessun calciatore trovato</h2>
       <p>Modifica o rimuovi qualche filtro per ampliare i risultati.</p>
     </section>
   }
 
-  @if (visiblePlayers().length > 0) {
-    <section class="card players-table-card">
+  @if (displayedPlayers().length > 0) {
+    <section class="card players-table-card" [attr.aria-busy]="playersResource.isLoading()">
       <table class="table">
         <thead>
           <tr>
@@ -160,7 +191,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (player of playersGroupedByRole(); track player.id) {
+          @for (player of displayedPlayers(); track player.id) {
             <tr>
               <td>
                 <strong>{{ player.name }} {{ player.surname }}</strong>
@@ -184,16 +215,12 @@
       </table>
     </section>
   }
-  @if(totalPages() > 0) {
-    <nav aria-label="Paginazione calciatori">
+  @if (!playersResource.isLoading() && totalPages() > 0) {
+    <nav class="players-pagination" aria-label="Paginazione calciatori">
     <button type="button" class="btn"  (click) = "previousPage()" [disabled]= "isPreviousDisabled()" >Precedente</button>
-    <span class="container" >Pagina {{currentPage()+1}} di {{totalPages()}} </span>
+    <span>Pagina {{ displayedPage() }} di {{ totalPages() }}</span>
     <button type="button" class="btn" (click) = "nextPage()" [disabled]= "isNextDisabled()" >Successiva</button>
   </nav>
   }
-  <!-- TODO PAG 5: aggiungi qui una nav con aria-label="Paginazione calciatori".
-    Dentro metti due button type="button": Precedente e Successiva, collegati con (click) ai metodi di PAG 4.
-    Fra i due mostra "Pagina X di Y": Y viene da totalPages; se il backend parte da 0, mostra number + 1 come X.
-    Usa [disabled] alla prima/ultima pagina e durante caricamento/errori. Non leggere value() se !hasValue().
-    Con zero pagine nascondi la nav. Prova avanti e indietro: numero mostrato e righe devono aggiornarsi. -->
 </main>
+

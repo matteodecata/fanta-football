@@ -1,5 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { PlayerResponse, PlayerRole } from './players-response';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { PlayerFilters, PlayerResponse, PlayerRole } from './players-response';
 import { PlayersService } from './players.service';
 
 @Component({
@@ -8,240 +8,203 @@ import { PlayersService } from './players.service';
   templateUrl: './players.html',
   styleUrl: './players.css',
 })
-
 export class Players {
+  // PERCORSO: cerca "TODO META" e segui i numeri, un passaggio alla volta.
+  // 1: players-response.ts, tipi. 2-3: players.service.ts, chiamate HTTP.
+  // 4-6: questo file, collegamento e prezzo selezionato. 7: players.html, stati degli slider.
+  // 8: aggiornamento catalogo (HTML). 9: players.spec.ts, verifiche finali.
   private playersService = inject(PlayersService);
 
-  currentPage = signal<number>(0);
+  currentPage = signal(0);
   selectedRoles = signal<PlayerRole[]>([]);
   selectedRealTeamNames = signal<string[]>([]);
   minPriceFilter = signal<number | null>(null);
   maxPriceFilter = signal<number | null>(null);
+  draftMinPrice = linkedSignal(() => this.minPriceFilter());
+  draftMaxPrice = linkedSignal(() => this.maxPriceFilter());
   injuredFilter = signal<boolean | null>(null);
   searchTerm = signal('');
 
-  
+  priceRangeFilters = computed(() => ({
+    role: this.selectedRoles(),
+    realTeamName: this.selectedRealTeamNames(),
+    search: this.searchTerm().trim(),
+    injured: this.injuredFilter(),
+  }));
+
+  currentFilters = computed<PlayerFilters>(() => ({
+    role: this.selectedRoles(),
+    realTeamName: this.selectedRealTeamNames(),
+    search: this.searchTerm().trim(),
+    minPrice: this.minPriceFilter(),
+    maxPrice: this.maxPriceFilter(),
+    injured: this.injuredFilter(),
+  }));
 
   hasFilterActive = computed(() => {
-    return (
-      this.searchTerm().trim() !== '' ||
-      this.selectedRealTeamNames().length > 0 ||
-      this.selectedRoles().length > 0 ||
-      this.minPriceFilter() !== null ||
-      this.maxPriceFilter() !== null ||
-      this.injuredFilter() !== null
-    );
+    const filters = this.currentFilters();
+    return filters.search !== '' || filters.realTeamName.length > 0 ||
+      filters.role.length > 0 || filters.minPrice !== null ||
+      filters.maxPrice !== null || filters.injured !== null;
   });
 
-  playersResource = this.playersService.getPlayersResource(() => this.currentPage());
+  playersResource = this.playersService.getPlayersResource(
+    () => this.currentPage(),
+    () => this.currentFilters(),
+  );
 
-  // TODO PAG 3: le letture di .content sono corrette; ora gestisci anche una GET fallita.
-  // Crea sopra visiblePlayers un computed chiamato pagePlayers: deve restituire PlayerResponse[].
-  // Hint: prima controlla playersResource.hasValue(); se manca il valore restituisci [], altrimenti content.
-  // Poi usa pagePlayers() in visiblePlayers, realTeamNames, minCatalogPrice e maxCatalogPrice.
-  // Prova con il backend spento: deve comparire l'errore senza tentare map/filter su dati mancanti.
-  //
-   pagePlayers = computed(() => {
-    if(!this.playersResource.hasValue()) {
-      return [];
-    }
+  realTeamsResource = this.playersService.getRealTeamsResources();
+  priceRangeResource = this.playersService.getPriceRangeResource(
+    () => this.priceRangeFilters(),
+  );
+
+  // Filtri e paginazione sono gestiti dal backend; conserva l'ordine ricevuto.
+  pagePlayers = computed(() => {
+    if (this.playersResource.isLoading() || !this.playersResource.hasValue()) return [];
     return this.playersResource.value().content;
-  })
-
-  totalPages = computed(() => {
-    if(!this.playersResource.hasValue()) {
-      return 0;
-    }
-    return this.playersResource.value().totalPages;
-  });
-   // TODO PAG 6, dopo i pulsanti: fai cercare e filtrare TUTTO il catalogo al backend.
-  // Ora questo filter vede solo i 20 ricevuti. Prima prova la ricerca per nome usando il parametro reale dell'API.
-  // Poi aggiungi ruolo, squadra, prezzo e infortunio; verifica come inviare piu ruoli/squadre insieme.
-  // Quando il backend applica un filtro, evita di rifarlo qui con regole diverse.
-  // Prova un cognome che non era nella pagina corrente. Se l'API non supporta il filtro, va completata prima.
-  visiblePlayers = computed(() => {
-    const term = this.searchTerm().trim().toLowerCase();
-    const selectedRoles = this.selectedRoles();
-    const selectedRealTeamNames = this.selectedRealTeamNames();
-    const minPrice = this.minPriceFilter();
-    const maxPrice = this.maxPriceFilter();
-    const players = this.playersResource.value().content;
-    const injured = this.injuredFilter();
-    return players.filter((player) => {
-      const fullName = `${player.name} ${player.surname}`.toLowerCase();
-      const matchesTerm = !term || fullName.includes(term);
-      const matchesRole = selectedRoles.length === 0 || selectedRoles.includes(player.role);
-      const matchesRealTeam =
-        selectedRealTeamNames.length === 0 ||
-        selectedRealTeamNames.includes(player.realTeamName);
-      const matchesMinPrice = minPrice === null || player.price >= minPrice;
-      const matchesMaxPrice = maxPrice === null || player.price <= maxPrice;
-      const matchesInjured = injured === null || player.injured === injured;
-      return matchesTerm && matchesRole && matchesRealTeam && matchesMinPrice && matchesMaxPrice && matchesInjured;
-    });
   });
 
-  playersGroupedByRole = computed(() => {
-    // PAG 6, ordine: questo sort ordina solo i 20 ricevuti. Per ordinare tutto per P, D, C, A,
-    // chiedi l'ordinamento al backend prima della paginazione, con un criterio stabile a parita di ruolo.
-    const roleOrder: Record<PlayerRole, number> = {
-      P: 0,
-      D: 1,
-      C: 2,
-      A: 3,
-    };
-
-    return [...this.visiblePlayers()].sort((firstPlayer, secondPlayer) => {
-      return roleOrder[firstPlayer.role] - roleOrder[secondPlayer.role];
-    });
+  // Mantieni le righe precedenti visibili mentre arriva la risposta successiva.
+  displayedPlayers = linkedSignal<{ loading: boolean; players: PlayerResponse[] }, PlayerResponse[]>({
+    source: () => ({ loading: this.playersResource.isLoading(), players: this.pagePlayers() }),
+    computation: (state, previous) => state.loading ? previous?.value ?? [] : state.players,
   });
 
-  // TODO PAG 8: evita che bottoni squadra e limiti degli slider cambino passando pagina.
-  // Esempio: se nei primi 20 manca la Roma, il suo filtro sparisce anche se esiste nel catalogo.
-  // Chiedi al backend tutte le squadre e il minimo/massimo del catalogo, separati dalla pagina.
-  // Usa quei dati qui e in minCatalogPrice/maxCatalogPrice. Non inventare URL se l'endpoint manca.
-  realTeamNames = computed(() => {
-    return [...new Set(
-      this.playersResource.value().content.map((player) =>
-               player.realTeamName))]
-                  .sort((first, second) => first.localeCompare(second));
-  });
+  totalPages = computed(() => this.playersResource.hasValue()
+    ? this.playersResource.value().totalPages : 0);
 
+  displayedPage = computed(() => this.playersResource.hasValue()
+    ? this.playersResource.value().page + 1 : 0);
 
-  suggestedPlayers = computed(() => {
-    // PAG 6: anche i suggerimenti devono leggere i risultati della ricerca backend.
-    // slice(0, 5) qui va bene: limita i suggerimenti, non decide quali giocatori cercare.
-    const term = this.searchTerm().trim().toLowerCase();
-    if (term.length < 2) {
-      return [];
-    }
-    return this.visiblePlayers().slice(0, 5);
-  });
+  realTeamNames = computed(() => this.realTeamsResource.hasValue()
+    ? [...this.realTeamsResource.value()].sort((first, second) => first.localeCompare(second))
+    : []);
 
-   minCatalogPrice = computed(() => {
-    const prices = this.playersResource.value().content.map((player) => player.price);
-    if (prices.length === 0) {
-      return 0;
-    }
-    return Math.min(...prices);
-   });
+  minCatalogPrice = computed(() => this.priceRangeResource.hasValue()
+    ? this.priceRangeResource.value().minPrice : null);
+  maxCatalogPrice = computed(() => this.priceRangeResource.hasValue()
+    ? this.priceRangeResource.value().maxPrice : null);
 
-   maxCatalogPrice = computed(() => {
-    const prices = this.playersResource.value().content.map((player) => player.price);
-    if (prices.length === 0) {
-      return 0;
-    }
-     return Math.max(...prices);
-   });
+  suggestedPlayers = computed(() => this.searchTerm().trim().length < 2
+    ? [] : this.pagePlayers().slice(0, 5));
 
-   
-   
+  private isPagePending = computed(() => this.playersResource.isLoading() ||
+    !this.playersResource.hasValue() ||
+    this.playersResource.value().page !== this.currentPage());
 
+  isPreviousDisabled = computed(() => this.isPagePending() ||
+    this.totalPages() === 0 || this.currentPage() <= 0);
 
-  // TODO: aggiungi gestione messaggi errore piu specifica.
-  // Domanda guida: playersResource.error() contiene informazioni utili oltre al semplice "errore"?
-  // Hint: prima guarda con console/log o debug che forma ha l'errore HTTP, poi decidi se mostrare
-  // un messaggio diverso per 401, 403, 404 o backend spento.
+  isNextDisabled = computed(() => this.isPagePending() ||
+    this.totalPages() === 0 || this.currentPage() >= this.totalPages() - 1 ||
+    !this.playersResource.value().hasNext);
 
-  previousPage()  {
-    if(!this.playersResource.hasValue() || this.playersResource.isLoading() 
-      || this.playersResource.value().totalPages === 0 || this.playersResource.error()) {
-      return;
-    }
-    const currentPage = this.currentPage();
-    if(currentPage > 0) {
-      this.currentPage.set(currentPage - 1);
-    }
-  };
+  
 
-  nextPage(){
-    if(!this.playersResource.hasValue() || this.playersResource.isLoading() ||
-         this.playersResource.value().totalPages === 0 || this.playersResource.error()) {
-      return;
-    }
-    const totalPages = this.playersResource.value().totalPages;
-    const currentPage = this.currentPage();
-    if(currentPage < totalPages -1) {
-      this.currentPage.set(currentPage + 1);
-    }
-  };
+  previousPage() {
+    if (!this.isPreviousDisabled()) this.currentPage.update(page => page - 1);
+  }
 
-  isPreviousDisabled = computed(() => {
-    return !this.playersResource.hasValue() || this.playersResource.isLoading() 
-       || this.totalPages() === 0 || this.currentPage() <= 0
-  });
+  nextPage() {
+    if (!this.isNextDisabled()) this.currentPage.update(page => page + 1);
+  }
 
-  isNextDisabled = computed(() => {
-    return !this.playersResource.hasValue() || this.playersResource.isLoading()
-    || this.totalPages() === 0 || this.currentPage() >= this.totalPages() - 1
-  });
-
-
-  // TODO PAG 4: aggiungi qui previousPage() e nextPage(), prima dei metodi dei filtri.
-  // Devono diminuire/aumentare currentPage di 1. Dopo PAG 2, la GET parte da sola: niente reload aggiuntivo.
-  // Controlla i limiti PRIMA di cambiare il signal, anche dentro i metodi: non basta disabilitare il bottone.
-  // Hint: con pagine da 0 e totalPages = 3, gli indici validi sono 0, 1, 2. Con zero pagine non avanzare.
-  // Leggi totalPages solo se hasValue() e vero; durante caricamento/errori non cambiare pagina.
-  //
-  // TODO PAG 7, insieme ai filtri backend: quando cambia un filtro, torna alla prima pagina.
-  // Esempio: sei a pagina 5 e cerchi un nome con 2 risultati; devi richiedere la prima, non la quinta.
-  // Aggiungi il reset di currentPage ai metodi di filtro sotto, incluso updateSearchTerm e resetFilters.
-  // Ricordati anche selectSuggestedPlayer: cambia il testo della ricerca, quindi deve resettare la pagina.
+  // TODO META 6 - Gestisci un prezzo selezionato prima di cambiare gli altri filtri.
+  // Esempio: avevi scelto minimo 50, ma la nuova squadra ha prezzi da 5 a 30. Cosa mostra lo slider?
+  // Per iniziare: azzera a null i due filtri prezzo quando cambi squadra, ruolo, ricerca o infortunio.
+  // Hint: puoi raccogliere questo piccolo reset in un metodo richiamato dai quattro handler.
+  // NON farlo nei due handler del prezzo o cambiando pagina. Mantieni il ritorno a pagina 0.
+  // selectSuggestedPlayer passa gia da updateSearchTerm: deve seguire la stessa regola.
+  private resetPriceFilter() {
+    this.minPriceFilter.set(null);
+    this.maxPriceFilter.set(null);
+    this.draftMinPrice.set(null);
+    this.draftMaxPrice.set(null);
+  }
   updateRealTeamNameFilter(value: string) {
-    this.selectedRealTeamNames.update((selectedNames) =>
-      selectedNames.includes(value)
-        ? selectedNames.filter((selectedName) => selectedName !== value)
-        : [...selectedNames, value],
-    );
+    this.currentPage.set(0);
+    this.resetPriceFilter();
+    this.selectedRealTeamNames.update(names => names.includes(value)
+      ? names.filter(name => name !== value) : [...names, value]);
   }
 
   updateRoleFilter(value: PlayerRole) {
-    this.selectedRoles.update((selectedRoles) =>
-      selectedRoles.includes(value)
-        ? selectedRoles.filter((selectedRole) => selectedRole !== value)
-        : [...selectedRoles, value],
-    );
+    this.currentPage.set(0);
+    this.resetPriceFilter();
+    this.selectedRoles.update(roles => roles.includes(value)
+      ? roles.filter(role => role !== value) : [...roles, value]);
   }
 
   updateMinPriceFilter(value: string) {
+    this.currentPage.set(0);
     const minPrice = value ? Number(value) : null;
     const maxPrice = this.maxPriceFilter();
     this.minPriceFilter.set(minPrice);
-    if (minPrice !== null && maxPrice !== null &&  minPrice > maxPrice) {
-     this.maxPriceFilter.set(minPrice);
+    if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+      this.maxPriceFilter.set(minPrice);
     }
   }
 
+  previewMinPrice(value: string) {
+    const min = Number(value);
+    this.draftMinPrice.set(min);
+    if (min > (this.draftMaxPrice() ?? this.maxCatalogPrice() ?? min)) {
+      this.draftMaxPrice.set(min);
+    }
+  }
+
+  previewMaxPrice(value: string) {
+    const max = Number(value);
+    this.draftMaxPrice.set(max);
+    if (max < (this.draftMinPrice() ?? this.minCatalogPrice() ?? max)) {
+      this.draftMinPrice.set(max);
+    }
+  }
+
+  commitPriceFilters() {
+    const min = this.draftMinPrice();
+    const max = this.draftMaxPrice();
+    this.currentPage.set(0);
+    this.minPriceFilter.set(min);
+    this.maxPriceFilter.set(max);
+  }
+
   updateMaxPriceFilter(value: string) {
-   const maxPrice = value ? Number(value) : null;
-   const minPrice = this.minPriceFilter();
-       this.maxPriceFilter.set(maxPrice);
-   if (maxPrice !== null && minPrice !== null && maxPrice < minPrice) {
-    this.minPriceFilter.set(maxPrice);
-   }
+    this.currentPage.set(0);
+    const maxPrice = value ? Number(value) : null;
+    const minPrice = this.minPriceFilter();
+    this.maxPriceFilter.set(maxPrice);
+    if (maxPrice !== null && minPrice !== null && maxPrice < minPrice) {
+      this.minPriceFilter.set(maxPrice);
+    }
   }
 
   updateInjuredFilter(value: boolean) {
+    this.currentPage.set(0);
+    this.resetPriceFilter();
     this.injuredFilter.set(this.injuredFilter() === value ? null : value);
   }
 
   updateSearchTerm(value: string) {
+    this.currentPage.set(0);
+    this.resetPriceFilter();
     this.searchTerm.set(value);
   }
 
-  resetFilters() { 
+  resetFilters() {
+    this.currentPage.set(0);
     this.searchTerm.set('');
     this.selectedRoles.set([]);
     this.selectedRealTeamNames.set([]);
     this.minPriceFilter.set(null);
     this.maxPriceFilter.set(null);
+    this.draftMinPrice.set(null);
+    this.draftMaxPrice.set(null);
     this.injuredFilter.set(null);
   }
 
-
   selectSuggestedPlayer(player: PlayerResponse) {
-    // PAG 7: applica anche qui lo stesso reset della pagina usato quando digiti un nome.
-    this.searchTerm.set(`${player.name} ${player.surname}`);
+    this.updateSearchTerm(`${player.name} ${player.surname}`);
   }
 
   isRoleSelected(role: PlayerRole) {
@@ -253,20 +216,62 @@ export class Players {
   }
 
   teamInitials(realTeamName: string) {
-    return realTeamName
-      .split(' ')
-      .filter((word) => word.length > 0)
-      .slice(0, 2)
-      .map((word) => word[0].toUpperCase())
-      .join('');
+    return realTeamName.split(' ').filter(word => word.length > 0)
+      .slice(0, 2).map(word => word[0].toUpperCase()).join('');
   }
 
   roleBadgeClass(role: PlayerRole) {
     return `badge players-role-badge players-role-badge--${role.toLowerCase()}`;
   }
 
+  disableSlider = computed<boolean>(() => {
+    // Prima verifica che la risposta sia disponibile e leggibile.
+    if (this.priceRangeResource.isLoading() || this.priceRangeResource.error() ||
+        !this.priceRangeResource.hasValue()) {
+      return true;
+    }
+    const response = this.priceRangeResource.value();
+    // Una risposta presente puo comunque contenere estremi null.
+    if (response.maxPrice === null || response.minPrice === null) {
+      return true;
+    }
+    // Lo scorrimento serve solo quando esiste un intervallo di prezzi.
+    return response.minPrice >= response.maxPrice;
+  });
 
+  refreshCatalog() {
+    const currentPage = this.currentPage();
+    if(currentPage !== 0) {
+      this.currentPage.set(0);
+    }else {
+      this.playersResource.reload();
+    }
+    this.priceRangeResource.reload();
+    this.realTeamsResource.reload();
+  }
   
+ 
 
+  hasPriceRange = computed<boolean>(() => {  
+    if(this.priceRangeResource.isLoading() || this.priceRangeResource.error() || !this.priceRangeResource.hasValue()) {
+      return false;
+    }
+    const response = this.priceRangeResource.value();
+    return response.minPrice !== null && response.maxPrice !== null &&
+      response.minPrice <= response.maxPrice;
+  });
 
+  // I valori tecnici degli input restano numerici anche senza un intervallo.
+  sliderPrices = computed(() => {
+    if (!this.hasPriceRange()) return { lower: 0, upper: 0, min: 0, max: 0 };
+    const lower = this.minCatalogPrice() ?? 0;
+    const upper = this.maxCatalogPrice() ?? lower;
+    const min = Math.min(upper, Math.max(lower, this.draftMinPrice() ?? lower));
+    const max = Math.max(min, Math.min(upper, Math.max(lower, this.draftMaxPrice() ?? upper)));
+    return { lower, upper, min, max };
+  });
+  
+  anyResourceIsLoading = computed(() => {
+    return  this.playersResource.isLoading() || this.realTeamsResource.isLoading() || this.priceRangeResource.isLoading();
+  });
 }
