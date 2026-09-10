@@ -34,7 +34,18 @@
       @for (group of visibleGroups(); track group.roundNumber) {
         <section class="matchday" [attr.aria-labelledby]="'matchday-' + group.roundNumber">
           <div class="matchday__header">
-            <h3 [id]="'matchday-' + group.roundNumber">Giornata {{ group.roundNumber }}</h3>
+            <div class="matchday__heading">
+              <h3 [id]="'matchday-' + group.roundNumber">Giornata {{ group.roundNumber }}</h3>
+              @if (group.startDate) {
+                <span class="matchday__date">
+                  <time [attr.datetime]="group.startDate">{{ group.startDate | date: 'd MMM yyyy' }}</time>
+                  @if (group.endDate) {
+                    <span> – </span>
+                    <time [attr.datetime]="group.endDate">{{ group.endDate | date: 'd MMM yyyy' }}</time>
+                  }
+                </span>
+              }
+            </div>
             <span class="matchday__count">{{ group.matches.length }} {{ group.matches.length === 1 ? 'partita' : 'partite' }}</span>
           </div>
           <div class="matchday__matches">
@@ -66,9 +77,6 @@
                 <div class="match__aside">
                 @if (!match.matchdayClosed) {
                   <span class="match__status">Risultato disponibile alla chiusura della giornata</span>
-                }
-                @if (match.matchDay !== null && match.matchDay !== undefined) {
-                  <time class="match__date">{{ match.matchDay | date: 'd MMM yyyy' }}</time>
                 }
                 @if (match.status) { <span class="match__status">{{ match.status }}</span> }
                 @if (match.lineupId !== undefined) {

@@ -31,7 +31,7 @@ describe('TeamDetail', () => {
       TestBed.tick();
       http.expectOne('/api/teams/13/players').flush([]);
     });
-    http.expectOne('/api/players').flush([]);
+    http.expectOne('/api/players?page=0&size=100').flush({ content: [], totalPages: 0, totalElements: 0, number: 0 });
     await fixture.whenStable();
     fixture.detectChanges();
     const page = fixture.nativeElement as HTMLElement;

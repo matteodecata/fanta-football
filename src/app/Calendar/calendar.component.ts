@@ -1,5 +1,5 @@
-import { DatePipe } from '@angular/common';
-import { afterNextRender, Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { DatePipe, formatDate } from '@angular/common';
+import { afterNextRender, Component, computed, inject, input, linkedSignal, LOCALE_ID, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CalendarApiService, CalendarMatch, CalendarScore } from './calendar-api.service';
 
@@ -20,6 +20,7 @@ export class CalendarComponent {
   readonly myTeamId = input<number | null>(null);
 
   private readonly calendarApi = inject(CalendarApiService);
+  private readonly locale = inject(LOCALE_ID);
   readonly status = signal<CalendarStatus>('idle');
   readonly matches = signal<CalendarMatch[]>([]);
   readonly scoreByLineupId = signal<Record<number, CalendarScore>>({});
@@ -39,7 +40,21 @@ export class CalendarComponent {
     }
     return [...groups.entries()]
       .sort(([firstRound], [secondRound]) => firstRound - secondRound)
-      .map(([roundNumber, matches]) => ({ roundNumber, matches }));
+      .map(([roundNumber, matches]) => {
+        const dates = matches
+          .map((match) => match.matchDay)
+          .filter((date): date is string | number => date !== null && date !== undefined)
+          .map((date) => formatDate(date, 'yyyy-MM-dd', this.locale))
+          .sort();
+        const startDate = dates[0];
+        const lastDate = dates.at(-1);
+        return {
+          roundNumber,
+          matches,
+          startDate,
+          endDate: lastDate !== startDate ? lastDate : undefined,
+        };
+      });
   });
 
   readonly canGenerate = computed(() => this.isAdmin() && this.status() === 'not-generated');

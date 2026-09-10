@@ -49,6 +49,9 @@
   color: var(--c-text);
   font-size: var(--fs-md);
 }
+.matchday__heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); }
+.matchday__date { color: var(--c-text-muted); font-size: var(--fs-sm); }
+.matchday__date time { white-space: nowrap; }
 .matchday__count { color: var(--c-text-subtle); font-size: var(--fs-sm); }
 .matchday__matches { display: grid; gap: var(--sp-3); }
 .match {
@@ -67,7 +70,6 @@
 .match__teams strong { color: var(--c-accent); }
 .match__aside { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); }
 .match__score { white-space: nowrap; font-variant-numeric: tabular-nums; }
-.match__date { color: var(--c-text-subtle); font-size: var(--fs-sm); white-space: nowrap; }
 .match__status { color: var(--c-text-muted); font-size: var(--fs-sm); }
 .match__status--error { color: var(--c-danger); }
 .empty-state { gap: var(--sp-2); }
