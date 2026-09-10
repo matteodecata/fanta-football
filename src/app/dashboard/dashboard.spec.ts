@@ -46,7 +46,7 @@ describe('Dashboard', () => {
     expect(page.querySelector('.empty-leagues')?.textContent).toContain(
       'Non partecipi ancora a nessuna lega',
     );
-    expect(page.querySelector('.empty-invites')?.textContent).toContain('Nessun invito in sospeso');
+    expect(page.querySelector('.empty-invites')?.textContent).toContain('Non hai inviti ricevuti in sospeso');
   });
 
   it('ricarica le leghe quando si torna alla dashboard', async () => {

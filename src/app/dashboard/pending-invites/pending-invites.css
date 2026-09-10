@@ -8,6 +8,33 @@
   gap: var(--sp-4);
 }
 
+.invite-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid var(--c-border);
+}
+
+.invite-tab {
+  padding: var(--sp-2) var(--sp-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--c-text-muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.invite-tab:hover,
+.invite-tab:focus-visible,
+.invite-tab--active {
+  color: var(--c-accent);
+}
+
+.invite-tab--active {
+  border-bottom-color: var(--c-accent);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -67,6 +94,19 @@
   flex-wrap: wrap;
   gap: var(--sp-2);
   margin-top: var(--sp-3);
+}
+
+.cancel-confirmation {
+  display: grid;
+  gap: var(--sp-2);
+  width: 100%;
+}
+
+.cancel-confirmation p {
+  margin: 0;
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  font-weight: 700;
 }
 
 .invites-status {

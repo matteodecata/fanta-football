@@ -87,7 +87,7 @@ describe('PendingInvites', () => {
         expect(navigate).toHaveBeenCalledWith(['/leagues', 9, 'team', 'new']);
       } else {
         expect(navigate).not.toHaveBeenCalled();
-        expect((fixture.nativeElement as HTMLElement).textContent).toContain('Nessun invito in sospeso');
+        expect((fixture.nativeElement as HTMLElement).textContent).toContain('Non hai inviti ricevuti in sospeso');
       }
       http.verify();
     });
