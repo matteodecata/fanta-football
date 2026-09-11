@@ -1,19 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { PlayerResponse } from '../players/players-response';
+import { AuctionPurchaseRequest } from './auction.model';
 
-export interface AvailablePlayersPageResponse {
-  content: PlayerResponse[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  hasNext: boolean;
-}
 
-export interface AuctionPurchaseRequest {
-  purchasePrice: number;
-}
 
 @Injectable({ providedIn: 'root' })
 export class AuctionService {

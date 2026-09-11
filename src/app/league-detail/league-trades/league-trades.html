@@ -25,13 +25,13 @@
       <article class="trade-card" [attr.aria-label]="'Scambio tra ' + trade.proposingTeamName + ' e ' + trade.receivingTeamName">
         <div class="trade-card__meta">
           <span>{{ trade.proposingTeamName }} → {{ trade.receivingTeamName }} · {{ trade.proposalDate | date:'dd/MM/yyyy' }}</span>
-          <span class="status-badge">{{ statusLabels[trade.status] }}</span>
+          <span class="status-badge" [attr.data-status]="trade.status">{{ statusLabels[trade.status] }}</span>
         </div>
         <div class="trade-exchange">
           <div class="player-offer">
             <span class="player-offer__label">Offerto da {{ trade.proposingTeamName }}</span>
             <div class="player-info">
-              <span class="player-avatar" aria-hidden="true"></span>
+              <span class="player-avatar" aria-hidden="true">{{ trade.offeredPlayerName.slice(0, 1).toUpperCase() }}</span>
               <span><strong>{{ trade.offeredPlayerName }}</strong><small>{{ trade.proposingTeamName }}</small></span>
             </div>
           </div>
@@ -39,7 +39,7 @@
           <div class="player-offer">
             <span class="player-offer__label">Richiesto a {{ trade.receivingTeamName }}</span>
             <div class="player-info">
-              <span class="player-avatar" aria-hidden="true"></span>
+              <span class="player-avatar" aria-hidden="true">{{ trade.requestedPlayerName.slice(0, 1).toUpperCase() }}</span>
               <span><strong>{{ trade.requestedPlayerName }}</strong><small>{{ trade.receivingTeamName }}</small></span>
             </div>
           </div>
@@ -47,10 +47,10 @@
         <div class="trade-card__footer">
           <p>
             @if (trade.amount > 0) {
-              Conguaglio: {{ trade.proposingTeamName }} paga {{ trade.amount }} crediti a {{ trade.receivingTeamName }}.
+              Conguaglio: {{ trade.proposingTeamName }} paga <strong>{{ trade.amount }} crediti</strong> a {{ trade.receivingTeamName }}.
             } @else if (trade.amount < 0) {
-              Conguaglio: {{ trade.receivingTeamName }} paga {{ -trade.amount }} crediti a {{ trade.proposingTeamName }}.
-            } @else { Nessun conguaglio. }
+              Conguaglio: {{ trade.receivingTeamName }} paga <strong>{{ -trade.amount }} crediti</strong> a {{ trade.proposingTeamName }}.
+            } @else { <strong>Scambio alla pari</strong> }
           </p>
           @if (canReject(trade)) {
             <div class="trade-actions">
@@ -62,7 +62,7 @@
           }
         </div>
       </article>
-    } @empty { <p>Nessuno scambio presente nella lega.</p> }
+    } @empty { <div class="trades-empty"><h3>Nessuno scambio nella lega</h3><p>Le proposte e gli scambi conclusi compariranno qui.</p></div> }
   </div>
 }
 
@@ -90,7 +90,7 @@
                             </select>
                         </label>
                         <label class="trade-field">
-                            <span>Il tuo calciatore</span>
+                            <span>Cosa offri</span>
                             <select id="offered-player" [value]="newProposal().offeredPlayerId" [disabled]="!hasReceivingTeam() || submitting()" (change)="onPlayerChange('offeredPlayerId', $event)">
                                 <option value="0">Seleziona un calciatore</option>
                                 @for(player of offeredPlayers(); track player.playerId){
@@ -101,7 +101,7 @@
                             </select>
                         </label>
                         <label class="trade-field">
-                            <span>Calciatore richiesto</span>
+                            <span>Cosa chiedi</span>
                             <select id="requested-player" [value]="newProposal().requestedPlayerId" [disabled]="!hasReceivingTeam() || submitting()" (change)="onPlayerChange('requestedPlayerId', $event)">
                                 <option value="0">Seleziona un calciatore</option>
                                 @for(player of availablePlayers(); track player.playerId){

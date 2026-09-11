@@ -2,8 +2,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Players } from './players';
-import { PageResponse, PlayerResponse } from './players-response';
+import { PageResponse, PlayerResponse } from './players.model';
 
+//Il describe rinomina il nostro test per fare capire cosa stiamo controllando
 describe('Catalogo con filtri e paginazione backend', () => {
   let fixture: ComponentFixture<Players>;
   let component: Players;
@@ -17,16 +18,22 @@ describe('Catalogo con filtri e paginazione backend', () => {
     ...goalkeeper, id: 2, role: 'D', surname: 'Bianchi', realTeamName: 'Milan', price: 30,
   };
 
+//prima di ogni test prepara un ambiente pulito, per evitare di portarsi qualcosa dal test precedente
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Players],
       providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
+    //fixture e' l'ambiente che contiene il test
     fixture = TestBed.createComponent(Players);
+    //component simula il componente da testare 
     component = fixture.componentInstance;
+    //element simula l'html del componente
     element = fixture.nativeElement as HTMLElement;
+    //aggiorno la pagina
     fixture.detectChanges();
+    //da questa richiesta mi aspetto questo determinato risultato
     http.expectOne('/api/players/real-teams').flush(['Inter', 'Milan', 'Roma']);
     http.expectOne('/api/players/price-range').flush({ minPrice: 5, maxPrice: 30 });
   });
@@ -76,7 +83,9 @@ describe('Catalogo con filtri e paginazione backend', () => {
   });
 
   it('invia parametri ripetuti, search normalizzata, prezzo zero e injured false', async () => {
+    //carico i dati mock in maniera asincrona
     await load();
+    //aggiorno i filtri sul componente di test
     component.updateRoleFilter('P');
     component.updateRoleFilter('D');
     component.updateRealTeamNameFilter('Inter');
@@ -85,9 +94,12 @@ describe('Catalogo con filtri e paginazione backend', () => {
     component.updateInjuredFilter(false);
     component.updateMinPriceFilter('0');
     component.updateMaxPriceFilter('30');
+    //consente ad angular di vedere i cambiamenti
     fixture.detectChanges();
+    //request recupera l'endpoint dal backend
     const filtered = request();
     const params = filtered.request.params;
+    //
     expect(params.getAll('role')).toEqual(['P', 'D']);
     expect(params.getAll('realTeamName')).toEqual(['Inter', 'Milan']);
     expect(params.get('search')).toBe('ROSSI');

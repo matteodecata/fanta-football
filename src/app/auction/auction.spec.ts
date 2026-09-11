@@ -2,9 +2,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { PlayerResponse } from '../players/players-response';
+import { PlayerResponse } from '../players/players.model';
 import { Auction } from './auction';
-import { AvailablePlayersPageResponse } from './auction.service';
+import { AvailablePlayersPageResponse } from './auction.model';
 
 describe('Auction player search', () => {
   let fixture: ComponentFixture<Auction>;

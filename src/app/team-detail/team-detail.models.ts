@@ -1,4 +1,4 @@
-import { PlayerRole } from '../players/players-response';
+import { PlayerRole } from '../players/players.model';
 
 export interface TeamDetailResponse {
   id: number;

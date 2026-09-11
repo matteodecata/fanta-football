@@ -1,5 +1,5 @@
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
-import { PlayerFilters, PlayerResponse, PlayerRole } from './players-response';
+import { PlayerFilters, PlayerResponse, PlayerRole } from './players.model';
 import { PlayersService } from './players.service';
 
 @Component({
