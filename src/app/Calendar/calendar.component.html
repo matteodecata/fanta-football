@@ -92,19 +92,28 @@
                     </button>
                   }
                 }
-                @if (isMyMatch(match)) {
+                @if (match.matchdayClosed) {
                   <!--
-                    Pulsante visibile solo sulle proprie partite (myTeamId).
-                    matchdayClosed passato come query param: la pagina Lineup
-                    lo usa per bloccare il form e mostrare la formazione in
-                    sola lettura a giornata chiusa (vedi lineup.ts).
+                    A giornata chiusa chiunque può consultare la formazione
+                    schierata da entrambe le squadre (non solo la propria):
+                    la route /teams/{teamId}/matches/{leagueMatchId}/lineup
+                    accetta qualunque teamId, non solo myTeamId. closed=true
+                    fa aprire la pagina in sola lettura (vedi lineup.ts).
                   -->
+                  <a class="btn btn--sm" [routerLink]="['/teams', match.homeTeamId, 'matches', match.id, 'lineup']" [queryParams]="{ closed: true }">
+                    Formazione {{ match.homeTeamName }}
+                  </a>
+                  <a class="btn btn--sm" [routerLink]="['/teams', match.awayTeamId, 'matches', match.id, 'lineup']" [queryParams]="{ closed: true }">
+                    Formazione {{ match.awayTeamName }}
+                  </a>
+                } @else if (isMyMatch(match)) {
+                  <!-- Prima della chiusura solo la propria squadra può schierare/modificare -->
                   <a
                     class="btn btn--sm"
                     [routerLink]="['/teams', myTeamId(), 'matches', match.id, 'lineup']"
-                    [queryParams]="{ closed: match.matchdayClosed }"
+                    [queryParams]="{ closed: false }"
                   >
-                    {{ match.matchdayClosed ? 'Vedi formazione' : 'Schiera formazione' }}
+                    Schiera formazione
                   </a>
                 }
                 </div>

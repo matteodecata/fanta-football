@@ -1,90 +1,88 @@
-<div
-  class="pending-invites"
-  [attr.aria-busy]="invites.isLoading() ? 'true' : null"
->
+<div class="pending-invites" [attr.aria-busy]="displayedIsLoading() ? 'true' : null">
   <p class="sr-only" aria-live="polite">{{ statusMessage() }}</p>
 
+  <div class="invite-tabs" role="tablist" aria-label="Inviti in sospeso">
+    <button id="received-invites-tab" class="invite-tab" [class.invite-tab--active]="activeTab() === 'received'" type="button" role="tab" [attr.aria-selected]="activeTab() === 'received'" aria-controls="received-invites-panel" (click)="selectTab('received')">Ricevuti</button>
+    <button id="sent-invites-tab" class="invite-tab" [class.invite-tab--active]="activeTab() === 'sent'" type="button" role="tab" [attr.aria-selected]="activeTab() === 'sent'" aria-controls="sent-invites-panel" (click)="selectTab('sent')">Inviati</button>
+  </div>
+
   @if (actionError()) {
-    <div class="alert alert--danger" role="alert">
-      {{ actionError() }}
-    </div>
+    <div class="alert alert--danger" role="alert">{{ actionError() }}</div>
   }
 
-  @if (invites.status() === 'loading') {
-    <div class="invites-status" role="status">
-      <span class="spinner" aria-hidden="true"></span>
-      <span>Caricamento degli inviti…</span>
-    </div>
-  } @else if (invites.error()) {
-    <div class="invites-error alert alert--danger" role="alert">
-      <p>Non è stato possibile caricare gli inviti.</p>
-      <button class="btn btn--sm" type="button" (click)="reloadInvites()">
-        Riprova
-      </button>
-    </div>
-  } @else if (invites.value().length === 0) {
-    <div class="empty-invites">
-      <p>Nessun invito in sospeso.</p>
-      <span>Quando riceverai un invito, comparirà qui.</span>
-    </div>
-  } @else {
-    <ul class="invites-list" aria-label="Inviti in sospeso">
-      @for (invite of invites.value(); track invite.id) {
-        <li class="invite-item">
-          <article [attr.aria-labelledby]="'invite-title-' + invite.id">
-            <div class="invite-content">
-              <h3 [id]="'invite-title-' + invite.id">
-                @if (invite.leagueName) {
-                  Invito alla lega: {{ invite.leagueName }}
-                } @else {
-                  Invito alla lega: nome non disponibile
-                }
-              </h3>
-              <p>
-                @if (invite.username) {
-                  Inviato dall'utente: <strong>{{ invite.username }}</strong>
-                } @else {
-                  Inviato dall'utente: <strong>nome non disponibile</strong>
-                }
-              </p>
-              <p class="invite-date">
-                Ricevuto il
-                <time [attr.datetime]="invite.sentDate">
-                  {{ invite.sentDate | date: 'dd/MM/yyyy' }}
-                </time>
-              </p>
-            </div>
+  <div [id]="activeTab() === 'received' ? 'received-invites-panel' : 'sent-invites-panel'" role="tabpanel" [attr.aria-labelledby]="activeTab() === 'received' ? 'received-invites-tab' : 'sent-invites-tab'" tabindex="0">
+    @if (displayedIsLoading()) {
+      <div class="invites-status" role="status">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Caricamento degli inviti...</span>
+      </div>
+    } @else if (displayedError()) {
+      <div class="invites-error alert alert--danger" role="alert">
+        <p>Non è stato possibile caricare gli inviti.</p>
+        <button class="btn btn--sm" type="button" (click)="reloadInvites()">Riprova</button>
+      </div>
+    } @else if (displayedInvites().length === 0) {
+      <div class="empty-invites">
+        @if (activeTab() === 'received') {
+          <p>Non hai inviti ricevuti in sospeso.</p>
+          <span>Quando riceverai un invito, comparirà qui.</span>
+        } @else {
+          <p>Non hai inviti inviati in sospeso.</p>
+          <span>Quando invierai un invito, comparirà qui.</span>
+        }
+      </div>
+    } @else {
+      <ul class="invites-list" [attr.aria-label]="activeTab() === 'received' ? 'Inviti ricevuti' : 'Inviti inviati'">
+        @for (invite of displayedInvites(); track invite.id) {
+          <li class="invite-item">
+            <article [attr.aria-labelledby]="'invite-title-' + invite.id">
+              <div class="invite-content">
+                <h3 [id]="'invite-title-' + invite.id">
+                  @if (invite.leagueName) {
+                    {{ activeTab() === 'received' ? 'Invito alla lega:' : 'Invito inviato per la lega:' }} {{ invite.leagueName }}
+                  } @else {
+                    {{ activeTab() === 'received' ? 'Invito alla lega: nome non disponibile' : 'Invito inviato per la lega: nome non disponibile' }}
+                  }
+                </h3>
+                <p>
+                  @if (activeTab() === 'received') {
+                    Inviato dall'utente: <strong>{{ invite.invitedByUsername || invite.username || 'nome non disponibile' }}</strong>
+                  } @else {
+                    Destinatario: <strong>{{ invite.invitedUsername || 'nome non disponibile' }}</strong>
+                  }
+                </p>
+                <p class="invite-date">
+                  {{ activeTab() === 'received' ? 'Ricevuto il' : 'Inviato il' }}
+                  <time [attr.datetime]="invite.sentDate">{{ invite.sentDate | date: 'dd/MM/yyyy' }}</time>
+                </p>
+              </div>
 
-            <div
-              class="invite-actions"
-              [attr.aria-busy]="isProcessing(invite.id) ? 'true' : null"
-            >
-              <button
-                class="btn btn--primary btn--sm"
-                type="button"
-                [disabled]="isProcessing(invite.id)"
-                (click)="acceptInvite(invite)"
-                [attr.aria-label]="'Accetta invito alla lega ' + (invite.leagueName || invite.leagueId)"
-              >
-                @if (isProcessing(invite.id)) {
-                  Attendi…
-                } @else {
-                  Accetta
-                }
-              </button>
-              <button
-                class="btn btn--danger btn--sm"
-                type="button"
-                [disabled]="isProcessing(invite.id)"
-                (click)="rejectInvite(invite)"
-                [attr.aria-label]="'Rifiuta invito alla lega ' + (invite.leagueName || invite.leagueId)"
-              >
-                Rifiuta
-              </button>
-            </div>
-          </article>
-        </li>
-      }
-    </ul>
-  }
+              @if (activeTab() === 'received') {
+                <div class="invite-actions" [attr.aria-busy]="isProcessing(invite.id) ? 'true' : null">
+                  <button class="btn btn--primary btn--sm" type="button" [disabled]="isProcessing(invite.id)" (click)="acceptInvite(invite)" [attr.aria-label]="'Accetta invito alla lega ' + (invite.leagueName || invite.leagueId)">
+                    @if (isProcessing(invite.id)) { Attendi... } @else { Accetta }
+                  </button>
+                  <button class="btn btn--danger btn--sm" type="button" [disabled]="isProcessing(invite.id)" (click)="rejectInvite(invite)" [attr.aria-label]="'Rifiuta invito alla lega ' + (invite.leagueName || invite.leagueId)">Rifiuta</button>
+                </div>
+              } @else {
+                <div class="invite-actions" [attr.aria-busy]="isProcessing(invite.id) ? 'true' : null">
+                  @if (confirmingInviteId() === invite.id) {
+                    <div class="cancel-confirmation" role="alertdialog" aria-label="Conferma annullamento invito">
+                      <p>Sei sicuro di voler annullare questo invito?</p>
+                      <div class="invite-actions">
+                        <button class="btn btn--danger btn--sm" type="button" [disabled]="isProcessing(invite.id)" (click)="cancelInvite(invite)">Conferma</button>
+                        <button class="btn btn--sm" type="button" [disabled]="isProcessing(invite.id)" (click)="dismissCancelConfirmation()">Annulla</button>
+                      </div>
+                    </div>
+                  } @else {
+                    <button class="btn btn--sm" type="button" [disabled]="isProcessing(invite.id)" (click)="requestCancel(invite.id)" [attr.aria-label]="'Annulla invito alla lega ' + (invite.leagueName || invite.leagueId)">Annulla</button>
+                  }
+                </div>
+              }
+            </article>
+          </li>
+        }
+      </ul>
+    }
+  </div>
 </div>

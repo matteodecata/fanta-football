@@ -53,6 +53,12 @@
             <p class="field__hint">Scegli prima un modulo per sapere quanti titolari servono per ruolo.</p>
           }
 
+          @if (matchdayClosed() && ratingsStatus() === 'loading') {
+            <p class="field__hint"><span class="spinner" aria-hidden="true"></span> Caricamento voti…</p>
+          } @else if (matchdayClosed() && ratingsStatus() === 'error') {
+            <p class="field__hint">Voti non disponibili al momento.</p>
+          }
+
           <!-- Il portiere è a selezione singola (radio, massimo 1 titolare); D/C/A restano checkbox libere fino al limite del modulo -->
           <fieldset class="fieldset">
             <legend>Portiere</legend>
@@ -61,6 +67,14 @@
                 <label class="radio">
                   <input type="radio" name="lineup-goalkeeper" [checked]="starterTeamPlayerIds().has(player.id)" (change)="toggleStarter(player)" />
                   <span>{{ player.name }} {{ player.surname }}</span>
+                  @if (matchdayClosed()) {
+                    <span class="badge" [class.badge--accent]="starterTeamPlayerIds().has(player.id)">
+                      {{ starterTeamPlayerIds().has(player.id) ? 'Titolare' : 'Panchina' }}
+                    </span>
+                    @if (ratingLabelFor(player.id); as ratingLabel) {
+                      <span class="badge badge--info">Voto {{ ratingLabel }}</span>
+                    }
+                  }
                 </label>
               } @empty {
                 <p class="empty-state">Nessun portiere disponibile in rosa.</p>
@@ -80,6 +94,14 @@
                   <label class="checkbox">
                     <input type="checkbox" [checked]="starterTeamPlayerIds().has(player.id)" (change)="toggleStarter(player)" />
                     <span>{{ player.name }} {{ player.surname }}</span>
+                    @if (matchdayClosed()) {
+                      <span class="badge" [class.badge--accent]="starterTeamPlayerIds().has(player.id)">
+                        {{ starterTeamPlayerIds().has(player.id) ? 'Titolare' : 'Panchina' }}
+                      </span>
+                      @if (ratingLabelFor(player.id); as ratingLabel) {
+                        <span class="badge badge--info">Voto {{ ratingLabel }}</span>
+                      }
+                    }
                   </label>
                 } @empty {
                   <p class="empty-state">Nessun giocatore disponibile per questo ruolo.</p>

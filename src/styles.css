@@ -210,6 +210,38 @@
     gap: var(--sp-6);
   }
 
+  .app-page-background {
+    position: relative;
+    isolation: isolate;
+    min-height: calc(100dvh - 4.25rem);
+    background-color: var(--c-bg);
+  }
+
+  .app-page-background::before {
+    position: absolute;
+    inset: -1rem;
+    z-index: -2;
+    content: '';
+    background: url('/messiFantaFootball.jpg') center / cover no-repeat;
+    filter: blur(6px);
+    opacity: 0.36;
+    transform: scale(1.03);
+  }
+
+  .app-page-background::after {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    content: '';
+    background: rgb(7 44 46 / 0.42);
+    pointer-events: none;
+  }
+
+  .app-page-background > * {
+    position: relative;
+    z-index: 1;
+  }
+
   .page-header { display: grid; gap: var(--sp-2); }
   .page-header p { color: var(--c-text-muted); }
 
