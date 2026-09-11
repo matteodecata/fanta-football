@@ -107,11 +107,6 @@ export class Lineup {
     () => this.lineupTypes().find((type) => type.id === this.selectedLineupTypeId()) ?? null,
   );
 
-  protected readonly starterLimitByRole = computed((): Record<PlayerRole, number> => {
-    const type = this.selectedLineupType();
-    return { P: 1, D: type?.defenderNum ?? 0, C: type?.midfielderNum ?? 0, A: type?.forwardNum ?? 0 };
-  });
-
   // Conteggio titolari selezionati per ruolo, portiere incluso: da
   // confrontare con defenderNum/midfielderNum/forwardNum del modulo scelto
   // (il portiere non dipende dal modulo, ne serve sempre esattamente 1).
@@ -126,7 +121,7 @@ export class Lineup {
 
   // Il bonus "difensiva" lo assegna comunque il backend, ma è comodo
   // mostrarlo subito in UI: è true solo con 5 difensori titolari.
-  protected readonly defensive = computed(() => this.starterCountByRole().D === 5);
+  protected readonly defensive = computed(() => {return this.starterCountByRole().D > 3 && this.starterCountByRole().P ===1});
 
   // Rispecchia esattamente validateFormation lato backend: 1 portiere
   // titolare + i conteggi D/C/A del modulo scelto (che sommati fanno sempre
@@ -217,14 +212,8 @@ export class Lineup {
   // comporta diversamente: al massimo un titolare alla volta (come una
   // radio), mentre D/C/A restano una selezione libera fino al limite del
   // modulo scelto.
-  protected isStarterDisabled(player: TeamPlayerResponse): boolean {
-    if (this.matchdayClosed()) return true;
-    if (this.starterTeamPlayerIds().has(player.id) || player.playerRole === 'P') return false;
-    return this.starterCountByRole()[player.playerRole] >= this.starterLimitByRole()[player.playerRole];
-  }
-
   protected toggleStarter(player: TeamPlayerResponse): void {
-    if (this.isStarterDisabled(player)) return;
+    if (this.matchdayClosed()) return;
     this.benchTeamPlayerIds.update((current) => {
       const next = new Set(current);
       next.delete(player.id);
