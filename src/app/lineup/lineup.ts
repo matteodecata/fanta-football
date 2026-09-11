@@ -7,7 +7,7 @@ import { TeamsApiService } from '../teams/teams-api.service';
 import { TeamPlayerResponse } from '../team-detail/team-detail.models';
 import { PlayerRole } from '../players/players-response';
 import { LineupService } from './lineup.service';
-import { LineupPlayerRequest, LineupRequest, LineupResponse, LineupTypeResponse } from './lineup.models';
+import { LineupPlayerRequest, LineupRequest, LineupResponse, LineupTypeResponse, PlayerRatingResponse } from './lineup.models';
 
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 const VALID_ROLES = new Set<PlayerRole>(['P', 'D', 'C', 'A']);
@@ -84,6 +84,18 @@ export class Lineup {
   protected readonly saveStatus = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
   protected readonly errorMessage = signal('');
 
+  // Voti fantacalcio per giocatore: visibili solo a giornata chiusa (prima
+  // non hanno senso, sono tutti null). Caricati separatamente dalla
+  // formazione perché l'endpoint restituisce tutta la rosa attiva, non solo
+  // chi era stato schierato.
+  protected readonly ratings = signal<PlayerRatingResponse[]>([]);
+  protected readonly ratingsStatus = signal<LoadStatus>('idle');
+  protected readonly ratingByTeamPlayerId = computed(() => {
+    const map = new Map<number, number | null>();
+    for (const rating of this.ratings()) map.set(rating.teamPlayerId, rating.fantaRating);
+    return map;
+  });
+
   protected readonly selectedLineupType = computed(
     () => this.lineupTypes().find((type) => type.id === this.selectedLineupTypeId()) ?? null,
   );
@@ -122,6 +134,7 @@ export class Lineup {
   constructor() {
     this.loadLineupTypes();
     effect(() => this.loadExistingLineup(this.teamId(), this.leagueMatchId()));
+    effect(() => this.loadRatings(this.teamId(), this.leagueMatchId(), this.matchdayClosed()));
   }
 
   private loadLineupTypes(): void {
@@ -148,6 +161,37 @@ export class Lineup {
       },
       error: () => this.lineupStatus.set('error'),
     });
+  }
+
+  private loadRatings(teamId: number, leagueMatchId: number, matchdayClosed: boolean): void {
+    if (!matchdayClosed) {
+      // A giornata aperta i voti non hanno senso (sarebbero tutti null):
+      // si resetta invece di mostrare uno stato residuo di una partita
+      // precedente se l'utente naviga da un match chiuso a uno aperto.
+      this.ratings.set([]);
+      this.ratingsStatus.set('idle');
+      return;
+    }
+    if (!Number.isInteger(teamId) || !Number.isInteger(leagueMatchId)) return;
+
+    this.ratingsStatus.set('loading');
+    this.lineupApi.getPlayerRatings(teamId, leagueMatchId).subscribe({
+      next: (ratings) => {
+        this.ratings.set(ratings);
+        this.ratingsStatus.set('ready');
+      },
+      error: () => this.ratingsStatus.set('error'),
+    });
+  }
+
+  // null quando non c'è ancora nulla da mostrare (voti non in stato 'ready',
+  // o giocatore assente dalla risposta): distinto da "N/D", che è il voto
+  // dichiaratamente nullo (giocatore reale non sceso in campo).
+  protected ratingLabelFor(teamPlayerId: number): string | null {
+    if (this.ratingsStatus() !== 'ready') return null;
+    const rating = this.ratingByTeamPlayerId().get(teamPlayerId);
+    if (rating === undefined) return null;
+    return rating === null ? 'N/D' : rating.toFixed(1);
   }
 
   protected selectLineupType(lineupTypeId: number): void {
