@@ -134,7 +134,7 @@
         </fieldset>
 
         @if (defensive()) {
-          <p><span class="badge badge--accent">Formazione difensiva · 5 difensori titolari</span></p>
+          <p><span class="badge badge--accent">Formazione difensiva · {{ starterCountByRole().D }} difensori titolari</span></p>
         }
 
         @if (errorMessage()) {

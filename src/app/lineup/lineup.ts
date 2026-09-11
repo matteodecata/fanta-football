@@ -123,6 +123,23 @@ export class Lineup {
   // mostrarlo subito in UI: è true solo con 5 difensori titolari.
   protected readonly defensive = computed(() => {return this.starterCountByRole().D > 3 && this.starterCountByRole().P ===1});
 
+  protected isStarterDisabled(player: TeamPlayerResponse): boolean {
+  if (this.matchdayClosed()) return true;
+  if (this.starterTeamPlayerIds().has(player.id)) return false;
+  if (player.playerRole === 'P') return false;
+
+  const type = this.selectedLineupType();
+  if (!type) return true;
+
+  const limits = {
+    D: type.defenderNum,
+    C: type.midfielderNum,
+    A: type.forwardNum,
+  };
+
+  return this.starterCountByRole()[player.playerRole] >= limits[player.playerRole];
+}
+
   // Rispecchia esattamente validateFormation lato backend: 1 portiere
   // titolare + i conteggi D/C/A del modulo scelto (che sommati fanno sempre
   // 10, quindi 11 titolari totali).
@@ -170,6 +187,8 @@ export class Lineup {
       error: () => this.lineupStatus.set('error'),
     });
   }
+  
+  
 
   private loadRatings(teamId: number, leagueMatchId: number, matchdayClosed: boolean): void {
     if (!matchdayClosed) {
