@@ -40,7 +40,7 @@
         </fieldset>
 
         <fieldset class="fieldset" [disabled]="matchdayClosed()">
-          <legend>Titolari e panchina</legend>
+          <legend>Titolari</legend>
 
           @if (selectedLineupType(); as type) {
             <p class="field__hint" aria-live="polite">
@@ -69,7 +69,7 @@
                   <span>{{ player.name }} {{ player.surname }}</span>
                   @if (matchdayClosed()) {
                     <span class="badge" [class.badge--accent]="starterTeamPlayerIds().has(player.id)">
-                      {{ starterTeamPlayerIds().has(player.id) ? 'Titolare' : 'Panchina' }}
+                      {{ starterTeamPlayerIds().has(player.id) ? 'Titolare' : (benchTeamPlayerIds().has(player.id) ? 'Panchina' : 'Fuori formazione') }}
                     </span>
                     @if (ratingLabelFor(player.id); as ratingLabel) {
                       <span class="badge badge--info">Voto {{ ratingLabel }}</span>
@@ -92,11 +92,11 @@
               <div class="lineup__players">
                 @for (player of group.players; track player.id) {
                   <label class="checkbox">
-                    <input type="checkbox" [checked]="starterTeamPlayerIds().has(player.id)" (change)="toggleStarter(player)" />
+                    <input type="checkbox" [checked]="starterTeamPlayerIds().has(player.id)" [disabled]="isStarterDisabled(player)" (change)="toggleStarter(player)" />
                     <span>{{ player.name }} {{ player.surname }}</span>
                     @if (matchdayClosed()) {
                       <span class="badge" [class.badge--accent]="starterTeamPlayerIds().has(player.id)">
-                        {{ starterTeamPlayerIds().has(player.id) ? 'Titolare' : 'Panchina' }}
+                        {{ starterTeamPlayerIds().has(player.id) ? 'Titolare' : (benchTeamPlayerIds().has(player.id) ? 'Panchina' : 'Fuori formazione') }}
                       </span>
                       @if (ratingLabelFor(player.id); as ratingLabel) {
                         <span class="badge badge--info">Voto {{ ratingLabel }}</span>
@@ -109,6 +109,28 @@
               </div>
             </fieldset>
           }
+        </fieldset>
+
+        <fieldset class="fieldset" [disabled]="matchdayClosed()">
+          <legend>Panchina</legend>
+          <p class="field__hint" id="bench-hint">
+            Scegli le riserve tra i giocatori non titolari, portieri inclusi.
+            I giocatori non selezionati restano fuori formazione.
+          </p>
+          <p class="field__hint" role="status">Panchinari selezionati: {{ benchCount() }}</p>
+          <div class="lineup__players" aria-describedby="bench-hint">
+            @for (player of benchCandidates(); track player.id) {
+              <label class="checkbox">
+                <input type="checkbox" [checked]="benchTeamPlayerIds().has(player.id)" (change)="toggleBench(player)" />
+                <span>{{ player.name }} {{ player.surname }} ({{ player.playerRole }})</span>
+                @if (matchdayClosed() && benchTeamPlayerIds().has(player.id)) {
+                  <span class="badge">Panchina</span>
+                }
+              </label>
+            } @empty {
+              <p class="empty-state">Nessun altro giocatore disponibile in rosa.</p>
+            }
+          </div>
         </fieldset>
 
         @if (defensive()) {

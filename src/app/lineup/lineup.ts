@@ -80,6 +80,13 @@ export class Lineup {
 
   protected readonly selectedLineupTypeId = signal<number | null>(null);
   protected readonly starterTeamPlayerIds = signal<Set<number>>(new Set());
+  protected readonly benchTeamPlayerIds = signal<Set<number>>(new Set());
+  protected readonly benchCandidates = computed(() =>
+    this.selectableRoster().filter((player) => !this.starterTeamPlayerIds().has(player.id)),
+  );
+  protected readonly benchCount = computed(() =>
+    this.benchCandidates().filter((player) => this.benchTeamPlayerIds().has(player.id)).length,
+  );
 
   protected readonly saveStatus = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
   protected readonly errorMessage = signal('');
@@ -99,6 +106,11 @@ export class Lineup {
   protected readonly selectedLineupType = computed(
     () => this.lineupTypes().find((type) => type.id === this.selectedLineupTypeId()) ?? null,
   );
+
+  protected readonly starterLimitByRole = computed((): Record<PlayerRole, number> => {
+    const type = this.selectedLineupType();
+    return { P: 1, D: type?.defenderNum ?? 0, C: type?.midfielderNum ?? 0, A: type?.forwardNum ?? 0 };
+  });
 
   // Conteggio titolari selezionati per ruolo, portiere incluso: da
   // confrontare con defenderNum/midfielderNum/forwardNum del modulo scelto
@@ -157,6 +169,7 @@ export class Lineup {
         this.existingLineup.set(lineup);
         this.selectedLineupTypeId.set(lineup?.lineupTypeId ?? null);
         this.starterTeamPlayerIds.set(new Set(lineup?.players.filter((player) => player.starter).map((player) => player.teamPlayerId) ?? []));
+        this.benchTeamPlayerIds.set(new Set(lineup?.players.filter((player) => !player.starter).map((player) => player.teamPlayerId) ?? []));
         this.lineupStatus.set('ready');
       },
       error: () => this.lineupStatus.set('error'),
@@ -204,8 +217,19 @@ export class Lineup {
   // comporta diversamente: al massimo un titolare alla volta (come una
   // radio), mentre D/C/A restano una selezione libera fino al limite del
   // modulo scelto.
+  protected isStarterDisabled(player: TeamPlayerResponse): boolean {
+    if (this.matchdayClosed()) return true;
+    if (this.starterTeamPlayerIds().has(player.id) || player.playerRole === 'P') return false;
+    return this.starterCountByRole()[player.playerRole] >= this.starterLimitByRole()[player.playerRole];
+  }
+
   protected toggleStarter(player: TeamPlayerResponse): void {
-    if (this.matchdayClosed()) return;
+    if (this.isStarterDisabled(player)) return;
+    this.benchTeamPlayerIds.update((current) => {
+      const next = new Set(current);
+      next.delete(player.id);
+      return next;
+    });
     this.starterTeamPlayerIds.update((current) => {
       const next = new Set(current);
       if (next.has(player.id)) {
@@ -221,12 +245,25 @@ export class Lineup {
     this.saveStatus.set('idle');
   }
 
+  protected toggleBench(player: TeamPlayerResponse): void {
+    if (this.matchdayClosed() || this.starterTeamPlayerIds().has(player.id)) return;
+    this.benchTeamPlayerIds.update((current) => {
+      const next = new Set(current);
+      if (next.has(player.id)) next.delete(player.id);
+      else next.add(player.id);
+      return next;
+    });
+    this.saveStatus.set('idle');
+  }
+
   protected submit(): void {
     const lineupTypeId = this.selectedLineupTypeId();
     if (lineupTypeId === null || this.matchdayClosed() || this.saveStatus() === 'saving' || !this.isStarterCountValid()) return;
 
     const starters = this.starterTeamPlayerIds();
-    const players: LineupPlayerRequest[] = this.selectableRoster().map((player) => ({
+    const players: LineupPlayerRequest[] = this.selectableRoster()
+      .filter((player) => starters.has(player.id) || this.benchTeamPlayerIds().has(player.id))
+      .map((player) => ({
       teamPlayerId: player.id,
       starter: starters.has(player.id),
     }));
