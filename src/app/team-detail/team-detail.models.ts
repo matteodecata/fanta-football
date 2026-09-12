@@ -27,6 +27,7 @@ export interface TeamPlayerResponse {
   purchaseDate: string;
   transferDate: string | null;
   purchasePrice: number;
+  fantaAverage: number | null;
 }
 
 export interface RenameTeamRequest {

@@ -10,7 +10,7 @@
 } @else if (roster().length === 0) {
   <p class="empty-state">Non ci sono calciatori attivi in questa rosa.</p>
 } @else {
-  <p id="fantamedia-help">La fantamedia non è al momento disponibile.</p>
+  <p id="fantamedia-help">La fantamedia include bonus e malus dei voti validi nelle giornate chiuse. — indica che non ci sono risultati validi.</p>
   <div class="table-wrap" tabindex="0" role="region" aria-label="Rosa della squadra">
     <table class="table" aria-describedby="fantamedia-help">
       <caption>Calciatori attualmente in rosa</caption>
@@ -23,7 +23,7 @@
           <tr>
             <th scope="row">{{ player.name }} {{ player.surname }}</th>
             <td>{{ player.roleLabel }}</td><td>{{ player.realTeamName }}</td>
-            <td>Non disponibile</td><td>{{ player.purchasePrice }}</td>
+            <td>{{ player.fantaAverage === null ? '—' : (player.fantaAverage | number:'1.2-2') }}</td><td>{{ player.purchasePrice }}</td>
           </tr>
         }
       </tbody>

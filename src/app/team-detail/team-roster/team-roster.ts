@@ -1,5 +1,6 @@
 ﻿import { Component, computed, inject, input } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { DecimalPipe } from '@angular/common';
 import { TeamsApiService } from '../../teams/teams-api.service';
 import { PlayerRole } from '../../players/players.model';
 
@@ -7,6 +8,7 @@ const ROLE_LABELS: Record<PlayerRole, string> = { P: 'Portiere', D: 'Difensore',
 
 @Component({
   selector: 'app-team-roster',
+  imports: [DecimalPipe],
   templateUrl: './team-roster.html',
   styleUrl: './team-roster.css',
 })
