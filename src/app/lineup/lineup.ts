@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { extractApiError } from '../core/http/api-error';
 import { TeamsApiService } from '../teams/teams-api.service';
 import { TeamPlayerResponse } from '../team-detail/team-detail.models';
@@ -13,7 +13,7 @@ type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 const VALID_ROLES = new Set<PlayerRole>(['P', 'D', 'C', 'A']);
 
 @Component({
-  imports: [],
+  imports: [RouterLink],
   selector: 'app-lineup',
   styleUrl: './lineup.css',
   templateUrl: './lineup.html',
@@ -27,6 +27,12 @@ export class Lineup {
   private readonly query = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   protected readonly teamId = computed(() => Number(this.params().get('teamId')));
   protected readonly leagueMatchId = computed(() => Number(this.params().get('leagueMatchId')));
+  protected readonly calendarReturn = computed(() => {
+    const leagueId = Number(this.query().get('leagueId'));
+    const round = Number(this.query().get('round'));
+    if (!Number.isSafeInteger(leagueId) || leagueId <= 0 || !Number.isSafeInteger(round) || round <= 0) return null;
+    return { leagueId, round };
+  });
   // Il Calendario conosce già matchdayClosed per ogni partita (sezione 14 di
   // PROJECT_CONTEXT.md): arriva qui come query param nel link verso questa
   // pagina, non serve rifare una chiamata solo per leggere questo flag.

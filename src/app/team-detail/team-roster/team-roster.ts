@@ -1,14 +1,12 @@
 ﻿import { Component, computed, inject, input } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TeamsApiService } from '../../teams/teams-api.service';
-import { PlayerRelease } from '../player-release/player-release';
 import { PlayerRole } from '../../players/players.model';
 
 const ROLE_LABELS: Record<PlayerRole, string> = { P: 'Portiere', D: 'Difensore', C: 'Centrocampista', A: 'Attaccante' };
 
 @Component({
   selector: 'app-team-roster',
-  imports: [PlayerRelease],
   templateUrl: './team-roster.html',
   styleUrl: './team-roster.css',
 })

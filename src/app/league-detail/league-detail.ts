@@ -21,7 +21,11 @@ export class LeagueDetail {
     { id: 'members', label: 'Partecipanti' },
     { id: 'trades', label: 'Scambi' },
   ] as const;
-  protected readonly activeSection = signal<string>('standings');
+  private readonly route = inject(ActivatedRoute);
+  protected readonly activeSection = signal<string>(
+    this.route.snapshot.queryParamMap.get('section') === 'calendar' ? 'calendar' : 'standings',
+  );
+  protected readonly calendarRound = Number(this.route.snapshot.queryParamMap.get('round'));
 
   protected navigateTabs(event: KeyboardEvent, index: number): void {
     let next: number;
@@ -35,7 +39,6 @@ export class LeagueDetail {
     const button = event.currentTarget as HTMLButtonElement;
     button.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
   }
-  private readonly route = inject(ActivatedRoute);
   private readonly session = inject(Session);
   protected readonly connectedUsername = this.session.username;
   protected readonly inviteFormVisible = signal(false);

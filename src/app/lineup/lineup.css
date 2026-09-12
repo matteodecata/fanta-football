@@ -11,6 +11,26 @@
   color: var(--c-text-muted);
 }
 
+.lineup__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.lineup__header-row .card__title { margin: 0; }
+
+.lineup__back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  min-height: 2.75rem;
+  margin-left: auto;
+  text-align: right;
+  font-size: var(--fs-sm);
+}
+
 .lineup__players {
   display: grid;
   gap: var(--sp-2);

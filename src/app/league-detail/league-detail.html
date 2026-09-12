@@ -61,7 +61,7 @@
       </section>
       <section id="panel-calendar" role="tabpanel" tabindex="0" aria-labelledby="tab-calendar" [hidden]="activeSection() !== 'calendar'">
         <!-- myTeamId permette al Calendario di riconoscere le proprie partite e mostrarci il pulsante "Formazione" -->
-        <app-calendar [leagueId]="leagueId" [isAdmin]="isAdmin()" [myTeamId]="myTeamId()" />
+        <app-calendar [leagueId]="leagueId" [isAdmin]="isAdmin()" [myTeamId]="myTeamId()" [initialRound]="calendarRound" />
       </section>
         <section id="panel-members" role="tabpanel" tabindex="0" class="card members-panel" aria-labelledby="tab-members" [hidden]="activeSection() !== 'members'">
           <h2 id="members-title" class="section-title">Partecipanti</h2>

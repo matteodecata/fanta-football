@@ -17,7 +17,6 @@
       <thead><tr>
         <th scope="col">Calciatore</th><th scope="col">Ruolo</th><th scope="col">Squadra reale</th>
         <th scope="col">Fantamedia</th><th scope="col">Crediti pagati</th>
-        @if (canManage()) { <th scope="col">Azioni</th> }
       </tr></thead>
       <tbody>
         @for (player of roster(); track player.id) {
@@ -25,9 +24,6 @@
             <th scope="row">{{ player.name }} {{ player.surname }}</th>
             <td>{{ player.roleLabel }}</td><td>{{ player.realTeamName }}</td>
             <td>Non disponibile</td><td>{{ player.purchasePrice }}</td>
-            @if (canManage()) {
-              <td><app-player-release [teamId]="teamId()" [playerId]="player.playerId" (released)="refreshRoster()" /></td>
-            }
           </tr>
         }
       </tbody>

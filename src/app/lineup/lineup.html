@@ -1,6 +1,13 @@
 <main class="page-shell">
   <section class="card" aria-labelledby="lineup-title">
-    <p class="card__title">Formazione</p>
+    <div class="lineup__header-row">
+      <p class="card__title">Formazione</p>
+      @if (calendarReturn(); as calendar) {
+        <a class="lineup__back-link" [routerLink]="['/leagues', calendar.leagueId]" [queryParams]="{ section: 'calendar', round: calendar.round }">
+          <span aria-hidden="true">←</span> Torna alla giornata
+        </a>
+      }
+    </div>
     <h1 id="lineup-title" data-route-heading tabindex="-1">Schiera la formazione</h1>
 
     @if (matchdayClosed()) {

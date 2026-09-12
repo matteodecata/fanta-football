@@ -14,6 +14,7 @@ type CalendarStatus = 'idle' | 'loading' | 'ready' | 'not-generated' | 'already-
 export class CalendarComponent {
   readonly leagueId = input.required<number>();
   readonly isAdmin = input(false);
+  readonly initialRound = input<number | null>(null);
   // Il proprio teamId in questa lega (risolto da league-detail.ts confrontando
   // lo username connesso con la classifica): serve solo a capire su quali
   // partite mostrare il pulsante "Formazione", null se non ancora disponibile.
@@ -59,8 +60,8 @@ export class CalendarComponent {
 
   readonly canGenerate = computed(() => this.isAdmin() && this.status() === 'not-generated');
   readonly selectedRoundIndex = linkedSignal(() => {
-    this.groupedMatches();
-    return 0;
+    const index = this.groupedMatches().findIndex((group) => group.roundNumber === this.initialRound());
+    return index >= 0 ? index : 0;
   });
   readonly visibleGroups = computed(() => {
     const group = this.groupedMatches()[this.selectedRoundIndex()];
@@ -70,6 +71,13 @@ export class CalendarComponent {
   changeRound(direction: number): void {
     const next = this.selectedRoundIndex() + direction;
     if (next >= 0 && next < this.groupedMatches().length) this.selectedRoundIndex.set(next);
+  }
+
+  selectRound(value: string): void {
+    const index = Number(value);
+    if (Number.isInteger(index) && index >= 0 && index < this.groupedMatches().length) {
+      this.selectedRoundIndex.set(index);
+    }
   }
 
   // true se la nostra squadra gioca questa partita (come home o away): usato

@@ -27,7 +27,15 @@
       @if (groupedMatches().length > 0) {
         <nav class="round-navigation" aria-label="Navigazione giornate">
           <button class="btn" type="button" (click)="changeRound(-1)" [disabled]="selectedRoundIndex() === 0">← Precedente</button>
-          <span>{{ selectedRoundIndex() + 1 }} di {{ groupedMatches().length }} giornate</span>
+          <label class="round-navigation__picker">
+            <span>Vai alla giornata</span>
+            <select class="select" #roundPicker [value]="selectedRoundIndex()" (change)="selectRound(roundPicker.value)">
+              @for (round of groupedMatches(); track round.roundNumber; let index = $index) {
+                <option [value]="index">Giornata {{ round.roundNumber }}</option>
+              }
+            </select>
+            <span>{{ selectedRoundIndex() + 1 }} di {{ groupedMatches().length }} giornate</span>
+          </label>
           <button class="btn" type="button" (click)="changeRound(1)" [disabled]="selectedRoundIndex() >= groupedMatches().length - 1">Successiva →</button>
         </nav>
       }
@@ -52,7 +60,18 @@
             @for (match of group.matches; track match.id) {
               <article class="match">
                 <div class="match__teams">
-                  <span>{{ match.homeTeamName }}</span>
+                  <div class="match__team">
+                    <span>{{ match.homeTeamName }}</span>
+                    @if (match.matchdayClosed) {
+                      <a class="btn btn--sm" [routerLink]="['/teams', match.homeTeamId, 'matches', match.id, 'lineup']" [queryParams]="{ closed: true, leagueId: leagueId(), round: group.roundNumber }" [attr.aria-label]="'Vedi formazione ' + match.homeTeamName">
+                        Vedi formazione
+                      </a>
+                    } @else if (myTeamId() !== null && match.homeTeamId === myTeamId()) {
+                      <a class="btn btn--sm" [routerLink]="['/teams', match.homeTeamId, 'matches', match.id, 'lineup']" [queryParams]="{ closed: false, leagueId: leagueId(), round: group.roundNumber }" [attr.aria-label]="'Schiera formazione ' + match.homeTeamName">
+                        Schiera formazione
+                      </a>
+                    }
+                  </div>
                 @if (match.matchdayClosed) {
                   <!--
                     TODO(studio): questo è un risultato minimo (fantagol +
@@ -72,11 +91,22 @@
                 } @else {
                   <strong aria-hidden="true">–</strong>
                 }
-                  <span>{{ match.awayTeamName }}</span>
+                  <div class="match__team">
+                    <span>{{ match.awayTeamName }}</span>
+                    @if (match.matchdayClosed) {
+                      <a class="btn btn--sm" [routerLink]="['/teams', match.awayTeamId, 'matches', match.id, 'lineup']" [queryParams]="{ closed: true, leagueId: leagueId(), round: group.roundNumber }" [attr.aria-label]="'Vedi formazione ' + match.awayTeamName">
+                        Vedi formazione
+                      </a>
+                    } @else if (myTeamId() !== null && match.awayTeamId === myTeamId()) {
+                      <a class="btn btn--sm" [routerLink]="['/teams', match.awayTeamId, 'matches', match.id, 'lineup']" [queryParams]="{ closed: false, leagueId: leagueId(), round: group.roundNumber }" [attr.aria-label]="'Schiera formazione ' + match.awayTeamName">
+                        Schiera formazione
+                      </a>
+                    }
+                  </div>
                 </div>
                 <div class="match__aside">
                 @if (!match.matchdayClosed) {
-                  <span class="match__status">Risultato disponibile alla chiusura della giornata</span>
+                  <span class="match__status">Il risultato sarà disponibile alla chiusura della giornata</span>
                 }
                 @if (match.status) { <span class="match__status">{{ match.status }}</span> }
                 @if (match.lineupId !== undefined) {
@@ -91,30 +121,6 @@
                       {{ scoreStateFor(match) === 'loading' ? 'Caricamento…' : 'Leggi punteggio' }}
                     </button>
                   }
-                }
-                @if (match.matchdayClosed) {
-                  <!--
-                    A giornata chiusa chiunque può consultare la formazione
-                    schierata da entrambe le squadre (non solo la propria):
-                    la route /teams/{teamId}/matches/{leagueMatchId}/lineup
-                    accetta qualunque teamId, non solo myTeamId. closed=true
-                    fa aprire la pagina in sola lettura (vedi lineup.ts).
-                  -->
-                  <a class="btn btn--sm" [routerLink]="['/teams', match.homeTeamId, 'matches', match.id, 'lineup']" [queryParams]="{ closed: true }">
-                    Formazione {{ match.homeTeamName }}
-                  </a>
-                  <a class="btn btn--sm" [routerLink]="['/teams', match.awayTeamId, 'matches', match.id, 'lineup']" [queryParams]="{ closed: true }">
-                    Formazione {{ match.awayTeamName }}
-                  </a>
-                } @else if (isMyMatch(match)) {
-                  <!-- Prima della chiusura solo la propria squadra può schierare/modificare -->
-                  <a
-                    class="btn btn--sm"
-                    [routerLink]="['/teams', myTeamId(), 'matches', match.id, 'lineup']"
-                    [queryParams]="{ closed: false }"
-                  >
-                    Schiera formazione
-                  </a>
                 }
                 </div>
               </article>
