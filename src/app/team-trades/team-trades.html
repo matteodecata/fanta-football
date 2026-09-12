@@ -1,4 +1,7 @@
 <div class="trades-page">
+    <video class="trades-background" autoplay muted [muted]="true" loop playsinline preload="auto" aria-hidden="true" tabindex="-1">
+        <source src="/RickeRob.mp4" type="video/mp4">
+    </video>
     <header class="trades-header">
         <h1>Scambi</h1>
         @if (leagueId !== null && leagueName(); as leagueNameValue) {
