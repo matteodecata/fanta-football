@@ -22,9 +22,10 @@ export class LeagueDetail {
     { id: 'trades', label: 'Scambi' },
   ] as const;
   private readonly route = inject(ActivatedRoute);
-  protected readonly activeSection = signal<string>(
-    this.route.snapshot.queryParamMap.get('section') === 'calendar' ? 'calendar' : 'standings',
-  );
+  protected readonly activeSection = signal<string>((() => {
+    const section = this.route.snapshot.queryParamMap.get('section');
+    return this.sections.some(s => s.id === section) ? section! : 'standings';
+  })());
   protected readonly calendarRound = Number(this.route.snapshot.queryParamMap.get('round'));
 
   protected navigateTabs(event: KeyboardEvent, index: number): void {

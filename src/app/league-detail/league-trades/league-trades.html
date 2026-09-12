@@ -80,7 +80,7 @@
                     <form (submit)="submitProposal($event)" class="proposal-form" >
                         <label class="trade-field">
                             <span>Squadra ricevente</span>
-                            <select id="receiving-team" [formField]="proposalForm.receivingTeamId" (change)="onReceivingTeamChange($event)">
+                            <select id="receiving-team" [value]="newProposal().receivingTeamId" (change)="onReceivingTeamChange($event)">
                                 <option value="0">Seleziona una squadra</option>
                                 @for(team of receivingTeams(); track team.teamId){
                                     <option [value]="team.teamId">
@@ -94,7 +94,7 @@
                             <select id="offered-player" [value]="newProposal().offeredPlayerId" [disabled]="!hasReceivingTeam() || submitting()" (change)="onPlayerChange('offeredPlayerId', $event)">
                                 <option value="0">Seleziona un calciatore</option>
                                 @for(player of offeredPlayers(); track player.playerId){
-                                    <option [value]="player.playerId">
+                                    <option [value]="player.id">
                                         {{ player.name }} {{ player.surname }}
                                     </option>
                                 }
@@ -105,7 +105,7 @@
                             <select id="requested-player" [value]="newProposal().requestedPlayerId" [disabled]="!hasReceivingTeam() || submitting()" (change)="onPlayerChange('requestedPlayerId', $event)">
                                 <option value="0">Seleziona un calciatore</option>
                                 @for(player of availablePlayers(); track player.playerId){
-                                    <option [value]="player.playerId">
+                                    <option [value]="player.id">
                                         {{ player.name }} {{ player.surname }}
                                     </option>
                                 }

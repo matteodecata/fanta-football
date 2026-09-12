@@ -11,12 +11,14 @@ export interface TradeDto {
   amount: number;
   status: TradeStatus;
   proposalDate: string;
+  leagueId: number;
+  leagueName: string;
 }
 
 export interface CreateTradeDto {
-  receivingTeamId: string;
-  requestedPlayerId: string;
-  offeredPlayerId: string;
+  receivingTeamId: number;
+  requestedPlayerId: number;
+  offeredPlayerId: number;
   amount: number;
 }
 

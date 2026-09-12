@@ -47,11 +47,11 @@ export class LeagueTrades {
   protected readonly receivingTeams = computed(() => this.leagueTeamsResource.hasValue()
     ? this.leagueTeamsResource.value().filter(team => !this.ownedTeamIds().has(team.teamId)) : []);
   protected readonly newProposal = signal<CreateTradeDto>({
-    receivingTeamId: '0', requestedPlayerId: '0', offeredPlayerId: '0', amount: 0,
+    receivingTeamId: 0, requestedPlayerId: 0, offeredPlayerId: 0, amount: 0,
   });
   protected readonly proposalForm = form(this.newProposal);
   protected readonly hasReceivingTeam = computed(() => this.receivingTeams()
-    .some(team => team.teamId === Number(this.newProposal().receivingTeamId)));
+    .some(team => team.teamId === this.newProposal().receivingTeamId));
   protected readonly offeredPlayersResource = httpResource<TeamPlayerResponse[]>(
     () => this.currentTeamId() ? '/api/teams/' + this.currentTeamId() + '/players' : undefined,
     { defaultValue: [] },
@@ -72,19 +72,19 @@ export class LeagueTrades {
     const proposal = this.newProposal();
     return !this.submitting() && this.hasReceivingTeam()
       && !this.offeredPlayersResource.isLoading() && !this.availablePlayersResource.isLoading()
-      && this.offeredPlayers().some(player => player.playerId === Number(proposal.offeredPlayerId))
-      && this.availablePlayers().some(player => player.playerId === Number(proposal.requestedPlayerId))
+      && this.offeredPlayers().some(player => player.id === proposal.offeredPlayerId)
+      && this.availablePlayers().some(player => player.id === proposal.requestedPlayerId)
       && Number.isFinite(proposal.amount);
   });
 
   protected onReceivingTeamChange(event: Event): void {
-    const receivingTeamId = (event.target as HTMLSelectElement).value;
-    this.newProposal.update(proposal => ({ ...proposal, receivingTeamId, requestedPlayerId: '0' }));
+    const receivingTeamId = Number((event.target as HTMLSelectElement).value);
+    this.newProposal.update(proposal => ({ ...proposal, receivingTeamId, requestedPlayerId: 0 }));
     this.proposalMessage.set('');
   }
 
   protected onPlayerChange(field: 'offeredPlayerId' | 'requestedPlayerId', event: Event): void {
-    const playerId = (event.target as HTMLSelectElement).value;
+    const playerId = Number((event.target as HTMLSelectElement).value);
     this.newProposal.update(proposal => ({ ...proposal, [field]: playerId }));
   }
 
@@ -96,7 +96,7 @@ export class LeagueTrades {
     this.proposalMessage.set('');
     try {
       await firstValueFrom(this.tradeService.createTrade(this.newProposal()));
-      this.newProposal.set({ receivingTeamId: '0', requestedPlayerId: '0', offeredPlayerId: '0', amount: 0 });
+      this.newProposal.set({ receivingTeamId: 0, requestedPlayerId: 0, offeredPlayerId: 0, amount: 0 });
       this.proposalMessage.set('Proposta inviata.');
       this.tradesResource.reload();
     } catch {

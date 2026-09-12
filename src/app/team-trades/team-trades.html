@@ -70,8 +70,7 @@
                         <p>@if (proposal.amount > 0) { {{ proposal.proposingTeamName }} paga <strong>{{ proposal.amount }} crediti</strong> a {{ proposal.receivingTeamName }}. } @else if (proposal.amount < 0) { {{ proposal.receivingTeamName }} paga <strong>{{ -proposal.amount }} crediti</strong> a {{ proposal.proposingTeamName }}. } @else { <strong>Scambio alla pari</strong> }</p>
                         @if (activeTab() === 'received' && proposal.status === 'PENDING') {
                             <div class="trade-actions">
-                                <button class="btn btn--primary btn--sm" type="button">Accetta</button>
-                                <button class="btn btn--sm" type="button">Rifiuta</button>
+                                <a class="btn btn--primary btn--sm" [routerLink]="['/leagues', proposal.leagueId]" [queryParams]="{ section: 'trades' }">Vai alla lega</a>
                             </div>
                         }
                     </div>

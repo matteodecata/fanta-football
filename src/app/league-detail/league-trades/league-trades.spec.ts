@@ -8,7 +8,7 @@ describe('LeagueTrades', () => {
   const trade = (id: number, proposingTeamId: number, receivingTeamId: number, status: TradeDto['status'] = 'PENDING'): TradeDto => ({
     id, proposingTeamId, receivingTeamId, status, proposingTeamName: 'Proponente',
     receivingTeamName: 'Ricevente', offeredPlayerName: 'Offerto', requestedPlayerName: 'Richiesto',
-    amount: 5, proposalDate: '2026-09-09T10:00:00Z',
+    amount: 5, proposalDate: '2026-09-09T10:00:00Z', leagueId: 9, leagueName: 'Lega',
   });
 
   async function setup() {
@@ -27,7 +27,7 @@ describe('LeagueTrades', () => {
       TestBed.tick();
       http.expectOne('/api/leagues/9/teams').flush([{ teamId: 1, teamName: 'Mia' }, { teamId: 2, teamName: 'Altra' }]);
     });
-    http.expectOne('/api/teams/1/players').flush([{ playerId: 10, name: 'Mario', surname: 'Rossi' }]);
+    http.expectOne('/api/teams/1/players').flush([{ id: 10, playerId: 100, name: 'Mario', surname: 'Rossi' }]);
     await fixture.whenStable();
     fixture.detectChanges();
     return { fixture, http, element: fixture.nativeElement as HTMLElement };
@@ -58,7 +58,7 @@ describe('LeagueTrades', () => {
     select('receiving-team', '2');
     await vi.waitFor(() => {
       TestBed.tick();
-      http.expectOne('/api/teams/2/players').flush([{ playerId: 20, name: 'Luca', surname: 'Verdi' }]);
+      http.expectOne('/api/teams/2/players').flush([{ id: 20, playerId: 200, name: 'Luca', surname: 'Verdi' }]);
     });
     await fixture.whenStable();
     fixture.detectChanges();
@@ -70,7 +70,7 @@ describe('LeagueTrades', () => {
     fixture.detectChanges();
     const request = http.expectOne('/api/trades');
     expect(request.request.method).toBe('POST');
-    expect(request.request.body).toEqual({ receivingTeamId: '2', offeredPlayerId: '10', requestedPlayerId: '20', amount: 0 });
+    expect(request.request.body).toEqual({ receivingTeamId: 2, offeredPlayerId: 10, requestedPlayerId: 20, amount: 0 });
     expect(submit.disabled).toBe(true);
     request.flush(trade(15, 1, 2));
     await vi.waitFor(() => {

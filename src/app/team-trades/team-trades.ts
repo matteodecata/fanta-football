@@ -1,12 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { TeamTradesService } from './team-trades.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TeamStandingResponse, TradeDto } from './team-trades.models';
 
 
 type TradeTab = 'received' | 'sent' | 'history';
 
 @Component({
+  imports: [RouterLink],
   templateUrl: './team-trades.html',
   styleUrl: './team-trades.css',
 })
