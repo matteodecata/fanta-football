@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { extractApiError } from '../core/http/api-error';
 import { PlayerResponse } from '../players/players.model';
 import { AuctionService } from './auction.service';
-import { AvailablePlayersPageResponse } from './auction.model';
+import { rxResource } from '@angular/core/rxjs-interop';
 
 interface AuctionTeam {
   teamId: number;
@@ -49,27 +49,15 @@ export class Auction {
     defaultValue: [],
   });
 
-  protected readonly playersResource = httpResource<AvailablePlayersPageResponse>(() => {
-      if (!this.leagueId || Number.isNaN(this.leagueId)) {
-      return undefined;
-    }
-    return {
-      url: `/api/leagues/${this.leagueId}/players/available`,
-      method: 'GET',
-    };
-  }, {
-    defaultValue: {
-      content: [],
-      page: 0,
-      size: 20,
-      totalElements: 0,
-      totalPages: 0,
-      hasNext: false,
-    },
+  protected readonly playersResource = rxResource({
+    params: () => Number.isSafeInteger(this.leagueId) && this.leagueId > 0
+      ? this.leagueId : undefined,
+    stream: ({ params }) => this.auctionService.getAvailablePlayers(params),
+    defaultValue: [],
   });
 
   protected readonly availablePlayers = computed(() =>
-    this.playersResource.hasValue() ? this.playersResource.value().content : [],
+    this.playersResource.hasValue() ? this.playersResource.value() : [],
   );
 
   protected readonly isLoading = computed(

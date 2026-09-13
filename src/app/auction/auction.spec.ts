@@ -95,6 +95,53 @@ describe('Auction player search', () => {
     http.expectNone(playersUrl);
   });
 
+  it('carica tutte le pagine e permette di acquistare un difensore assente dalla prima', async () => {
+    http.expectOne(teamsUrl).flush(teams);
+    const defender: PlayerResponse = { ...players[0], id: 90, name: 'Marco', surname: 'Agori', role: 'D' };
+    http.expectOne(playersUrl).flush({
+      ...playersPage([{ ...players[0], role: 'P' }]),
+      size: 1, totalElements: 3, totalPages: 3, hasNext: true,
+    });
+    fixture.detectChanges();
+    expect(element<HTMLInputElement>('#auction-player').disabled).toBe(true);
+    http.expectOne(`${playersUrl}?page=1&size=1`).flush({
+      ...playersPage([defender]), page: 1, size: 1, totalElements: 3, totalPages: 3, hasNext: true,
+    });
+    http.expectOne(`${playersUrl}?page=2&size=1`).flush({
+      ...playersPage([{ ...players[1], role: 'A' }]), page: 2, size: 1, totalElements: 3, totalPages: 3,
+    });
+    await settle();
+    input('#auction-player', 'Marco Agori');
+    expect(element('.auction-suggestion').textContent).toContain('Marco Agori');
+    element<HTMLButtonElement>('.auction-suggestion').click();
+    const team = element<HTMLSelectElement>('#auction-team');
+    team.value = '12';
+    team.dispatchEvent(new Event('change', { bubbles: true }));
+    input('#auction-price', '20');
+    element<HTMLButtonElement>('.btn--primary').click();
+    const purchase = http.expectOne('/api/leagues/7/teams/12/players/90');
+    expect(purchase.request.body).toEqual({ purchasePrice: 20 });
+    purchase.flush(null);
+    await Promise.resolve();
+    fixture.detectChanges();
+    http.expectOne(teamsUrl).flush(teams);
+    http.expectOne(playersUrl).flush({ ...playersPage([players[0]]), size: 1, totalPages: 2, hasNext: true });
+    http.expectOne(`${playersUrl}?page=1&size=1`).flush({ ...playersPage([players[1]]), page: 1, size: 1, totalPages: 2 });
+    await settle();
+    input('#auction-player', 'Marco Agori');
+    expect(page.querySelector('.auction-suggestion')).toBeNull();
+  });
+
+  it('non presenta un elenco parziale se una pagina successiva fallisce', async () => {
+    http.expectOne(teamsUrl).flush(teams);
+    http.expectOne(playersUrl).flush({ ...playersPage(players), totalPages: 2, hasNext: true });
+    http.expectOne(`${playersUrl}?page=1&size=20`).flush('Errore', { status: 500, statusText: 'Server Error' });
+    await settle();
+    expect(element('.alert--danger').textContent).toContain('Non e stato possibile caricare');
+    expect(element<HTMLInputElement>('#auction-player').disabled).toBe(true);
+    expect(page.querySelector('.auction-search-status')).toBeNull();
+  });
+
   it('seleziona il player, ripristina il focus e annulla la scelta se cambia il testo', async () => {
     await load();
     preparePurchase();
