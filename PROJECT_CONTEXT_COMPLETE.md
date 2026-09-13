@@ -1,8 +1,10 @@
 # FantaFootball — contesto completo del progetto
 
-Documento consolidato al **12 settembre 2026**, ricavato dalla documentazione presente e dalla lettura del codice del frontend. Serve a riprendere il lavoro senza conoscere le conversazioni precedenti.
+Documento aggiornato al **13 settembre 2026**, dopo la rilettura della versione precedente e di tutti i **152 file presenti in `src`**, inclusi componenti, servizi, modelli, template, CSS e test. Serve a riprendere il lavoro senza conoscere le conversazioni precedenti.
 
-Questo è un nuovo documento: `PROJECT_CONTEXT.md`, `AUTH_FLOW_GUIDE.md`, `README.md`, `AGENTS.md` e `CLAUDE.md` restano invariati. Non sostituisce le istruzioni operative di `AGENTS.md` né il contratto del backend.
+L'aggiornamento include la successiva correzione frontend di **Asta lega**: caricamento di tutte le pagine dei disponibili, ricerca su tutti i ruoli, 8 test mirati superati e build production riuscita. Dettagli nelle sezioni 9, 17 e 18.
+
+Questa guida consolida il contesto corrente: `PROJECT_CONTEXT.md`, `AUTH_FLOW_GUIDE.md`, `README.md`, `AGENTS.md` e `CLAUDE.md` restano invariati. Non sostituisce le istruzioni operative di `AGENTS.md` né il contratto del backend. I riferimenti storici sono conservati dalla versione precedente; in questo aggiornamento sono stati ricontrollati i sorgenti, `AGENTS.md`, `package.json`, le configurazioni Angular/TypeScript e il proxy.
 
 La descrizione di una funzionalità come implementata significa che il relativo flusso è presente nel codice: non equivale a una certificazione end-to-end. Per questa ricognizione non sono stati interrogati Swagger o il backend e non è stato eseguito un nuovo audit AXE.
 
@@ -124,6 +126,8 @@ Le convenzioni richiedono TypeScript strict. Nella configurazione letta sono pre
 
 ## 4. Organizzazione del codice
 
+Inventario letto il 13 settembre: **84 file TypeScript** (inclusi 17 `.spec.ts`), **34 template HTML** e **34 CSS**, per un totale di **152 file**. Sono inclusi anche i CSS vuoti, `src/main.ts`, `src/index.html` e `src/styles.css`. Gli asset in `public` sono esterni a questo inventario.
+
 ### Come leggere i file di una funzionalità
 
 Una stessa pagina è normalmente distribuita in più file, ognuno con uno scopo preciso:
@@ -230,7 +234,15 @@ Il logout della shell elimina la sessione locale e apre il login con `replaceUrl
 
 Il login usa Signal Forms, validazione required, stato di invio, messaggi API, focus sul primo campo invalido e visibilità password. Dopo l'accesso va sempre alla dashboard: il parametro `returnUrl` prodotto dalla guard non viene ancora consumato.
 
-Registrazione, richiesta reset e completamento reset hanno componenti e metodi API dedicati, ma solo il form di registrazione fra questi tre è collegato al servizio. La registrazione riuscita apre il login e non autentica automaticamente. Le modifiche di username/password dall'account e la disabilitazione richiedono la password corrente e gestiscono il ritorno al login. Il contesto storico indica che queste operazioni invalidano i token sul backend.
+Registrazione, richiesta reset e completamento reset hanno componenti e metodi API dedicati, ma solo il form di registrazione fra questi tre è collegato al servizio. La registrazione riuscita apre il login e non autentica automaticamente. Le modifiche di username/password dall'account e la disabilitazione richiedono la password corrente e tentano il ritorno al login. Il contesto storico indica che queste operazioni invalidano i token sul backend; la pulizia della sessione frontend dopo il successo è però incompleta.
+
+### Account: validazioni e limite del logout
+
+Il nuovo username deve avere 3–20 caratteri e contenere lettere, numeri, trattini o underscore. Il cambio password richiede 12–64 caratteri, maiuscola, minuscola, numero, carattere speciale, conferma coincidente e una password diversa dall'attuale. La disattivazione richiede anche il campo di conferma `DISATTIVA`; il payload DELETE contiene soltanto `currentPassword`.
+
+Nessuno dei tre componenti account chiama `Session.logout()` dopo il successo. `ChangePassword` e `DisableAccount` rimuovono `fanta-football-token`, mentre la sessione reale è conservata in `ff.session`; `ChangeUsername` esegue soltanto la navigazione. Il signal della sessione resta quindi valorizzato: `guestGuard` può rimandare alla dashboard finché un successivo 401 non attiva il logout dell'interceptor. Questo limite non riguarda il pulsante Logout della shell, che usa correttamente `Session.logout()`.
+
+I componenti passano messaggi e, per il cambio username, il nuovo nome tramite lo stato di navigazione. `Login` non legge questi valori: non documentarli come messaggi visibili o precompilazione già implementata.
 
 ### Registrazione e recupero password: cosa avviene davvero
 
@@ -241,6 +253,8 @@ Registrazione, richiesta reset e completamento reset hanno componenti e metodi A
 | Reimpostazione | Richiede codice, password di almeno otto caratteri e conferma coincidente | Il submit scrive i dati nella console; **non cambia la password sul backend** |
 
 Il form di reimpostazione non precompila ancora il codice dal link ricevuto: parte con il campo token vuoto. I metodi `requestPasswordReset()` e `confirmPasswordReset()` del servizio sono già pronti, ma la loro sola presenza non rende operativi i due pulsanti dei form.
+
+La registrazione mostra una checklist reattiva per la password: almeno 12 caratteri, minuscola, maiuscola, cifra, carattere speciale e controllo contro una breve lista di password comuni. Non applica il limite massimo di 64 caratteri presente nel cambio password. Il componente aggiorna `submitting` ed `errorMessage`, ma il template non disabilita il submit durante la richiesta e non rende gli errori generali; viene mostrato il conflitto username riconosciuto con 409 e codice `USERNAME_TAKEN` o `username_taken`.
 
 La modifica password dall'account è un'altra funzione: riguarda un utente già autenticato che conosce la password corrente. Non va confusa con il recupero di una password dimenticata.
 
@@ -360,7 +374,7 @@ La rinomina, quando disponibile per il proprietario, modifica il nome tramite PA
 
 #### Interpretare correttamente una riga
 
-Supponiamo che la relazione di rosa abbia `id=501`, `playerId=80`, `purchasePrice=15` e `transferDate=null`. È il calciatore 80, attualmente posseduto dalla squadra e acquistato per 15 crediti. Il numero 501 identifica quella specifica relazione di possesso: sarà usato come `teamPlayerId` nella formazione. Non è il numero da usare per indicare il calciatore in un acquisto o in una proposta scambio.
+Supponiamo che la relazione di rosa abbia `id=501`, `playerId=80`, `purchasePrice=15` e `transferDate=null`. È il calciatore 80, attualmente posseduto dalla squadra e acquistato per 15 crediti. Il numero 501 identifica quella specifica relazione di possesso: sarà usato come `teamPlayerId` nella formazione. Per l'acquisto si usa l'ID del calciatore; il form scambi attuale usa invece l'ID della relazione, come descritto nella sezione 10.
 
 Riferimenti: [Teams](src/app/teams/teams.ts), [TeamDetail](src/app/team-detail/team-detail.ts), [TeamRoster](src/app/team-detail/team-roster/team-roster.html).
 
@@ -378,7 +392,9 @@ La rosa proviene da `/api/teams/:teamId/players` e mostra solo relazioni con `tr
 
 **La colonna “Azioni” e i pulsanti di svincolo sono stati rimossi dalla tabella per scelta dell'utente.** Il componente `player-release/` e la relativa logica restano nel repository, ma non sono più renderizzati dalla rosa. La rinomina della propria squadra resta una funzione separata.
 
-Il ruolo deriva dal campo **`playerRole`** della relazione squadra/giocatore. I crediti pagati sono `purchasePrice`, non il prezzo attuale del catalogo. La fantamedia è indicata come “Non disponibile”, con spiegazione dedicata: non viene inventata né ricavata dai singoli voti disponibili.
+Il ruolo deriva dal campo **`playerRole`** della relazione squadra/giocatore. I crediti pagati sono `purchasePrice`, non il prezzo attuale del catalogo. La fantamedia arriva dal campo **`fantaAverage: number | null`** di `TeamPlayerResponse`, nella stessa risposta della rosa: non richiede chiamate aggiuntive e non viene calcolata dal frontend.
+
+`TeamRoster` importa `DecimalPipe` e usa `number:'1.2-2'`: mostra due decimali, conserva lo zero come valore valido e rende `null` come **“—”**. Per esempio, con la locale predefinita dei test, `6.756` diventa `6.76` e `0` diventa `0.00`. La spiegazione della tabella indica che la fantamedia include bonus e malus dei voti validi nelle giornate chiuse. Questa è la semantica presentata dalla UI; il calcolo backend non è stato verificato in questa ricognizione.
 
 Il 403 sulla rosa produce un messaggio esplicito di accesso negato. I contesti storici attribuiscono la lettura al proprietario/admin; l'effettiva consultabilità delle rose avversarie dipende dal backend e influisce anche sul flusso di proposta scambio.
 
@@ -420,7 +436,9 @@ L'asta è implementata in [Auction](src/app/auction/auction.ts). Carica le squad
 
 Il prezzo deve essere positivo e compatibile con il budget della squadra. La ricerca propone fino a cinque calciatori dopo almeno due caratteri. Al successo il form viene azzerato e vengono ricaricati squadre e disponibili. I conflitti `budget_too_low` e `player_already_owned` hanno gestione specifica.
 
-Limite del codice attuale: la risposta dei disponibili è paginata, ma il componente usa soltanto `content` della richiesta iniziale, senza passare pagina né iterare le successive. La ricerca locale copre quindi solo i dati ricevuti, non necessariamente tutti i disponibili nella lega.
+L'asta carica tutti i disponibili tramite `AuctionService.getAvailablePlayers()` e una `rxResource`. Dopo la prima risposta, segue `hasNext`, richiedendo `page + 1` e conservando la dimensione `size` restituita dal backend; unisce tutti i `content` prima di abilitare la ricerca. In questo modo una prima pagina di soli portieri non impedisce di trovare difensori, centrocampisti e attaccanti delle pagine successive. Anche il reload dopo acquisto recupera l'intero elenco. Se una pagina fallisce, viene mostrato l'errore di caricamento senza presentare un elenco parziale. Il costo resta proporzionale al numero di pagine: per cataloghi grandi valutare una ricerca backend, previa verifica del contratto.
+
+Il link “Gestisci asta” è visibile soltanto all'admin nel dettaglio lega, ma `Auction` non verifica autonomamente il ruolo e la route ha la sola guard di autenticazione del contenitore. Un accesso diretto non è quindi bloccato dal frontend in base al ruolo: il POST deve applicare i permessi sul backend.
 
 #### Perché il backend può rifiutare un acquisto apparentemente valido
 
@@ -465,11 +483,15 @@ Sono presenti due interfacce complementari.
 
 **`LeagueTrades`**, nella scheda Scambi del dettaglio lega, carica tutti gli scambi della lega e consente di proporre e rispondere. Determina la propria squadra dall'elenco restituito da `/api/teams/me`, filtrato per lega; esclude le proprie squadre dai destinatari e carica le rose delle due parti.
 
-La proposta invia `receivingTeamId`, `requestedPlayerId`, `offeredPlayerId`, `amount`. Il modello frontend conserva attualmente gli ID della proposta come stringhe provenienti dalle select. La verifica di selezione usa conversioni numeriche; il payload inviato resta quello del modello.
+La proposta invia `receivingTeamId`, `requestedPlayerId`, `offeredPlayerId`, `amount`, tutti di tipo **`number`** in `CreateTradeDto`. Le select convertono i valori con `Number`; lo stato iniziale e il reset usano zero per gli ID non selezionati.
+
+**Identificativi effettivamente inviati:** le opzioni dei due giocatori usano `[value]="player.id"` della relazione `TeamPlayerResponse`, e `canSubmit` confronta questi stessi `id`. Non usano `player.playerId`, nonostante i nomi `offeredPlayerId` e `requestedPlayerId`. Il test della proposta conferma questa scelta: con relazioni `id=10/20` e calciatori `playerId=100/200`, il POST contiene `offeredPlayerId: 10` e `requestedPlayerId: 20`. La precedente descrizione con ID stringa o ID di catalogo non rappresenta il codice corrente; la compatibilità con il contratto backend va verificata prima di cambiare questa mappatura.
 
 Secondo il contratto storico, un conguaglio positivo è pagato dal proponente, uno negativo dal ricevente. La proposta richiede selezioni presenti nelle liste caricate e un importo finito.
 
 Solo la squadra ricevente può accettare un `PENDING`; entrambe le parti possono rifiutarlo. Il PATCH invia `ACCEPTED` o `REJECTED`. Dopo creazione o risposta vengono ricaricati gli scambi, anche perché uno scambio accettato può rendere incompatibili altre proposte.
+
+Per il proponente il pulsante si chiama “Annulla”, ma invia comunque `REJECTED`, non `CANCELLED`. Nella pagina generale, le proposte ricevute in attesa hanno un link “Vai alla lega” verso `/leagues/:leagueId?section=trades` per raggiungere le azioni.
 
 La ricarica corrente dopo una risposta riguarda gli scambi: non è una invalidazione generale di rose, crediti e classifiche già caricati altrove. Inoltre le liste giocatori della proposta non applicano esplicitamente il filtro `transferDate === null` usato nella rosa e nella formazione; non presumere equivalenza senza controllare la risposta backend.
 
@@ -612,7 +634,7 @@ Questa tabella registra le chiamate del frontend e i contratti recuperati dalle 
 | Squadra | POST `/api/teams` | `{teamName,leagueId}` |
 | Squadre utente | GET `/api/teams/me` | Squadre possedute |
 | Rinomina | PATCH `/api/teams/:teamId` | `{name}` |
-| Rosa | GET `/api/teams/:teamId/players` | Relazioni squadra/calciatore |
+| Rosa | GET `/api/teams/:teamId/players` | Relazioni squadra/calciatore, incluso `fantaAverage` nullable |
 | Svincolo | DELETE `/api/teams/:teamId/players/:playerId` | Codice conservato, comando rimosso dalla tabella rosa |
 | Invito | POST `/api/leagues/:leagueId/invites` | `{invitedUsername}` |
 | Inviti | GET `/api/invites/pending`, GET `/api/invites/sent` | Ricevuti e inviati |
@@ -620,11 +642,11 @@ Questa tabella registra le chiamate del frontend e i contratti recuperati dalle 
 | Catalogo | GET `/api/players` | `page`, `size`, `role`, `realTeamName`, `search`, `minPrice`, `maxPrice`, `injured` |
 | Metadati catalogo | GET `/api/players/real-teams` | Array di nomi |
 | Metadati catalogo | GET `/api/players/price-range` | `{minPrice,maxPrice}`, entrambi nullable |
-| Asta | GET `/api/leagues/:leagueId/players/available` | Risposta paginata dei disponibili |
+| Asta | GET `/api/leagues/:leagueId/players/available` | Prima richiesta senza parametri; successive con `page` e `size` finché `hasNext` è vero; risultati aggregati nel frontend |
 | Acquisto | POST `/api/leagues/:leagueId/teams/:teamId/players/:playerId` | `{purchasePrice}` |
 | Scambi | GET `/api/trades` | Scambi dell'utente |
 | Scambi lega | GET `/api/leagues/:leagueId/trades` | Scambi della lega |
-| Proposta | POST `/api/trades` | Destinatario, giocatori, importo |
+| Proposta | POST `/api/trades` | Quattro campi numerici; gli ID dei giocatori provengono attualmente da `TeamPlayerResponse.id` |
 | Risposta scambio | PATCH `/api/trades/:tradeId` | `{status: 'ACCEPTED' o 'REJECTED'}` |
 | Calendario | GET e POST `/api/leagues/:leagueId/matches` | Lettura e generazione |
 | Moduli | GET `/api/lineup-types` | Catalogo moduli |
@@ -633,6 +655,8 @@ Questa tabella registra le chiamate del frontend e i contratti recuperati dalle 
 | Punteggio opzionale | GET `/api/lineups/:lineupId/score` | `{score,goals}` |
 
 Altri contratti recuperati dal contesto storico, da non confondere con pagine correnti: POST `/api/auth/logout`; GET `/api/teams/:teamId/trades` con combinazioni `scope=history` oppure `status=pending&direction=received|sent`; GET `/api/players/:playerId/matchdays/:matchdayId/rating`. Le attuali viste scambi usano invece le liste utente/lega e filtri nel componente.
+
+`TeamDetailService.getTeamById()` conserva anche GET `/api/teams/:teamId`, ma non è usato dalla pagina dettaglio corrente. La presenza del metodo non supera la segnalazione storica di endpoint assente.
 
 La documentazione storica segnala come non utilizzabili per nuove feature `/api/public/**`, POST `/api/registration-requests` e l'ingresso tramite invite code, perché non associati a controller/flussi disponibili nello snapshot ricevuto. Verificare il contratto attuale prima di considerarli implementabili.
 
@@ -643,13 +667,14 @@ La documentazione storica segnala come non utilizzabili per nuove feature `/api/
 | Calciatore di catalogo | `PlayerResponse.id`, `role`, `price` |
 | Calciatore nella rosa | `TeamPlayerResponse.id` identifica la relazione; `playerId` identifica il calciatore; il ruolo è `playerRole` |
 | Richiesta formazione | Usa `teamPlayerId`, cioè l'ID della relazione, non `playerId` |
-| Acquisto, svincolo, scambio | Usano il calciatore `playerId` |
+| Acquisto e svincolo | Usano l'ID del calciatore |
+| Proposta scambio corrente | Campi `offeredPlayerId`/`requestedPlayerId` numerici valorizzati da `TeamPlayerResponse.id`; verificare il contratto backend |
 | Partita della lega | `CalendarMatch.id`, passato nella route come `leagueMatchId` |
 | Giornata visualizzata | `roundNumber`, distinto dall'indice zero-based della navigazione |
 | Data partita | `matchDay`, stringa o numero opzionale nel modello corrente; non un ID di giornata reale |
 | Risultato | `homeGoals/awayGoals`: fantagol; `homeScore/awayScore`: fantapunti |
 | Prezzo | `price`: quotazione catalogo; `purchasePrice`: crediti effettivamente pagati |
-| Voto e fantamedia | `fantaRating`: voto per partita, nullable; fantamedia aggregata non fornita alla rosa |
+| Voto e fantamedia | `fantaRating`: voto per partita, nullable; `fantaAverage`: media aggregata nullable restituita con la rosa |
 
 `PageResponse` contiene `content`, `page`, `size`, `totalElements`, `totalPages`, `hasNext`. Il campo è **`page`**, non `number`. Il servizio calendario tollera un array diretto o un oggetto con `matches`/`calendar`.
 
@@ -694,9 +719,11 @@ Le convenzioni di `AGENTS.md` richiedono componenti standalone, `inject`, input/
 
 Il sorgente conserva stili di implementazione diversi e commenti didattici. Non assumere che tutte le convenzioni siano già applicate ovunque.
 
-Gli errori sono presentati con stati espliciti di caricamento, vuoto, fallimento e successo. `extractApiError` controlla payload non fidati attraverso `unknown` e type guard; alcune feature usano messaggi generici o estrattori locali. Un 403 indica un problema di permessi, non automaticamente una sessione scaduta.
+Molte feature presentano stati espliciti di caricamento, vuoto, fallimento e successo, ma non tutte li gestiscono completamente. `TeamTrades`, per esempio, non ha uno stato di caricamento e può mostrare una lista vuota mentre attende le risposte; la registrazione non rende `errorMessage`. `extractApiError` controlla payload non fidati attraverso `unknown` e type guard; alcune feature usano messaggi generici o estrattori locali. Un 403 indica un problema di permessi, non automaticamente una sessione scaduta.
 
 Il design usa [src/styles.css](src/styles.css) per token di colore, spaziatura, tipografia, pulsanti, tabelle, form, badge e alert, più CSS per feature. Calendario e altre pagine usano layout responsive, incluse container query. Non è dichiarata una libreria UI esterna nelle dipendenze principali.
+
+La palette globale “Abisso” usa sfondi verde petrolio e accento lime, con layer CSS `reset`, `base`, `components`, `utilities` e riduzione delle animazioni per `prefers-reduced-motion`. La landing richiama `/sfondoFantaFootball.jpg`; lo sfondo condiviso richiama `/messiFantaFootball.jpg` con sfocatura e overlay. Sono immagini CSS, non elementi `NgOptimizedImage`. I font Archivo/Public Sans sono dichiarati nello stack CSS, ma i link per scaricarli compaiono soltanto in un commento e non in `index.html`: il browser può usare i font di fallback.
 
 Sono presenti etichette, tabelle semantiche, stati live, focus dei titoli alla navigazione e gestione tastiera delle schede del dettaglio lega. La shell gestisce chiusura del menu account con Escape e ripristino del focus. Tuttavia **WCAG AA e superamento AXE sono requisiti, non risultati di audit attestati da questo documento**.
 
@@ -712,6 +739,7 @@ Sono presenti etichette, tabelle semantiche, stati live, focus dei titoli alla n
 | Ruolo rosa recuperato dal catalogo/denominato `role` | Il codice della rosa usa `playerRole` direttamente |
 | Catalogo filtrato tutto sul client | Pagina `/players` con filtri e paginazione backend, più endpoint metadati |
 | Asta non iniziata | Pagina e registrazione acquisto implementate |
+| Ricerca asta limitata alla prima pagina, potenzialmente di soli portieri | `AuctionService` carica tutte le pagine; ricerca locale nell'elenco completo, senza modifiche backend |
 | Scambi con team fisso e submit vuoto | Viste utente/lega/squadra e proposta reale in `LeagueTrades` |
 | Link navbar Scambi verso dashboard | Link attuale `/trades` |
 | Nessuna ricarica leghe al ritorno | `UserLeagues.ngOnInit()` ricarica la risorsa |
@@ -719,6 +747,8 @@ Sono presenti etichette, tabelle semantiche, stati live, focus dei titoli alla n
 | Svincolo nella colonna Azioni | Colonna e pulsanti rimossi per scelta grafica dell'utente |
 | Solo avanzamento sequenziale calendario | Select per salto diretto alla giornata |
 | Nessun ritorno dalla formazione | Link esplicito con contesto lega/giornata |
+| Fantamedia sempre non disponibile | Rosa collegata a `fantaAverage`, due decimali, zero valido e “—” per null |
+| ID della proposta scambio come stringhe | `CreateTradeDto` numerico; select basate sull'ID della relazione di rosa |
 
 Le checklist storiche restano utili per ricostruire le decisioni, ma non vanno eseguite come se ogni voce non spuntata fosse ancora da implementare.
 
@@ -726,23 +756,26 @@ Le checklist storiche restano utili per ricostruire le decisioni, ma non vanno e
 
 Questa sezione registra limiti osservati o verifiche non effettuate. Non costituisce autorizzazione a modificarli automaticamente.
 
-- **Fantamedia:** la colonna resta senza dato aggregato; serve un contratto backend adeguato.
+- **Fantamedia:** il frontend legge `fantaAverage`; verificare che la risposta backend lo valorizzi con numero o `null`. Non esiste una normalizzazione esplicita del campo mancante (`undefined`) né un calcolo locale di recupero.
+- **Account:** dopo modifica username/password o disattivazione manca `Session.logout()`; la rimozione di `fanta-football-token` non elimina `ff.session`. Messaggi nello stato di navigazione non letti da Login.
+- **Registrazione:** errori generali non renderizzati e submit non disabilitato durante la richiesta, pur essendo presenti i relativi signal. Le regole password differiscono tra registrazione, cambio e reset.
 - **Recupero password:** i form forgot/reset non chiamano ancora i metodi API disponibili; il messaggio locale del primo non dimostra l'invio di un'email. Il codice di reset non viene letto automaticamente dall'URL. I submit conservano inoltre log dei dati immessi, inclusi quelli del reset: descrivere questi componenti come incompleti, non come un recupero operativo.
-- **Asta:** ricerca limitata al `content` della pagina iniziale dei disponibili finché non viene gestita la paginazione completa.
+- **Asta:** la ricerca ora copre tutte le pagine dei disponibili; resta da valutare il costo del caricamento completo per cataloghi grandi. Manca una verifica admin nel componente per l'accesso diretto.
 - **Permessi su rose e formazioni avversarie:** i link esistono, ma i GET possono fallire se il backend limita l'accesso. Verificare con utenti reali, anche per le proposte di scambio.
 - **Chiusura formazione:** la UI si basa sul query parameter; una pagina già aperta non riceve automaticamente un nuovo stato di chiusura dal calendario. Il backend deve applicare la regola definitiva.
 - **Formazione assente:** il servizio tratta ogni 404 della GET come assenza, senza distinguere squadra/partita inesistente da formazione mai creata.
 - **Bonus difensivo:** commento e condizione differiscono; la condizione corrente è D > 3 con un portiere.
-- **Scambi:** la ricarica dopo risposta non aggiorna tutte le altre risorse condivise; le rose della proposta non sono filtrate esplicitamente per trasferimento.
+- **Scambi:** la ricarica dopo risposta non aggiorna tutte le altre risorse condivise; le rose della proposta non sono filtrate esplicitamente per trasferimento. Il POST usa gli ID delle relazioni nei campi dei giocatori: confermare il contratto. `TeamTrades` non mostra un caricamento né un pulsante di retry e nella vista contestuale usa il teamId della route per filtrare, senza verificarne l'ownership.
 - **Ritorno calendario:** disponibile se `leagueId` e `round` sono validi nel link. Non è una persistenza universale della posizione su ogni refresh o accesso diretto.
 - **Sessione/login:** `returnUrl` non utilizzato; nessuna validazione locale della scadenza nella proprietà `isAuthenticated`.
 - **Accessibilità:** `src/index.html` conserva `lang="en"` benché la UI sia italiana; nei template delle due shell letti non è presente uno skip link. Focus dopo dati asincroni e contrasto richiedono verifica effettiva.
+- **Semantica e tastiera:** diverse pagine inseriscono un `<main>` dentro il `<main>` della shell; landing e `TeamTrades` non espongono `data-route-heading`. Le schede di inviti e `TeamTrades` non implementano la navigazione con frecce/Home/End del dettaglio lega; quelle di `TeamTrades` non collegano tab e tabpanel. La conferma annullamento invito usa `alertdialog` senza una gestione dedicata del focus.
 - **Configurazione strict:** i flag principali strict non sono dichiarati esplicitamente nei file TypeScript letti, nonostante il requisito nelle convenzioni.
 - **Pulizia tecnica:** route formazione duplicata, commenti TODO superati, elementi conservati dopo cambi di UI (come lo svincolo) e accesso HTTP non sempre incapsulato nei servizi.
 - **Localizzazione:** la UI usa testi italiani, ma il provider globale della locale italiana non risulta configurato in `app.config.ts`; alcuni formati sono esplicitamente `it-IT`, altri dipendono da `LOCALE_ID`.
 - **Punteggi per lineup:** gli ID opzionali nel calendario non sono garantiti dallo snapshot backend documentato; il risultato base resta indipendente da questi campi.
 
-L'ultima build eseguita nella sessione prima della redazione di questo documento è riuscita. Ha segnalato il superamento del budget di avviso CSS di 4 kB per `Calendar/calendar.component.css` (circa 4,34 kB) e `team-trades/team-trades.css` (circa 5,27 kB). Il limite di errore per stile componente è 8 kB; il budget iniziale è 500 kB di avviso e 1 MB di errore. Questi dati non sono una misura dei tempi di caricamento reali.
+La build production eseguita il **13 settembre**, dopo la correzione dell'asta, con `npm.cmd run build` è **riuscita**. Il bundle iniziale misura circa **322,99 kB**. Restano i due avvisi CSS già segnalati in precedenza: `Calendar/calendar.component.css` (4,34 kB) e `team-trades/team-trades.css` (5,27 kB). La configurazione conferma i budget: 4 kB di avviso e 8 kB di errore per stile componente; 500 kB di avviso e 1 MB di errore per il bundle iniziale. Questi dati non sono una misura dei tempi di caricamento reali.
 
 ## 18. Test e continuità del lavoro
 
@@ -750,7 +783,24 @@ Al momento della ricognizione sono presenti **17 file `.spec.ts`**: app, shell p
 
 La presenza di un file non certifica la copertura della feature. In particolare il test della formazione è ancora un semplice test di creazione del componente. Non risultano file di test dedicati per Session, interceptor, guard, calendario e pagina `TeamTrades` nell'inventario letto. Alcuni test potrebbero riflettere UI o contratti precedenti e vanno confrontati prima di usarli come prova dello stato attuale.
 
-Per questa attività documentale non sono stati eseguiti test applicativi né modificati codice o test. Le build riuscite della sessione precedente non attestano il superamento dell'intera suite Vitest. Il README cita `ng e2e`, ma `angular.json` non contiene un target e2e configurato.
+La lettura dei test conferma queste verifiche già scritte. Per l'asta è stata anche eseguita la suite mirata dopo la correzione; per le altre aree questa tabella descrive i casi presenti, non una nuova esecuzione:
+
+| Area | Casi presenti |
+| --- | --- |
+| Rosa | Fantamedia arrotondata a due decimali, zero, null, esclusione trasferiti, retry e 403, senza chiamate aggiuntive al catalogo |
+| Catalogo | Paginazione e ordine backend, parametri ripetuti, `injured=false`, metadati, slider provvisori/confermati, mantenimento tabella durante il caricamento, errori e refresh |
+| Asta | Ricerca su tutte le pagine, acquisto di un difensore della seconda pagina, reload completo, errore su pagina successiva, selezione/focus, riepilogo budget, vuoto/errore e POST |
+| Scambi lega | Permessi dei pulsanti, proposta numerica con ID di relazione, PATCH e ricarica lista |
+| Dashboard e inviti | Caricamento/vuoto/errore, rientro in dashboard, polling e visibilità, decisione prima della navigazione, invito con username ripulito |
+| Squadre e account | Selezione lega e filtro allenatore, creazione squadra, richieste HTTP dei servizi cambio username/password; la shell verifica menu e logout locale |
+
+Sono visibili almeno due aspettative obsolete: `app.spec.ts` cerca “Hello, fanta-football” in un `<h1>`, mentre `app.html` contiene solo il router outlet; `team-detail.spec.ts` si aspetta ancora GET `/api/players?page=0&size=100` e usa `number` nella risposta mock, mentre la rosa non carica più il catalogo e il modello paginato usa `page`. I test minimi di `Lineup`, `PublicLayout` e landing non configurano esplicitamente tutte le dipendenze di routing/HTTP richieste: verificarli eseguendo la suite prima di considerarli una validazione.
+
+La ricognizione iniziale ha modificato soltanto la documentazione. La successiva correzione autorizzata dell'asta ha aggiornato `auction.service.ts`, `auction.ts`, `auction.html` e `auction.spec.ts`. Il README cita `ng e2e`, ma `angular.json` non contiene un target e2e configurato.
+
+Successivamente alla ricognizione documentale, il 13 settembre è stata corretta la paginazione dell'asta: `npm.cmd test -- --watch=false --include=src/app/auction/auction.spec.ts` ha superato tutti gli **8 test** della feature. Questo risultato riguarda la suite mirata, non l'intera suite né una verifica con backend reale.
+
+Il test di regressione simula tre pagine: la prima contiene un portiere, la seconda il difensore Marco Agori e la terza un attaccante. Verifica la selezione e il POST del difensore, poi il caricamento di tutte le pagine dopo l'acquisto e la sua assenza dai nuovi suggerimenti. Un altro caso verifica che un errore nella seconda pagina blocchi la ricerca anziché presentare i risultati parziali come completi. La build production è riuscita con gli avvisi riportati nella sezione 17; `git diff --check` non ha rilevato errori di whitespace.
 
 Per una verifica funzionale successiva, percorrere almeno: login → creazione lega → invito → accettazione e creazione squadra → asta → rosa → calendario → scelta di una giornata lontana → formazione → ritorno alla stessa giornata; aggiungere consultazione di una partita chiusa e proposta/risposta di scambio con due utenti distinti. Verificare separatamente tastiera, mobile, AXE, API negate e sessione scaduta.
 
